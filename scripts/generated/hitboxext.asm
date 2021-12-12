@@ -154,6 +154,31 @@ bl InitDefaultValuesExtHit
 mr r0, r30
 mulli r3, r4, 316
 gecko.end
+gecko 2147986164
+lwz r3, 8(r19)
+mr r4, r30
+lwz r5, 12(r19)
+bl SetVarsOnHit
+ba r12, 2147986188
+SetVarsOnHit:
+prolog rSrcData, rDefData, rHitStruct, rExtHitStruct, rSrcGObj, rDefGObj, rSrcType, rDefType
+epilog
+blr
+gecko 2150041004
+mr r3, r29
+mr r4, r24
+mr r5, r26
+bl SetVarsOnHit
+OriginalExit_802705ac:
+lwz r0, 3232(r30)
+gecko 2150042552
+mr r3, r30
+mr r4, r26
+mr r5, r19
+bl SetVarsOnHit
+OriginalExit_80270BB8:
+lwz r0, 3232(r31)
+gecko.end
 gecko 2147932412
 lfs f0, -30608(rtoc)
 stfs f1, 6200(r30)

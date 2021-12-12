@@ -265,6 +265,62 @@ proc patchResetVarsPlayerThinkShieldDamage(ctx: HitboxExtContext): string =
         %callbackHooks
         gecko.end
 
+proc patchSetVarsOnHit(ctx: HitboxExtContext): string =
+    ## Set ExtHit vars that affect defender and attacker
+    result = ppc:
+        # CalculateKnockback patch
+        gecko 0x8007aaf4
+        # r12 = source ftdata
+        # r25 = defender ftdata
+        # r31 = ptr ft hit
+        # r30 = gobj of defender
+        # r4 = gobj of src
+        lwz r3, 0x8(r19) # src gobj
+        mr r4, r30 # def gobj
+        lwz r5, 0xC(r19) # ptr fthit of source
+        bl SetVarsOnHit
+        ba r12, 0x8007ab0c # done, so skip to end of func
+
+        SetVarsOnHit:
+            # inputs
+            # r3 = source gobj
+            # r4 = defender gobj
+            # r5 = source hit ft/it hit struct ptr
+            prolog rSrcData, rDefData, rHitStruct, rExtHitStruct, rSrcGObj, rDefGObj, rSrcType, rDefType
+            epilog
+            blr
+
+        # Hitbox Entity Vs Melee - Patch Set Variables
+        gecko 0x802705ac
+        # eg. when a player hits an item with melee
+        # r30 = itdata
+        # r26 = fthit
+        # r28 = attacker data ptr
+        # r24 = gobj of itdata
+        # r29 = gobj of attacker
+        mr r3, r29 # src
+        mr r4, r24 # def
+        mr r5, r26 # ithit
+        bl SetVarsOnHit
+        OriginalExit_802705ac:
+            lwz r0, 0xCA0(r30)
+
+        # 8026fe68 - proj vs proj 
+        # Hitbox Entity Vs Projectiles - Set Variables
+        gecko 0x80270BB8
+        # eg. when a player hits an item (eg. goomba) with projectile
+        # r31 = itdata
+        # r19 = hit struct
+        # r26 = gobj of defender
+        # r30 = gobj of attacker
+        mr r3, r30 # atk
+        mr r4, r26 # def
+        mr r5, r19 # ithit
+        bl SetVarsOnHit
+        OriginalExit_80270BB8:
+            lwz r0, 0xCA0(r31)
+        gecko.end
+
 const PropertyPatches = proc(ctx: HitboxExtContext): string =
     include property/hitstunmod
 
@@ -274,6 +330,7 @@ proc patchMain(gameData: GameData): string =
         %PropertyPatches(ctx)
         %patchSubactionCommandParsing(ctx)
         %patchDefaultValuesForExtHit(ctx)
+        %patchSetVarsOnHit(ctx)
         %patchResetVarsPlayerThinkShieldDamage(ctx)
         gecko.end
 

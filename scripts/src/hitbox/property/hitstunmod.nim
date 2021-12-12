@@ -1,8 +1,9 @@
-
 ctx.addCallbackHook(chkResetVarsPlayerThinkShieldDamage, proc(cb: Callback): string =
     # reset HitstunModifierOffset to 0.0
     ppc: stfs %(cb.regFloatZero), %%(calcOffsetFtData(ctx, HitstunModifierOffset))(%(cb.regFighterData)))
+    
 result.add ppc do:
+    # hitstun mechanics patch
     gecko 0x8008DD70
     # Adds or removes frames of hitstun
     # 8008dd68: loads global hitstun multiplier of 0.4 from plco
