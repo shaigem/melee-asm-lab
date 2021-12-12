@@ -7,12 +7,20 @@ type
         fighterDataSize*: int
         itemDataSize*: int
 
+type FighterData* = enum
+    fdScript = 0x3E4
+
+type Script* = enum
+    sEventTimer = 0x0
+    sFrameTimer = 0x4
+    sCurrent = 0x8
+
 const
     FighterDataOrigSize* = 0x23EC
     ItemDataOrigSize* = 0xFCC
 
 const
-    VanillaGameDat* = GameData(dataType: GameDataType.Vanilla,
+    VanillaGameData* = GameData(dataType: GameDataType.Vanilla,
     fighterDataSize: FighterDataOrigSize,
     itemDataSize: ItemDataOrigSize)
     

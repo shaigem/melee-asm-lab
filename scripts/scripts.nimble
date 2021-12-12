@@ -13,5 +13,5 @@ bin           = @["scripts"]
 requires "nim >= 1.6.0"
 requires "geckon >= 0.1.0"
 
-task hitboxext, "Build the hitbox extension code":
+task generate, "generate all of the codes":
     exec "nim r ./" & srcDir & "/hitbox/hitboxext"
