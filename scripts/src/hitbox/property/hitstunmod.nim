@@ -1,7 +1,13 @@
 ctx.addCallbackHook(chkResetVarsPlayerThinkShieldDamage, proc(cb: Callback): string =
     # reset HitstunModifierOffset to 0.0
     ppc: stfs %(cb.regFloatZero), %%(calcOffsetFtData(ctx, HitstunModifierOffset))(%(cb.regFighterData)))
-    
+
+ctx.addCallbackHook(chkSetDefenderFighterVarsOnHit, proc(cb: Callback): string =
+    # reset HitstunModifierOffset to 0.0
+    ppc:
+        lfs f0, %%ExtHitHitstunModifierOffset(%(cb.regExtHitOff))
+        stfs f0, %%(calcOffsetFtData(ctx, HitstunModifierOffset))(%(cb.regDefData)))
+
 result.add ppc do:
     # hitstun mechanics patch
     gecko 0x8008DD70

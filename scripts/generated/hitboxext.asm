@@ -162,7 +162,82 @@ bl SetVarsOnHit
 ba r12, 2147986188
 SetVarsOnHit:
 prolog rSrcData, rDefData, rHitStruct, rExtHitStruct, rSrcGObj, rDefGObj, rSrcType, rDefType
+lwz rSrcData, 44(r3)
+lwz rDefData, 44(r4)
+mr rHitStruct, r5
+mr rSrcGObj, r3
+mr rDefGObj, r4
+mr r3, rSrcGObj
+bl IsItemOrFighter
+mr rSrcType, r3
+cmpwi r3, 1
+beq SetupFighterVars
+cmpwi r3, 2
+bne Epilog_SetVarsOnHit
+SetupItemVars:
+li r5, 1492
+li r6, 316
+li r7, 4044
+b CalculateExtHitOffset
+SetupFighterVars:
+li r5, 2324
+li r6, 312
+li r7, 9196
+CalculateExtHitOffset:
+mr r3, rSrcData
+mr r4, rHitStruct
+bl GetExtHitForHitboxStruct
+cmpwi r3, 0
+beq Epilog_SetVarsOnHit
+mr rExtHitStruct, r3
+cmpwi rDefType, 1
+bne Epilog_SetVarsOnHit
+lfs f0, 12(r28)
+stfs f0, 9280(r30)
+Epilog_SetVarsOnHit:
 epilog
+blr
+CalculateHitlagMultiOffset:
+cmpwi r3, 1
+beq Return1960
+cmpwi r3, 2
+bne Exit_CalculateHitlagMultiOffset
+li r3, 4124
+b Exit_CalculateHitlagMultiOffset
+Return1960:
+li r3, 6496
+Exit_CalculateHitlagMultiOffset:
+blr
+IsItemOrFighter:
+lhz r0, 0(r3)
+cmpwi r0, 4
+li r3, 1
+beq Result_IsItemOrFighter
+li r3, 2
+cmpwi r0, 6
+beq Result_IsItemOrFighter
+li r3, 0
+Result_IsItemOrFighter:
+blr
+GetExtHitForHitboxStruct:
+add r8, r3, r5
+li r5, 0
+b Comparison_GetExtHitForHitboxStruct
+Loop_GetExtHitForHitboxStruct:
+addi r5, r5, 1
+cmpwi r5, 3
+bgt- NotFound_GetExtHitForHitboxStruct
+add r8, r8, r6
+Comparison_GetExtHitForHitboxStruct:
+cmplw r8, r4
+bne+ Loop_GetExtHitForHitboxStruct
+mulli r5, r5, 20
+add r5, r5, r7
+add r5, r3, r5
+mr r3, r5
+blr
+NotFound_GetExtHitForHitboxStruct:
+li r3, 0
 blr
 gecko 2150041004
 mr r3, r29
@@ -183,5 +258,6 @@ gecko 2147932412
 lfs f0, -30608(rtoc)
 stfs f1, 6200(r30)
 stfs f1, 9280(r30)
+
 gecko.end
 gecko.end

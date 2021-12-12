@@ -51,12 +51,15 @@ const
 type
     CallbackHookKind* = enum
         chkResetVarsPlayerThinkShieldDamage
+        chkSetDefenderFighterVarsOnHit
 
     Callback = ref CallbackObj
     CallbackObj = object
         case kind: CallbackHookKind
         of chkResetVarsPlayerThinkShieldDamage:
             regFloatZero, regFloatOne, regIntZero, regFighterData: Register
+        of chkSetDefenderFighterVarsOnHit:
+            regDefData, regExtHitOff: Register
 
     CallbackHookHandler* = proc (cb: Callback): string {.closure.}
     CallbackHookHandlers* = seq[(CallbackHookKind, CallbackHookHandler)]
@@ -67,6 +70,7 @@ type
 proc addCallbackHook*(hitboxExt: HitboxExtContext; hookKind: CallbackHookKind; handler: CallbackHookHandler) =
     hitboxExt.callbackHookHandlers.add((hookKind, handler))
 func calcOffsetFtData*(ctx: HitboxExtContext, varOff: int): int = ctx.gameData.fighterDataSize + varOff
+func calcOffsetItData*(ctx: HitboxExtContext, varOff: int): int = ctx.gameData.itemDataSize + varOff
 
 func getExtHitOffset(regFighterData, regHitboxId: Register; extraDataOffset: int|Register; regOutput: Register = r3): string =
     if regOutput == regFighterData:
@@ -255,9 +259,11 @@ proc patchResetVarsPlayerThinkShieldDamage(ctx: HitboxExtContext): string =
     # r3 = 0
     # r30 = fighter data
     var callbackHooks = ""
-    for cb in ctx.callbackHookHandlers:
+    for i, cb in ctx.callbackHookHandlers:
         if cb[0] == chkResetVarsPlayerThinkShieldDamage:
-            callbackHooks.add cb[1](Callback(kind: chkResetVarsPlayerThinkShieldDamage, regFloatZero: f1, regFloatOne: f0, regIntZero: r3, regFighterData: r30))            
+            callbackHooks.add cb[1](Callback(kind: chkResetVarsPlayerThinkShieldDamage, regFloatZero: f1, regFloatOne: f0, regIntZero: r3, regFighterData: r30))
+            if i < ctx.callbackHookHandlers.len - 1:
+                callbackHooks.add "\n"      # TODO create a template or something to reuse this part...
     result = ppc:
         gecko 0x8006D8FC
         lfs f0, -0x7790(rtoc) # 1.0
@@ -267,6 +273,12 @@ proc patchResetVarsPlayerThinkShieldDamage(ctx: HitboxExtContext): string =
 
 proc patchSetVarsOnHit(ctx: HitboxExtContext): string =
     ## Set ExtHit vars that affect defender and attacker
+    var defVarCallbackHooks = ""
+    for i, cb in ctx.callbackHookHandlers:
+        if cb[0] == chkSetDefenderFighterVarsOnHit:
+            defVarCallbackHooks.add cb[1](Callback(kind: chkSetDefenderFighterVarsOnHit, regDefData: r30, regExtHitOff: r28))
+            if i < ctx.callbackHookHandlers.len - 1:
+                defVarCallbackHooks.add "\n" # TODO create a template or something to reuse this part...
     result = ppc:
         # CalculateKnockback patch
         gecko 0x8007aaf4
@@ -287,8 +299,117 @@ proc patchSetVarsOnHit(ctx: HitboxExtContext): string =
             # r4 = defender gobj
             # r5 = source hit ft/it hit struct ptr
             prolog rSrcData, rDefData, rHitStruct, rExtHitStruct, rSrcGObj, rDefGObj, rSrcType, rDefType
-            epilog
-            blr
+            lwz rSrcData, 0x2C(r3)
+            lwz rDefData, 0x2C(r4)
+            mr rHitStruct, r5
+            mr rSrcGObj, r3
+            mr rDefGObj, r4
+
+            # calculate ExtHit offset for given ft/it hit ptr
+            mr r3, rSrcGObj # src gobj
+            bl IsItemOrFighter
+            mr rSrcType, r3 # backup source type
+            cmpwi r3, 1
+            beq SetupFighterVars
+            cmpwi r3, 2
+            bne Epilog_SetVarsOnHit
+
+            SetupItemVars:
+                li r5, 1492
+                li r6, 316
+                li r7, %(ctx.gameData.itemDataSize)
+            b CalculateExtHitOffset
+
+            SetupFighterVars:
+                li r5, 2324
+                li r6, 312
+                li r7, %(ctx.gameData.fighterDataSize)
+
+            CalculateExtHitOffset:
+                mr r3, rSrcData
+                mr r4, rHitStruct
+                bl GetExtHitForHitboxStruct
+
+            # r3 now has offset
+            cmpwi r3, 0
+            beq Epilog_SetVarsOnHit
+
+            mr rExtHitStruct, r3 # ExtHit off
+
+            # r25 = source type
+            # r24 = defender type
+            # r28 = ExtHit offset
+
+            # set vars for def & attackers
+
+            # now we store other variables for defenders who are fighters ONLY
+            cmpwi rDefType, 1 # fighter
+            bne Epilog_SetVarsOnHit # not fighter, skip this section
+
+            %defVarCallbackHooks
+
+            Epilog_SetVarsOnHit:
+                epilog
+                blr
+
+            CalculateHitlagMultiOffset:
+                cmpwi r3, 1
+                beq Return1960
+                cmpwi r3, 2
+                bne Exit_CalculateHitlagMultiOffset
+                li r3, %(calcOffsetItData(ctx, ExtItHitlagMultiplierOffset))
+                b Exit_CalculateHitlagMultiOffset
+                Return1960:
+                    li r3, 0x1960
+                Exit_CalculateHitlagMultiOffset:
+                    blr
+
+            IsItemOrFighter:
+                # input = gobj in r3
+                # returns 0 = ?, 1 = fighter, 2 = item, in r3
+                lhz r0, 0(r3)
+                cmpwi r0,0x4
+                li r3, 1
+                beq Result_IsItemOrFighter
+                li r3, 2
+                cmpwi r0,0x6
+                beq Result_IsItemOrFighter
+                li r3, 0
+                Result_IsItemOrFighter:
+                    blr
+
+            GetExtHitForHitboxStruct:
+                # uses
+                # r3, r4, r5, r6, r7, r8
+                # inputs
+                # r3 = ft/itdata
+                # r4 = ft/ithit
+                # r5 = ft/ithit start offset relative to ft/itdata
+                # r6 = ft/ithit struct size
+                # r7 = ExtItem/Fighter offset
+                # outputs
+                # r3 = ptr to ExtHit
+                add r8, r3, r5
+                # r5 is now free to use
+                li r5, 0
+                b Comparison_GetExtHitForHitboxStruct
+                Loop_GetExtHitForHitboxStruct:
+                    addi r5, r5, 1
+                    cmpwi r5, 3
+                    bgt- NotFound_GetExtHitForHitboxStruct
+                    add r8, r8, r6
+                    Comparison_GetExtHitForHitboxStruct:
+                        cmplw r8, r4
+                        bne+ Loop_GetExtHitForHitboxStruct
+                # found
+                mulli r5, r5, %ExtHitSize
+                add r5, r5, r7
+                add r5, r3, r5
+                mr r3, r5
+                blr
+                NotFound_GetExtHitForHitboxStruct:
+                    li r3, 0
+                    blr
 
         # Hitbox Entity Vs Melee - Patch Set Variables
         gecko 0x802705ac
