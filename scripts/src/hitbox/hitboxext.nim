@@ -49,6 +49,18 @@ const
     CustomEventID = 0x3C
     EventLength = 0x8
 
+func getExtHitOffset(regFighterData, regHitboxId: Register; extraDataOffset: int|Register; regOutput: Register = r3): string =
+    if regOutput == regFighterData:
+        raise newException(ValueError, "output register (" & $regOutput & ") cannot be the same as the fighter data register")
+    result = ppc:
+        mulli %regOutput, %regHitboxId, %ExtHitSize # hitbox id * ext hit size
+        block:
+            if extraDataOffset is Register:
+                ppc: add %regOutput, %regOutput, %extraDataOffset
+            else:
+                ppc: addi %regOutput, %regOutput, %extraDataOffset
+        add %regOutput, %regFighterData, %regOutput
+
 func patchFighterDataAllocation(gameData: GameData; dataSizeToAdd: int): string =
     result = ppc:
         # patch init player block values
@@ -133,9 +145,7 @@ func patchSubactionCommandParsing(gameData: GameData): string =
             SetLoopCount:
                 mtctr r0
             # calculate ExtHit ptr offset in Ft/It data
-            mulli r4, r4, %ExtHitSize
-            add r4, r4, r5
-            add r4, r30, r4
+            %getExtHitOffset(regFighterData = r30, regHitboxId = r4, extraDataOffset = r5, regOutput = r4)
 
             b BeginReadData
 
@@ -230,13 +240,61 @@ func patchSubactionCommandParsing(gameData: GameData): string =
             ""    
         gecko.end
 
+func patchDefaultValuesForExtHit(gameData: GameData): string =
+    result = ppc:
+        # init default values for ExtHit variables - Melee Hitboxes
+        gecko 0x8007127c
+        # r0 = hitbox id
+        # r31 = fighter data
+        %getExtHitOffset(regFighterData = r31, regHitboxId = r0, extraDataOffset = gameData.fighterDataSize)
+        # backup hitbox id to r30
+        mr r30, r0
+        bl InitDefaultValuesExtHit
+        b OriginalExit_8007127C
+
+        InitDefaultValuesExtHit:
+            # inputs
+            # r3 = fighter data
+            # uses: r0, r3, f0
+            # reset vars that need to be 1
+            lfs f0, -0x7790(rtoc) # 1.0
+            stfs f0, %%ExtHitHitlagOffset(r3)
+            stfs f0, %%ExtHitSDIMultiplierOffset(r3)
+            stfs f0, %%ExtHitShieldstunMultiplierOffset(r3)
+            # reset vars that need to be 0
+            lfs f0, -0x778C(rtoc) # 0.0
+            stfs f0, %%ExtHitHitstunModifierOffset(r3)
+            li r0, 0
+            stw r0, %%ExtHitFlags1Offset(r3)
+            blr
+
+        OriginalExit_8007127C:
+            mulli r3, r30, 312 # original line used r0 instead of r30
+
+        # next, patch for Item hitboxes
+        gecko 0x802790f0
+        # r4 = hitbox id
+        # r30 = item data
+        # r0 = r30
+        %getExtHitOffset(regFighterData = r30, regHitboxId = r4, extraDataOffset = gameData.itemDataSize)
+        bl InitDefaultValuesExtHit
+        # restore r0
+        mr r0, r30
+        mulli r3, r4, 316 # orig line
+        gecko.end
+
+func patchMain(gameData: GameData): string =
+    result = ppc:
+        %patchSubactionCommandParsing(gameData)
+        %patchDefaultValuesForExtHit(gameData)
+        gecko.end
 
 const HitboxExtA20XX* =
     createCode "Hitbox Extension A20XX":
         code:
             %patchFighterDataAllocation(A20XXGameData, ExtFighterDataSize)
             %patchItemDataAllocation(A20XXGameData, ExtItemDataSize)
-            %patchSubactionCommandParsing(A20XXGameData)
+            %patchMain(A20XXGameData)
 
 proc main() =
     generate "./generated/hitboxext.asm", HitboxExtA20XX

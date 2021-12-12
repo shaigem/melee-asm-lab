@@ -122,3 +122,31 @@ ba r12, 2147956104
 OriginalExit_80073574:
 
 gecko.end
+gecko 2147947132
+mulli r3, r0, 20
+addi r3, r3, 9196
+add r3, r31, r3
+mr r30, r0
+bl InitDefaultValuesExtHit
+b OriginalExit_8007127C
+InitDefaultValuesExtHit:
+lfs f0, -30608(rtoc)
+stfs f0, 0(r3)
+stfs f0, 4(r3)
+stfs f0, 8(r3)
+lfs f0, -30604(rtoc)
+stfs f0, 12(r3)
+li r0, 0
+stw r0, 16(r3)
+blr
+OriginalExit_8007127C:
+mulli r3, r30, 312
+gecko 2150076656
+mulli r3, r4, 20
+addi r3, r3, 4044
+add r3, r30, r3
+bl InitDefaultValuesExtHit
+mr r0, r30
+mulli r3, r4, 316
+gecko.end
+gecko.end
