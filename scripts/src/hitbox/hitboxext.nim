@@ -1,4 +1,3 @@
-import geckon
 import ../melee
 
 # Variable offsets in our new ExtHit struct
@@ -49,6 +48,26 @@ const
     CustomEventID = 0x3C
     EventLength = 0x8
 
+type
+    CallbackHookKind* = enum
+        chkResetVarsPlayerThinkShieldDamage
+
+    Callback = ref CallbackObj
+    CallbackObj = object
+        case kind: CallbackHookKind
+        of chkResetVarsPlayerThinkShieldDamage:
+            regFloatZero, regFloatOne, regIntZero, regFighterData: Register
+
+    CallbackHookHandler* = proc (cb: Callback): string {.closure.}
+    CallbackHookHandlers* = seq[(CallbackHookKind, CallbackHookHandler)]
+    HitboxExtContext* = ref object
+        gameData*: GameData
+        callbackHookHandlers*: CallBackHookHandlers
+
+proc addCallbackHook*(hitboxExt: HitboxExtContext; hookKind: CallbackHookKind; handler: CallbackHookHandler) =
+    hitboxExt.callbackHookHandlers.add((hookKind, handler))
+func calcOffsetFtData*(ctx: HitboxExtContext, varOff: int): int = ctx.gameData.fighterDataSize + varOff
+
 func getExtHitOffset(regFighterData, regHitboxId: Register; extraDataOffset: int|Register; regOutput: Register = r3): string =
     if regOutput == regFighterData:
         raise newException(ValueError, "output register (" & $regOutput & ") cannot be the same as the fighter data register")
@@ -61,66 +80,13 @@ func getExtHitOffset(regFighterData, regHitboxId: Register; extraDataOffset: int
                 ppc: addi %regOutput, %regOutput, %extraDataOffset
         add %regOutput, %regFighterData, %regOutput
 
-func patchFighterDataAllocation(gameData: GameData; dataSizeToAdd: int): string =
-    result = ppc:
-        # patch init player block values
-        gecko 0x80068EEC
-        # extra stuff for 20XX
-        block:
-            if gameData.dataType == GameDataType.A20XX:
-                ppc:
-                    li r4, 0
-                    stw r4, 0x20(r31)
-                    stw r4, 0x24(r31)
-                    stb r4, 0x0D(r3)
-                    sth r4, 0x0E(r3)
-                    stb r4, 0x21FD(r3)
-                    sth r4, 0x21FE(r3)
-            else:
-                ""
-        addi r30, r3, 0 # backup data pointer
-        load r4, 0x80458fd0
-        lwz r4, 0x20(r4)
-        bla r12, %ZeroDataLength
-        # exit
-        mr r3, r30
-        lis r4, 0x8046
-
-        # next patch, adjust the fighter data size
-        gecko 0x800679BC, li r4, %(gameData.fighterDataSize + dataSizeToAdd)
-
-        # finally, any specific game mod patches
-        block:
-            if gameData.dataType == GameDataType.A20XX:
-                # fixes crash for 20XX when loading marth & roy
-                # NOTE: this will break the 'Marth and Roy Sword Swing File Colors'!!!
-                ppc: gecko 0x8013651C, blr
-            else:
-                ""
-        gecko.end
-
-func patchItemDataAllocation(gameData: GameData; dataSizeToAdd: int): string =
-    let newDataSize = gameData.itemDataSize + dataSizeToAdd
-    result = ppc:
-        # size patch
-        gecko 0x80266FD8, li r4, %newDataSize
-        # init extended item data patch
-        gecko 0x80268754
-        addi r29, r3, 0 # backup r3
-        li r4, %newDataSize
-        bla r12, %ZeroDataLength
-        # _return
-        mr r3, r29 # restore r3
-        `mr.` r6, r3
-        gecko.end
-
-func patchSubactionCommandParsing(gameData: GameData): string =
+func patchSubactionCommandParsing(ctx: HitboxExtContext): string =
     result = ppc:
         # custom fighter subaction event injection
         gecko 0x80073318
         cmpwi r28, %CustomEventID
         bne+ OriginalExit_80073318
-        li r5, %(gameData.fighterDataSize)
+        li r5, %(ctx.gameData.fighterDataSize)
         bl ParseEventData
         ba r12, 0x8007332C
         # local func for parsing the custom subaction event (items will use this too)
@@ -219,7 +185,7 @@ func patchSubactionCommandParsing(gameData: GameData): string =
         gecko 0x80279ABC
         cmpwi r28, %CustomEventID
         bne+ OriginalExit_80279ABC
-        li r5, %(gameData.itemDataSize)
+        li r5, %(ctx.gameData.itemDataSize)
         bl ParseEventData
         ba r12, 0x80279ad0 # we handled our custom event, now go to end of parsing
         
@@ -240,13 +206,13 @@ func patchSubactionCommandParsing(gameData: GameData): string =
             ""    
         gecko.end
 
-func patchDefaultValuesForExtHit(gameData: GameData): string =
+func patchDefaultValuesForExtHit(ctx: HitboxExtContext): string =
     result = ppc:
         # init default values for ExtHit variables - Melee Hitboxes
         gecko 0x8007127c
         # r0 = hitbox id
         # r31 = fighter data
-        %getExtHitOffset(regFighterData = r31, regHitboxId = r0, extraDataOffset = gameData.fighterDataSize)
+        %getExtHitOffset(regFighterData = r31, regHitboxId = r0, extraDataOffset = ctx.gameData.fighterDataSize)
         # backup hitbox id to r30
         mr r30, r0
         bl InitDefaultValuesExtHit
@@ -276,17 +242,39 @@ func patchDefaultValuesForExtHit(gameData: GameData): string =
         # r4 = hitbox id
         # r30 = item data
         # r0 = r30
-        %getExtHitOffset(regFighterData = r30, regHitboxId = r4, extraDataOffset = gameData.itemDataSize)
+        %getExtHitOffset(regFighterData = r30, regHitboxId = r4, extraDataOffset = ctx.gameData.itemDataSize)
         bl InitDefaultValuesExtHit
         # restore r0
         mr r0, r30
         mulli r3, r4, 316 # orig line
         gecko.end
 
-func patchMain(gameData: GameData): string =
+proc patchResetVarsPlayerThinkShieldDamage(ctx: HitboxExtContext): string =
+    # f1 = 0.0
+    # f0 = 1.0
+    # r3 = 0
+    # r30 = fighter data
+    var callbackHooks = ""
+    for cb in ctx.callbackHookHandlers:
+        if cb[0] == chkResetVarsPlayerThinkShieldDamage:
+            callbackHooks.add cb[1](Callback(kind: chkResetVarsPlayerThinkShieldDamage, regFloatZero: f1, regFloatOne: f0, regIntZero: r3, regFighterData: r30))            
     result = ppc:
-        %patchSubactionCommandParsing(gameData)
-        %patchDefaultValuesForExtHit(gameData)
+        gecko 0x8006D8FC
+        lfs f0, -0x7790(rtoc) # 1.0
+        stfs f1, 0x1838(r30) # original code line
+        %callbackHooks
+        gecko.end
+
+const PropertyPatches = proc(ctx: HitboxExtContext): string =
+    include property/hitstunmod
+
+proc patchMain(gameData: GameData): string =
+    let ctx = HitboxExtContext(gameData: gameData)
+    result = ppc:
+        %PropertyPatches(ctx)
+        %patchSubactionCommandParsing(ctx)
+        %patchDefaultValuesForExtHit(ctx)
+        %patchResetVarsPlayerThinkShieldDamage(ctx)
         gecko.end
 
 const HitboxExtA20XX* =

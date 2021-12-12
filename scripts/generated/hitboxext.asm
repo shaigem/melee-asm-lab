@@ -30,6 +30,11 @@ bla r12, 2147533152
 mr r3, r29
 mr. r6, r3
 gecko.end
+gecko 2148064624
+lfs f0, 9280(r29)
+fadds f30, f30, f0
+fctiwz f0, f30
+gecko.end
 gecko 2147955480
 cmpwi r28, 60
 bne+ OriginalExit_80073318
@@ -148,5 +153,10 @@ add r3, r30, r3
 bl InitDefaultValuesExtHit
 mr r0, r30
 mulli r3, r4, 316
+gecko.end
+gecko 2147932412
+lfs f0, -30608(rtoc)
+stfs f1, 6200(r30)
+stfs f1, 9280(r30)
 gecko.end
 gecko.end
