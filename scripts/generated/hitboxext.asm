@@ -232,12 +232,12 @@ stfs f0, 0(r4)
 b Exit_HitlagMulti
 CalculateHitlagMultiOffset_HitlagMulti:
 cmpwi r3, 1
-beq Return1960
+beq Return1960_HitlagMulti
 cmpwi r3, 2
 bne Exit_CalculateHitlagMultiOffset
 li r3, 4124
 b Exit_CalculateHitlagMultiOffset
-Return1960:
+Return1960_HitlagMulti:
 li r3, 6496
 Exit_CalculateHitlagMultiOffset:
 blr

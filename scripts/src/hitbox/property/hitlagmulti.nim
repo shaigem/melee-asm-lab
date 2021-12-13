@@ -41,12 +41,12 @@ ctx.addCallbackHook(chkSetDefsAtksVarsOnHit, proc(cb: Callback): string =
 
         CalculateHitlagMultiOffset_HitlagMulti:
             cmpwi r3, 1
-            beq Return1960
+            beq Return1960_HitlagMulti
             cmpwi r3, 2
             bne Exit_CalculateHitlagMultiOffset
             li r3, %(calcOffsetItData(ctx, ExtItHitlagMultiplierOffset))
             b Exit_CalculateHitlagMultiOffset
-            Return1960:
+            Return1960_HitlagMulti:
                 li r3, 0x1960
             Exit_CalculateHitlagMultiOffset:
                 blr
