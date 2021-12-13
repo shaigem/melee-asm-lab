@@ -1,6 +1,6 @@
 ctx.addCallbackHook(chkResetVarsPlayerThinkShieldDamage, proc(cb: Callback): string =
     # reset HitstunModifierOffset to 0.0
-    ppc: stfs %(cb.regFloatZero), %%(calcOffsetFtData(ctx, HitstunModifierOffset))(%(cb.regFighterData)))
+    ppc: stfs %(cb.regFloatZero), %%(calcOffsetFtData(ctx, HitstunModifierOffset))(%(cb.regData)))
 
 ctx.addCallbackHook(chkSetDefenderFighterVarsOnHit, proc(cb: Callback): string =
     # set the defender's hitstun modifier variable on hit
@@ -8,7 +8,7 @@ ctx.addCallbackHook(chkSetDefenderFighterVarsOnHit, proc(cb: Callback): string =
         lfs f0, %%ExtHitHitstunModifierOffset(%(cb.regExtHitOff)) # load the hitstun modifier of the ExtHit
         stfs f0, %%(calcOffsetFtData(ctx, HitstunModifierOffset))(%(cb.regDefData))) # set the defender's hitstun modifier to the one from ExtHit
 
-result.add ppc do:
+result.addPatches ppc do:
     # hitstun mechanics patch
     gecko 0x8008DD70
     # Adds or removes frames of hitstun

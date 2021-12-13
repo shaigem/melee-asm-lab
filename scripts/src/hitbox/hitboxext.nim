@@ -51,16 +51,18 @@ const
 
 type
     CallbackHookKind* = enum
+        chkResetVarsItems
         chkResetVarsPlayerThinkShieldDamage
         chkSetDefenderFighterVarsOnHit
+        chkSetDefsAtksVarsOnHit
 
     Callback = ref CallbackObj
     CallbackObj = object
         case kind: CallbackHookKind
-        of chkResetVarsPlayerThinkShieldDamage:
-            regFloatZero, regFloatOne, regIntZero, regFighterData: Register
-        of chkSetDefenderFighterVarsOnHit:
-            regDefData, regExtHitOff: Register
+        of chkResetVarsPlayerThinkShieldDamage, chkResetVarsItems:
+            regFloatZero, regFloatOne, regIntZero, regData: Register
+        of chkSetDefsAtksVarsOnHit, chkSetDefenderFighterVarsOnHit:
+            regDefGObj, regSrcData, regDefData, regSrcType, regDefType, regHitOff, regExtHitOff: Register
 
     CallbackHookHandler* = proc (cb: Callback): string {.closure.}
     CallbackHookHandlers* = seq[(CallbackHookKind, CallbackHookHandler)]
@@ -260,6 +262,18 @@ func patchDefaultValuesForExtHit(ctx: HitboxExtContext): string =
         mulli r3, r4, 316 # orig line
         gecko.end
 
+proc patchResetVarsItemsDamage(ctx: HitboxExtContext): string =
+    result = ppc:
+        gecko 0x80269cdc
+        # r5 = itdata
+        # f1 = 1.0
+        # f0 = 0.0
+        # r4 = 0
+        lfs f1, -0x7790(rtoc) # 1.0            
+        lfs f0, -0x33A8(rtoc) # 0.0, original code line
+        %getFormattedCallbackHooks(ctx, Callback(kind: chkResetVarsItems, regFloatZero: f0, regFloatOne: f1, regIntZero: r4, regData: r5))
+        gecko.end
+
 proc patchResetVarsPlayerThinkShieldDamage(ctx: HitboxExtContext): string =
     # f1 = 0.0
     # f0 = 1.0
@@ -269,7 +283,7 @@ proc patchResetVarsPlayerThinkShieldDamage(ctx: HitboxExtContext): string =
         gecko 0x8006D8FC
         lfs f0, -0x7790(rtoc) # 1.0
         stfs f1, 0x1838(r30) # original code line
-        %getFormattedCallbackHooks(ctx, Callback(kind: chkResetVarsPlayerThinkShieldDamage, regFloatZero: f1, regFloatOne: f0, regIntZero: r3, regFighterData: r30))
+        %getFormattedCallbackHooks(ctx, Callback(kind: chkResetVarsPlayerThinkShieldDamage, regFloatZero: f1, regFloatOne: f0, regIntZero: r3, regData: r30))
         gecko.end
 
 proc patchSetVarsOnHit(ctx: HitboxExtContext): string =
@@ -330,34 +344,19 @@ proc patchSetVarsOnHit(ctx: HitboxExtContext): string =
             beq Epilog_SetVarsOnHit
 
             mr rExtHitStruct, r3 # ExtHit off
-
             # r25 = source type
             # r24 = defender type
             # r28 = ExtHit offset
-
             # set vars for def & attackers
-
+            %getFormattedCallbackHooks(ctx, Callback(kind: chkSetDefsAtksVarsOnHit, regDefGObj: r26, regSrcData: r31, regDefData: r30, regSrcType: r25, regDefType: r24, regHitOff: r29, regExtHitOff: r28))
             # now we store other variables for defenders who are fighters ONLY
             cmpwi rDefType, 1 # fighter
             bne Epilog_SetVarsOnHit # not fighter, skip this section
-
-            %getFormattedCallbackHooks(ctx, Callback(kind: chkSetDefenderFighterVarsOnHit, regDefData: r30, regExtHitOff: r28))
+            %getFormattedCallbackHooks(ctx, Callback(kind: chkSetDefenderFighterVarsOnHit, regDefGObj: r26, regSrcData: r31, regDefData: r30, regSrcType: r25, regDefType: r24, regHitOff: r29, regExtHitOff: r28))
 
             Epilog_SetVarsOnHit:
                 epilog
                 blr
-
-            CalculateHitlagMultiOffset:
-                cmpwi r3, 1
-                beq Return1960
-                cmpwi r3, 2
-                bne Exit_CalculateHitlagMultiOffset
-                li r3, %(calcOffsetItData(ctx, ExtItHitlagMultiplierOffset))
-                b Exit_CalculateHitlagMultiOffset
-                Return1960:
-                    li r3, 0x1960
-                Exit_CalculateHitlagMultiOffset:
-                    blr
 
             IsItemOrFighter:
                 # input = gobj in r3
@@ -437,7 +436,10 @@ proc patchSetVarsOnHit(ctx: HitboxExtContext): string =
             lwz r0, 0xCA0(r31)
         gecko.end
 
+proc addPatches(s: var string; i: string) = s.add i & "\n"
+
 const PropertyPatches = proc(ctx: HitboxExtContext): string =
+    include property/hitlagmulti
     include property/hitstunmod
 
 proc patchMain(gameData: GameData): string =
@@ -447,6 +449,7 @@ proc patchMain(gameData: GameData): string =
         %patchSubactionCommandParsing(ctx)
         %patchDefaultValuesForExtHit(ctx)
         %patchSetVarsOnHit(ctx)
+        %patchResetVarsItemsDamage(ctx)
         %patchResetVarsPlayerThinkShieldDamage(ctx)
         gecko.end
 

@@ -30,11 +30,29 @@ bla r12, 2147533152
 mr r3, r29
 mr. r6, r3
 gecko.end
+gecko 2147932508
+lwz r3, 6744(r30)
+cmplwi r3, 0
+bne Exit_8006d95c
+stfs f0, 6496(r30)
+Exit_8006d95c:
+li r3, 0
+gecko 2150020180
+lfs f1, 4124(r31)
+fmuls f0, f0, f1
+lfs f1, -30608(rtoc)
+fcmpo cr0, f0, f1
+bge+ Exit_8026b454
+fmr f0, f1
+Exit_8026b454:
+fctiwz f0, f0
+gecko.end
 gecko 2148064624
 lfs f0, 9280(r29)
 fadds f30, f30, f0
 fctiwz f0, f30
 gecko.end
+
 gecko 2147955480
 cmpwi r28, 60
 bne+ OriginalExit_80073318
@@ -190,14 +208,29 @@ bl GetExtHitForHitboxStruct
 cmpwi r3, 0
 beq Epilog_SetVarsOnHit
 mr rExtHitStruct, r3
-cmpwi rDefType, 1
-bne Epilog_SetVarsOnHit
-lfs f0, 12(r28)
-stfs f0, 9280(r30)
-Epilog_SetVarsOnHit:
-epilog
-blr
-CalculateHitlagMultiOffset:
+lfs f0, 0(r28)
+mr r3, r25
+bl CalculateHitlagMultiOffset_HitlagMulti
+add r4, r31, r3
+mr r3, r26
+bl IsItemOrFighter
+mr r24, r3
+bl CalculateHitlagMultiOffset_HitlagMulti
+add r5, r30, r3
+lwz r0, 48(r29)
+cmplwi r0, 2
+bne+ NotElectric_HitlagMulti
+lwz r3, -20812(r13)
+lfs f1, 420(r3)
+fmuls f1, f1, f0
+stfs f1, 0(r5)
+b UpdateHitlagForAttacker_HitlagMulti
+NotElectric_HitlagMulti:
+stfs f0, 0(r5)
+UpdateHitlagForAttacker_HitlagMulti:
+stfs f0, 0(r4)
+b Exit_HitlagMulti
+CalculateHitlagMultiOffset_HitlagMulti:
 cmpwi r3, 1
 beq Return1960
 cmpwi r3, 2
@@ -207,6 +240,15 @@ b Exit_CalculateHitlagMultiOffset
 Return1960:
 li r3, 6496
 Exit_CalculateHitlagMultiOffset:
+blr
+Exit_HitlagMulti:
+
+cmpwi rDefType, 1
+bne Epilog_SetVarsOnHit
+lfs f0, 12(r28)
+stfs f0, 9280(r30)
+Epilog_SetVarsOnHit:
+epilog
 blr
 IsItemOrFighter:
 lhz r0, 0(r3)
@@ -253,6 +295,11 @@ mr r5, r19
 bl SetVarsOnHit
 OriginalExit_80270BB8:
 lwz r0, 3232(r31)
+gecko.end
+gecko 2150014172
+lfs f1, -30608(rtoc)
+lfs f0, -13224(rtoc)
+stfs f1, 4124(r5)
 gecko.end
 gecko 2147932412
 lfs f0, -30608(rtoc)
