@@ -258,6 +258,5 @@ gecko 2147932412
 lfs f0, -30608(rtoc)
 stfs f1, 6200(r30)
 stfs f1, 9280(r30)
-
 gecko.end
 gecko.end

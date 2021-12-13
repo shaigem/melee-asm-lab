@@ -1,4 +1,5 @@
 import ../melee
+import sugar, strutils
 
 # Variable offsets in our new ExtHit struct
 const
@@ -69,6 +70,12 @@ type
 
 proc addCallbackHook*(hitboxExt: HitboxExtContext; hookKind: CallbackHookKind; handler: CallbackHookHandler) =
     hitboxExt.callbackHookHandlers.add((hookKind, handler))
+proc getFormattedCallbackHooks(hitboxExt: HitboxExtContext; cb: Callback): string =
+    let handlers = hitboxExt.callbackHookHandlers
+    result = (collect(newSeq) do:
+        for h in handlers:
+            if h[0] == cb.kind: h[1](cb)).join("\n")
+        
 func calcOffsetFtData*(ctx: HitboxExtContext, varOff: int): int = ctx.gameData.fighterDataSize + varOff
 func calcOffsetItData*(ctx: HitboxExtContext, varOff: int): int = ctx.gameData.itemDataSize + varOff
 
@@ -258,27 +265,15 @@ proc patchResetVarsPlayerThinkShieldDamage(ctx: HitboxExtContext): string =
     # f0 = 1.0
     # r3 = 0
     # r30 = fighter data
-    var callbackHooks = ""
-    for i, cb in ctx.callbackHookHandlers:
-        if cb[0] == chkResetVarsPlayerThinkShieldDamage:
-            callbackHooks.add cb[1](Callback(kind: chkResetVarsPlayerThinkShieldDamage, regFloatZero: f1, regFloatOne: f0, regIntZero: r3, regFighterData: r30))
-            if i < ctx.callbackHookHandlers.len - 1:
-                callbackHooks.add "\n"      # TODO create a template or something to reuse this part...
     result = ppc:
         gecko 0x8006D8FC
         lfs f0, -0x7790(rtoc) # 1.0
         stfs f1, 0x1838(r30) # original code line
-        %callbackHooks
+        %getFormattedCallbackHooks(ctx, Callback(kind: chkResetVarsPlayerThinkShieldDamage, regFloatZero: f1, regFloatOne: f0, regIntZero: r3, regFighterData: r30))
         gecko.end
 
 proc patchSetVarsOnHit(ctx: HitboxExtContext): string =
     ## Set ExtHit vars that affect defender and attacker
-    var defVarCallbackHooks = ""
-    for i, cb in ctx.callbackHookHandlers:
-        if cb[0] == chkSetDefenderFighterVarsOnHit:
-            defVarCallbackHooks.add cb[1](Callback(kind: chkSetDefenderFighterVarsOnHit, regDefData: r30, regExtHitOff: r28))
-            if i < ctx.callbackHookHandlers.len - 1:
-                defVarCallbackHooks.add "\n" # TODO create a template or something to reuse this part...
     result = ppc:
         # CalculateKnockback patch
         gecko 0x8007aaf4
@@ -346,7 +341,7 @@ proc patchSetVarsOnHit(ctx: HitboxExtContext): string =
             cmpwi rDefType, 1 # fighter
             bne Epilog_SetVarsOnHit # not fighter, skip this section
 
-            %defVarCallbackHooks
+            %getFormattedCallbackHooks(ctx, Callback(kind: chkSetDefenderFighterVarsOnHit, regDefData: r30, regExtHitOff: r28))
 
             Epilog_SetVarsOnHit:
                 epilog
