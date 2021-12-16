@@ -35,7 +35,9 @@ const
     fighterDataSize: FighterDataOrigSize + 16 + 32,
     itemDataSize: ItemDataOrigSize + 0x4)
 
-const ZeroDataLength* = 0x8000C160
+const 
+    SelfInducedPhysics* = 0x80085134
+    ZeroDataLength* = 0x8000C160
 
 func patchFighterDataAllocation*(gameData: GameData; dataSizeToAdd: int): string =
     result = ppc:

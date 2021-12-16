@@ -14,4 +14,5 @@ requires "nim >= 1.6.0"
 requires "geckon >= 0.1.0"
 
 task generate, "generate all of the codes":
-    exec "nim r ./" & srcDir & "/hitbox/hitboxext"
+#    exec "nim r ./" & srcDir & "/hitbox/hitboxext"
+    exec "nim r ./" & srcDir & "/fighters/boss/movablehands"
