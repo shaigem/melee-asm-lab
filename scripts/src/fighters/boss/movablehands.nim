@@ -17,7 +17,6 @@ stage.GreatBay = 0x0D  # Great Bay
     0, 3
     ]#
 
-
 func patchFighterOnLoadMasterHand(): string =
     result = ppc:
         gecko 0x8014fcb8
@@ -30,19 +29,24 @@ func patchFighterOnLoadMasterHand(): string =
             1:
                 ".float" 2.0
             2:
-                ".float" 50.0
+                ".float" 45.0
             3:
-                ".float" 50.0
+                ".float" 45.0
             4:
-                ".float" -1.6
-            5:
                 ".float" 2.0
         data.struct 0, "", xMainMoveSpeed, 
-            xSecondaryMoveSpeed, 
-            xStartOffsetX, 
-            xStartOffsetY, 
-            xHarauLoopXVel,
+            xSecondaryMoveSpeed,
+            xStartOffsetX,
+            xStartOffsetY,
             xFreeMovementSpeed
+
+        data.table masterHandData
+        0: ".float" -1.6
+        data.struct 0, "", xHarauLoopXVel
+
+        data.table crazyHandData
+        0: ".float" 1.4
+        data.struct 0, "", xHarauLoopXVel
         data.end r3
 
         lfs f0, xStartOffsetX(r3)
@@ -81,69 +85,40 @@ func patchHarauMovementLoop(): string =
         bla r12, {SelfInducedPhysics}
         data.table CommonDataTable
         data.end r4
-        lfs f0, xHarauLoopXVel(r4)
-        lfs f1, 0x80(r3)
-        fadds f0, f1, f0
-        stfs f0, 0x80(r3)
-        gecko.end
-
-func patchFreeMovement(): string =
-    result = ppc:
-
-        gecko 0x801502a4, nop
-        gecko 0x801502a8, nop
-        gecko 0x8014fe8c, nop
-        gecko 0x8014fe90, nop
-
-        gecko 0x80150870
-        prolog rFighterData
-        bla r12, {SelfInducedPhysics}
-        mr rFighterData, r3
-        data.table CommonDataTable
-        data.end r3
-
-        lfs f1, xFreeMovementSpeed(r3)
-        lfs f2, -0x5B54(rtoc) # load 0.0
-
-        lfs f0, 0x620(rFighterData) # left stick x
-        fcmpo cr0, f2, f1
-        beq SetVelY_FreeMovement
-        fmuls f0, f0, f1
-        lfs f1, 0x80(rFighterData)
-        fadds f0, f1, f0
-        stfs f0, 0x80(rFighterData) # set x vel
-
-        SetVelY_FreeMovement:
-            lfs f0, 0x624(rFighterData) # left stick y
-            fcmpo cr0, f2, f0
-            beq Exit_FreeMovement # if stick y == 0.0, just exit
-            lfs f1, xFreeMovementSpeed(r3)            
-            fmuls f0, f0, f1
-            lfs f1, 0x84(rFighterData)
+        data.get r4, masterHandData
+        lfs f1, xHarauLoopXVel(r4)
+        bl HarauMovementPatch
+        b OriginalExit_80151ab0
+    
+        HarauMovementPatch:
+            # inputs
+            # r3 = fighter data
+            # f1 = xVel to add
+            lfs f0, {fdSelfVelX.int}(r3)
             fadds f0, f1, f0
-            stfs f0, 0x84(rFighterData)
-        
-        Exit_FreeMovement:
-            epilog
+            stfs f0, {fdSelfVelX.int}(r3)
             blr
 
-        # Master Hand Wait1 & Wait2 collision patch
-        gecko 0x80150890
-        lwz r3, 0x2C(r3) # fighter data
-        prolog rFighterGObj, rFighterData
-        bla r12, {SelfInducedPhysics}
-        lwz r3, 0(r3) # gobj
-        bla r12, 0x80081d0c
-        epilog
-        blr
+        OriginalExit_80151ab0:
+            ""
 
+        # crazy hand's harau loop physics
+        gecko 0x80157358
+        mr r3, r31
+        data.table CommonDataTable
+        data.end r4
+        data.get r4, crazyHandData
+        lfs f1, xHarauLoopXVel(r4)
+        bl HarauMovementPatch
         gecko.end
 
-const 
+const
     ControllableAllPorts* =
         createCode "MH & CH Controlled by All Ports":
             code:
-                gecko 0x801508b8, lwz r6, 0x65C(r4) # TODO grab doesn't work for MH
+                # TODO grab doesn't work for MH
+                gecko 0x801508b8, lwz r6, 0x65C(r4) # mh
+                gecko 0x80156AFC, lwz r0, 0x65C(r6) # ch
     
     NoLerpMovement* =
         createCode "MH/CH No Smooth Movement":
@@ -151,16 +126,20 @@ const
                 %patchFighterOnLoadMasterHand()
                 %patchGenericMoveToPoint()
 
-    FreeMovement* =
-        createCode "MH/CH Free Movement":
-            code: 
-                %patchFreeMovement()
-
     HarauCleanMovement* =
         createCode "MH/CH Harau Movement Fix":
             code:
                 # TODO this depends on NoLerpMovement...
                 %patchHarauMovementLoop()
 
+    NoAttackStartup* =
+        createCode "MH/CH No Attack Startup":
+            code:
+                # human-controlled master hand laser
+                gecko 0x80150b24
+                bla 0x80152BCC
+                gecko.end
+
+
 when isMainModule:
-    generate "./generated/handstages.asm", ControllableAllPorts, NoLerpMovement, HarauCleanMovement, FreeMovement
+    generate "./generated/handstages.asm", ControllableAllPorts, NoLerpMovement, HarauCleanMovement, NoAttackStartup

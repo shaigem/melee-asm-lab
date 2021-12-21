@@ -9,13 +9,16 @@ type
         fighterDataSize*: int
         itemDataSize*: int
 
-type FighterData* = enum
-    fdScript = 0x3E4
+    FighterData* = enum
+        fdSelfVelX = 0x80
+        fdSelfVelY = 0x84
+        fdelfVelZ = 0x88
+        fdScript = 0x3E4
 
-type Script* = enum
-    sEventTimer = 0x0
-    sFrameTimer = 0x4
-    sCurrent = 0x8
+    Script* = enum
+        sEventTimer = 0x0
+        sFrameTimer = 0x4
+        sCurrent = 0x8
 
 const
     FighterDataOrigSize* = 0x23EC
