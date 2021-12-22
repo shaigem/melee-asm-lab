@@ -14,16 +14,17 @@ const
                 # r4 = hit element
                 # r5 = damage
                 # r6 = move id
-                # r7 = 0 ? air state??
+                # r7 = 0 ? air state?? if 0, vibrate side to side, if 1, up and down
                 # f1 = hitlag multiplier
                 mr r3, r30
                 lwz r4, 0x1860(r30)
                 lwz r5, 0x183C(r30)
                 lwz r6, 0x10(r30)
-                lwz r7, 0xE0(r30)
+                # lwz r7, 0xE0(r30)
+                li r7, 0
                 lfs f1, 0x1960(r30)
                 bla r12, 0x80090594 # call Damage_AddHitlag? func
-                cmpwi r31, 0
+                cmpwi r31, 0 # original code line
                 gecko.end
 
 when isMainModule:
