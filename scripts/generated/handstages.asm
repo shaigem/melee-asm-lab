@@ -73,10 +73,9 @@ data.end r4
 data.get r4, crazyHandData
 lfs f1, xHarauLoopXVel(r4)
 bl HarauMovementPatch
-gecko.end
 # MH/CH No Attack Startup
 # authors: @[]
 # description: 
 gecko 2148862756
-bla 2148871116
+bla r12, 2148871116
 gecko.end

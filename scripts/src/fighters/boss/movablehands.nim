@@ -15,6 +15,17 @@ import ../../melee
     1, 6
 stage.GreatBay = 0x0D  # Great Bay
     0, 3
+
+
+    8015c010 - function moves towards player (follows based on x only)
+    f1 = speed of movement
+
+
+    mh attributes
+    # 0xA0 = Gootsubusuwait # of frames before punching down (default = 80 frames)
+    # 0xA4 = Gootsubusuwait target move speed
+    # 0xB8 = Paatsubusu target move speed
+    # 0x80 = Drill target move speed
     ]#
 
 func patchFighterOnLoadMasterHand(): string =
@@ -60,6 +71,7 @@ func patchFighterOnLoadMasterHand(): string =
 
         lfs f0, xMainMoveSpeed(r3)
         stfs f0, 0x2C(r31)
+
         # 80d43b8c
         lwz r0, 0x8(r4) # orig code line
         gecko.end
@@ -137,7 +149,7 @@ const
             code:
                 # human-controlled master hand laser
                 gecko 0x80150b24
-                bla 0x80152BCC
+                bla r12, 0x80152BCC
                 gecko.end
 
 
