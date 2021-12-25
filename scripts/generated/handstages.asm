@@ -21,7 +21,11 @@ CommonDataTable:
 .float 45.0
 4:
 .float 2.0
-data.struct 0, "", xMainMoveSpeed, xSecondaryMoveSpeed, xStartOffsetX, xStartOffsetY, xFreeMovementSpeed
+5:
+.float 0.0174533
+6:
+.float 0.872665
+data.struct 0, "", xMainMoveSpeed, xSecondaryMoveSpeed, xStartOffsetX, xStartOffsetY, xFreeMovementSpeed, xRadianOneDegree, xRadianFiftyDegrees
 data.table masterHandData
 0:
 .float -1.6
@@ -79,4 +83,133 @@ gecko.end
 # description: 
 gecko 2148862756
 bla r12, 2148871116
+gecko.end
+# MH Point Gun Towards Target
+# authors: @[]
+# description: 
+gecko 2148872788
+mflr r0
+stw r0, 0x00000004(sp)
+stwu sp, 0xFFFFFFB8(sp)
+stw r31, 0x00000044(sp)
+stw r30, 0x00000040(sp)
+data.table CommonDataTable
+data.end r30
+lwz r31, 0x0000002C(r3)
+bla r12, 2148028724
+lwz r0, 0x00002208(r31)
+cmplwi r0, 0
+beq Exit_80153254
+lfs f0, 0xFFFFD688(rtoc)
+stfs f0, 0x0000003C(sp)
+stfs f0, 0x00000038(sp)
+stfs f0, 0x00000034(sp)
+lwz r5, 0(r31)
+addi r3, r31, 0x000000B0
+addi r4, sp, 0x00000034
+lfs f1, 0x0000002C(r31)
+bla r12, 2150020660
+lfs f1, 0xFFFFD688(rtoc)
+lfs f0, 0x00000034(sp)
+fcmpu cr0, f1, f0
+bne lbl_802b6588
+lfs f0, 0x00000038(sp)
+fcmpu cr0, f1, f0
+beq Exit_80153254
+lbl_802b6588:
+lfs f2, 0x00000034(sp)
+addi r3, sp, 0x0000001C
+lfs f1, 0x000000B0(r31)
+fsubs f1, f1, f2
+stfs f1, 0x0000001C(sp)
+lfs f2, 0x00000038(sp)
+lfs f1, 0x000000B4(r31)
+fsubs f1, f1, f2
+stfs f1, 0x00000020(sp)
+lfs f0, 0xFFFFD688(rtoc)
+stfs f0, 0x00000024(sp)
+bla r12, 2147537840
+lfs f1, 0x00000020(sp)
+lfs f2, 0x0000001C(sp)
+bla r12, 2147626032
+fmr f2, f1
+lfs f0, xRadianOneDegree(r30)
+lfs f3, xRadianOneDegree(r30)
+lfs f1, 0x00002340(r31)
+lfs f0, 0xFFFFA818(rtoc)
+fsubs f1, f2, f1
+fcmpo cr0, f1, f0
+bge- CurrentBiggerThanTarget
+fneg f0, f1
+b CheckCurrent
+CurrentBiggerThanTarget:
+fmr f0, f1
+CheckCurrent:
+fcmpo cr0, f0, f3
+ble- HandCurrentLess
+lfs f0, 0xFFFFA818(rtoc)
+fcmpo cr0, f1, f0
+ble- MoveDown
+fmr f0, f3
+b SetRotation
+MoveDown:
+fneg f0, f3
+SetRotation:
+lfs f1, 0x00002340(r31)
+fadds f0, f1, f0
+stfs f0, 0x00002340(r31)
+b Exit_80153254
+HandCurrentLess:
+lfs f1, 0x00002340(r31)
+nop
+stfs f1, 0x00002340(r31)
+Exit_80153254:
+lfs f1, 0x00002340(r31)
+mr r3, r31
+li r4, 0
+bla r12, 2147965228
+lwz r0, 0x0000004C(sp)
+lwz r31, 0x00000044(sp)
+lwz r30, 0x00000040(sp)
+addi sp, sp, 0x00000048
+mtlr r0
+blr
+gecko 2148872516
+stw r0, 0x00002340(r31)
+lwz r0, 0x0000003C(sp)
+gecko 2148873296
+lfs f1, 0x00002340(r31)
+mr r3, r31
+li r4, 0
+bla r12, 2147965228
+lwz r0, 0x00000024(sp)
+gecko 2148873460
+lfs f1, 0x00002340(r30)
+mr r3, r30
+li r4, 0
+bla r12, 2147965228
+mr r3, r29
+gecko 2148873976
+lfs f1, 0x00002340(r31)
+bla r12, 2150785600
+stfs f1, 0x00000060(sp)
+lfs f1, 0x00002340(r31)
+bla r12, 2150786004
+fmr f3, f1
+lfs f1, 0x0000002C(r31)
+fmuls f3, f3, f1
+lfs f2, 0x00000060(sp)
+lfs f0, 0x000000D4(r30)
+fmuls f2, f2, f0
+fmuls f3, f3, f0
+mr r3, r28
+mr r7, r29
+addi r4, sp, 40
+gecko 2150566784
+addi r31, r3, 0
+lwz r3, 0x0000002C(r30)
+lwz r3, 0x00002340(r3)
+lwz r4, 0x00000028(r31)
+stw r3, 0x0000001C(r4)
+gecko 2150567072, nop
 gecko.end

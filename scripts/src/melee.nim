@@ -42,6 +42,7 @@ const
     SelfInducedPhysics* = 0x80085134
     ZeroDataLength* = 0x8000C160
     HumanOrCPUCheck* = 0x800a2040
+    Atan2* = 0x80022c30
 
 func patchFighterDataAllocation*(gameData: GameData; dataSizeToAdd: int): string =
     result = ppc:
