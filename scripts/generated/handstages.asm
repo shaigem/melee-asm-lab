@@ -29,7 +29,9 @@ data.struct 0, "", xMainMoveSpeed, xSecondaryMoveSpeed, xStartOffsetX, xStartOff
 data.table masterHandData
 0:
 .float -1.6
-data.struct 0, "", xHarauLoopXVel
+1:
+.float 3.25
+data.struct 0, "", xHarauLoopXVel, xYubideppou2AnimRate
 data.table crazyHandData
 0:
 .float 1.4
@@ -43,6 +45,9 @@ lfs f0, xSecondaryMoveSpeed(r3)
 stfs f0, 0x00000028(r31)
 lfs f0, xMainMoveSpeed(r3)
 stfs f0, 0x0000002C(r31)
+data.get r3, masterHandData
+lfs f0, xYubideppou2AnimRate(r3)
+stfs f0, 0x000000F4(r31)
 lwz r0, 0x00000008(r4)
 gecko.end
 gecko 2148908832, fmuls f0, f0, f30
@@ -212,4 +217,13 @@ lwz r3, 0x00002340(r3)
 lwz r4, 0x00000028(r31)
 stw r3, 0x0000001C(r4)
 gecko 2150567072, nop
+gecko 2150567396, nop
+gecko 2150567660
+bla r12, 2150029992
+rlwinm. r0, r3, 0, 28, 31
+beq Exit_802f0eec
+li r3, 1
+ba r12, 2150567668
+Exit_802f0eec:
+
 gecko.end

@@ -26,6 +26,7 @@ stage.GreatBay = 0x0D  # Great Bay
     # 0xA4 = Gootsubusuwait target move speed
     # 0xB8 = Paatsubusu target move speed
     # 0x80 = Drill target move speed
+    # 0xF4 = anim speed for rapid fire gun (default = 2.0)
     ]#
 
 func patchFighterOnLoadMasterHand(): string =
@@ -59,7 +60,8 @@ func patchFighterOnLoadMasterHand(): string =
 
         data.table masterHandData
         0: ".float" -1.6
-        data.struct 0, "", xHarauLoopXVel
+        1: ".float" 3.25
+        data.struct 0, "", xHarauLoopXVel, xYubideppou2AnimRate
 
         data.table crazyHandData
         0: ".float" 1.4
@@ -77,6 +79,10 @@ func patchFighterOnLoadMasterHand(): string =
 
         lfs f0, xMainMoveSpeed(r3)
         stfs f0, 0x2C(r31)
+
+        data.get r3, masterHandData
+        lfs f0, xYubideppou2AnimRate(r3)
+        stfs f0, 0xF4(r31)
 
         # 80d43b8c
         lwz r0, 0x8(r4) # orig code line
@@ -257,24 +263,24 @@ func patchYubideppou1Physics(): string =
             mtlr r0
             blr
 
-        
-        gecko 0x80153144
+
         # reset state var to 0 on yubideppou
+        gecko 0x80153144
         stw r0, 0x2340(r31)
         lwz r0, 0x3C(sp) # orig code line
 
-        gecko 0x80153450
         # patch yubideppou2 action state start function
         # apply rotation
+        gecko 0x80153450
         lfs f1, 0x2340(r31)
         mr r3, r31
         li r4, 0
         bla r12, 0x8007592C # ChangeRotation_Yaw
         lwz r0, 0x24(sp) # orig code line
 
-        gecko 0x801534f4
         # patch yubideppou2 interrupt for rapid fire
         # change rotation again since it gets reset upon rapid fire
+        gecko 0x801534f4
         # r29 = fighter gobj
         # r30 = fighter data
         lfs f1, 0x2340(r30)
@@ -283,9 +289,9 @@ func patchYubideppou1Physics(): string =
         bla r12, 0x8007592C # ChangeRotation_Yaw
         mr r3, r29 # orig code line
 
-        gecko 0x801536f8
         # patch yubideppou bullet spawn
         # update velocity directions to match rotation
+        gecko 0x801536f8
         lfs f1, 0x2340(r31)
         bla r12, 0x80326240 # cos
         stfs f1, 0x60(sp)
@@ -306,8 +312,8 @@ func patchYubideppou1Physics(): string =
         mr r7, r29
         addi r4, sp, 40 # orig code line
 
-        gecko 0x802f0b80
         # patch yubideppou bullet adjust rotation
+        gecko 0x802f0b80
         addi r31, r3, 0 # orig line
         lwz r3, 0x2C(r30)
         lwz r3, 0x2340(r3)
@@ -318,6 +324,18 @@ func patchYubideppou1Physics(): string =
         gecko 0x802f0ca0, nop # yubideppou bullet
         gecko 0x802f0de4, nop # yubideppou bullet rapid 
 
+        # patch item environment collision for bullet
+        # make bullets explode upon stage contact instead of bouncing off
+        gecko 0x802f0eec
+        bla r12, 0x8026DAA8 # check for stage collision
+        "rlwinm." r0, r3, 0, 28, 31
+        beq Exit_802f0eec
+
+        li r3, 1
+        ba r12, 0x802f0ef4
+
+        Exit_802f0eec:
+            ""
         gecko.end
 
 
