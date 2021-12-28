@@ -97,10 +97,18 @@ func patchGenericMoveToPoint(): string =
         gecko 0x8015bf38, {patchInstr}
 
         # mh patches
-        gecko 0x80152b78, nop # poke targeting move
-        gecko 0x80153378, nop # gun targeting move
-        gecko 0x80154548, nop # grab targeting move
-        gecko 0x801549e8, nop # player gets out of grab
+        # poke targeting move
+        gecko 0x80152b78, nop
+        gecko 0x80152b48, lfs f0, 0x28(r30) # was 0x2C, use the secondary move speed
+
+        # gun targeting move
+        gecko 0x80153378, nop
+
+        # grab targeting move
+        gecko 0x80154548, nop
+        gecko 0x80154518, lfs f0, 0x28(r30) # was 0x2C, use the secondary move speed
+
+        gecko 0x801549e8, nop # player gets out of grab, disable moving back to starting point
 
 func patchHarauMovementLoop(): string =
     result = ppc:
@@ -231,7 +239,7 @@ func patchYubideppou1Physics(): string =
                 blr
 
         OriginalExit_801533ac:
-            lfs f0, 0x2C(r30)
+            lfs f0, 0x28(r30) # was 0x2C
 
         # reset state var to 0 on yubideppou
         gecko 0x80153144

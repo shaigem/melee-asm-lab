@@ -54,8 +54,10 @@ gecko 2148908832, fmuls f0, f0, f30
 gecko 2148908844, fmuls f0, f0, f30
 gecko 2148908856, fmuls f0, f0, f30
 gecko 2148871032, nop
+gecko 2148870984, lfs f0, 0x00000028(r30)
 gecko 2148873080, nop
 gecko 2148877640, nop
+gecko 2148877592, lfs f0, 0x00000028(r30)
 gecko 2148878824, nop
 # MH/CH Harau Movement Fix
 # authors: @[]
@@ -154,7 +156,7 @@ Epilog_RotTowardsTarget:
 epilog
 blr
 OriginalExit_801533ac:
-lfs f0, 0x0000002C(r30)
+lfs f0, 0x00000028(r30)
 gecko 2148872516
 stw r0, 0x00002340(r31)
 lwz r0, 0x0000003C(sp)
