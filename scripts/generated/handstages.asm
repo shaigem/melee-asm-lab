@@ -14,7 +14,7 @@ CommonDataTable:
 0:
 .float 5.0
 1:
-.float 2.0
+.float 1.0
 2:
 .float 45.0
 3:
@@ -92,93 +92,69 @@ gecko.end
 # MH Point Gun Towards Target
 # authors: @[]
 # description: 
-gecko 2148872788
-mflr r0
-stw r0, 0x00000004(sp)
-stwu sp, 0xFFFFFFB8(sp)
-stw r31, 0x00000044(sp)
-stw r30, 0x00000040(sp)
-data.table CommonDataTable
-data.end r30
-lwz r31, 0x0000002C(r3)
-bla r12, 2148028724
-lwz r0, 0x00002208(r31)
-cmplwi r0, 0
-beq Exit_80153254
+gecko 2148873032
+lwz r3, 0(r31)
+lfs f1, 0x00000028(r30)
+bl RotTowardsTarget
+b OriginalExit_801533ac
+RotTowardsTarget:
+prolog rSrcData, fRotSpeedMulti, xVec3, (0x0000000C)
+lwz rSrcData, 0x0000002C(r3)
+fmr fRotSpeedMulti, f1
+regs (4), rTempVec
+addi rTempVec, sp, sp.xVec3
 lfs f0, 0xFFFFD688(rtoc)
-stfs f0, 0x0000003C(sp)
-stfs f0, 0x00000038(sp)
-stfs f0, 0x00000034(sp)
-lwz r5, 0(r31)
-addi r3, r31, 0x000000B0
-addi r4, sp, 0x00000034
-lfs f1, 0x0000002C(r31)
-bla r12, 2150020660
-lfs f1, 0xFFFFD688(rtoc)
-lfs f0, 0x00000034(sp)
-fcmpu cr0, f1, f0
-bne lbl_802b6588
-lfs f0, 0x00000038(sp)
-fcmpu cr0, f1, f0
-beq Exit_80153254
-lbl_802b6588:
-lfs f2, 0x00000034(sp)
-addi r3, sp, 0x0000001C
-lfs f1, 0x000000B0(r31)
-fsubs f1, f1, f2
-stfs f1, 0x0000001C(sp)
-lfs f2, 0x00000038(sp)
-lfs f1, 0x000000B4(r31)
-fsubs f1, f1, f2
-stfs f1, 0x00000020(sp)
-lfs f0, 0xFFFFD688(rtoc)
-stfs f0, 0x00000024(sp)
-bla r12, 2147537840
-lfs f1, 0x00000020(sp)
-lfs f2, 0x0000001C(sp)
+stfs f0, 0(rTempVec)
+stfs f0, 4(rTempVec)
+stfs f0, 8(rTempVec)
+lwz r5, 0x0000010C(rSrcData)
+bla r12, 2148909576
+lfs f4, 0(rTempVec)
+lfs f3, 0x000000B0(rSrcData)
+fsubs f2, f3, f4
+lfs f4, 4(rTempVec)
+lfs f3, 0x000000B4(rSrcData)
+fsubs f1, f3, f4
 bla r12, 2147626032
-fmr f2, f1
-lfs f0, xRadianOneDegree(r30)
-lfs f3, xRadianOneDegree(r30)
-lfs f1, 0x00002340(r31)
-lfs f0, 0xFFFFA818(rtoc)
-fsubs f1, f2, f1
-fcmpo cr0, f1, f0
-bge- CurrentBiggerThanTarget
+data.table CommonDataTable
+data.end r3
+lfs f3, xRadianOneDegree(r3)
+fmuls f3, f3, fRotSpeedMulti
+lfs f2, 0x00002340(r31)
+lfs f4, 0xFFFFA818(rtoc)
+fsubs f1, f1, f2
+fcmpu cr0, f1, f4
+bge- CurrentBiggerThanTarget_RotTowardsTarget
 fneg f0, f1
-b CheckCurrent
-CurrentBiggerThanTarget:
+b CheckCurrent_RotTowardsTarget
+CurrentBiggerThanTarget_RotTowardsTarget:
 fmr f0, f1
-CheckCurrent:
+CheckCurrent_RotTowardsTarget:
 fcmpo cr0, f0, f3
-ble- HandCurrentLess
-lfs f0, 0xFFFFA818(rtoc)
-fcmpo cr0, f1, f0
-ble- MoveDown
+ble- ClampRot_RotTowardsTarget
+fcmpu cr0, f1, f4
+ble- MoveDown_RotTowardsTarget
 fmr f0, f3
-b SetRotation
-MoveDown:
+b AddToRot_RotTowardsTarget
+MoveDown_RotTowardsTarget:
 fneg f0, f3
-SetRotation:
-lfs f1, 0x00002340(r31)
-fadds f0, f1, f0
-stfs f0, 0x00002340(r31)
-b Exit_80153254
-HandCurrentLess:
-lfs f1, 0x00002340(r31)
-nop
-stfs f1, 0x00002340(r31)
-Exit_80153254:
-lfs f1, 0x00002340(r31)
-mr r3, r31
+AddToRot_RotTowardsTarget:
+fadds f0, f2, f0
+stfs f0, 0x00002340(rSrcData)
+b Rotate_RotTowardsTarget
+ClampRot_RotTowardsTarget:
+fadds f1, f2, f1
+stfs f1, 0x00002340(rSrcData)
+Rotate_RotTowardsTarget:
+lfs f1, 0x00002340(rSrcData)
+mr r3, rSrcData
 li r4, 0
 bla r12, 2147965228
-lwz r0, 0x0000004C(sp)
-lwz r31, 0x00000044(sp)
-lwz r30, 0x00000040(sp)
-addi sp, sp, 0x00000048
-mtlr r0
+Epilog_RotTowardsTarget:
+epilog
 blr
+OriginalExit_801533ac:
+lfs f0, 0x0000002C(r30)
 gecko 2148872516
 stw r0, 0x00002340(r31)
 lwz r0, 0x0000003C(sp)
@@ -218,12 +194,4 @@ lwz r4, 0x00000028(r31)
 stw r3, 0x0000001C(r4)
 gecko 2150567072, nop
 gecko 2150567396, nop
-gecko 2150567660
-bla r12, 2150029992
-rlwinm. r0, r3, 0, 28, 31
-beq Exit_802f0eec
-li r3, 1
-ba r12, 2150567668
-Exit_802f0eec:
-
 gecko.end

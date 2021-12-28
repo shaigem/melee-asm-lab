@@ -39,7 +39,7 @@ func patchFighterOnLoadMasterHand(): string =
             0:
                 ".float" 5.0
             1:
-                ".float" 2.0
+                ".float" 1.0
             2:
                 ".float" 45.0
             3:
@@ -142,127 +142,96 @@ func patchYubideppou1Physics(): string =
     
     ]#
     result = ppc:
-        gecko 0x80153254
-        mflr r0
-        stw r0, 0x4(sp)
-        stwu sp, -0x48(sp)
-        stw r31, 0x44(sp)
-        stw r30, 0x40(sp)
-        data.table CommonDataTable
-        data.end r30
-        lwz r31, 0x2C(r3)
-        bla r12, {SelfInducedPhysics}
-
-        lwz r0, 0x2208(r31)
-        cmplwi r0, 0
-        beq Exit_80153254
-
-        lfs f0, -0x2978(rtoc)
-        stfs f0, 0x3C(sp)
-        stfs f0, 0x38(sp)
-        stfs f0, 0x34(sp)
-        
-        # get closest player?
-#        mr r5, r3
-        lwz r5, 0(r31)
-        addi r3, r31, 0xB0
-        addi r4, sp, 0x34
-        lfs f1, 0x2C(r31)
-        bla r12, 0x8026B634
-
-        # TODO if no players to target check
-
-        # target's x check
-        lfs f1, -0x2978(rtoc)
-        lfs f0, 0x34(sp)
-        fcmpu cr0, f1, f0
-        bne lbl_802b6588
-        # target's y check
-        lfs f0, 0x38(sp)
-        fcmpu cr0, f1, f0
-        beq Exit_80153254
-
-        lbl_802b6588:
+        gecko 0x80153348
+        lwz r3, 0(r31)
+        lfs f1, 0x28(r30)
+        bl RotTowardsTarget
+        b OriginalExit_801533ac
 
 
-            # next for target's pos...
-            # x
-            lfs f2, 0x34(sp)
-            addi r3, sp, 0x1C
-            lfs f1, 0xB0(r31)
-            fsubs f1, f1, f2
-            stfs f1, 0x1C(sp)
-            # y
-            lfs f2, 0x38(sp)
-            lfs f1, 0xB4(r31)
-            fsubs f1, f1, f2
-            stfs f1, 0x20(sp)
-            # z
+        RotTowardsTarget:
+            # inputs
+            # r3 = source gobj
+            # f1 = rotate speed multiplier
+            prolog rSrcData, fRotSpeedMulti, xVec3, (0xC)
+            lwz rSrcData, 0x2C(r3)
+            fmr fRotSpeedMulti, f1
+
+            regs (4), rTempVec
+            addi rTempVec, sp, sp.xVec3
+            # init temp vector to (0, 0, 0)
             lfs f0, -0x2978(rtoc)
-            stfs f0, 0x24(sp)
-            bla r12, 0x8000D3B0
+            stfs f0, 0(rTempVec)
+            stfs f0, 4(rTempVec)
+            stfs f0, 8(rTempVec)
+            # call the get closest player function
+            lwz r5, 0x10C(rSrcData)
+            bla r12, 0x8015c208
+            # TODO check if no valid players...
+            # targeted player's topn coordinates are stored in the stack (r4)
 
-            # get angle?
-            lfs f1, 0x20(sp)
-            lfs f2, 0x1C(sp)
+            # get the vector diff of target's pos & src pos
+            lfs f4, 0(rTempVec) # target's x
+            lfs f3, 0xB0(rSrcData) # src x pos
+            fsubs f2, f3, f4 # diff x
+            lfs f4, 4(rTempVec) # target's y
+            lfs f3, 0xB4(rSrcData) # src y pos
+            fsubs f1, f3, f4 # diff y
+            # calculate desired angle
             bla r12, {Atan2}
-            fmr f2, f1
+            # f1 = desired angle
 
-            lfs f0, xRadianOneDegree(r30)
-#            fcmpo cr0, f1, f0
-#            blt- Exit_80153254
 
-            # f2 = target rotation angle
-            lfs f3, xRadianOneDegree(r30)
-            lfs f1, 0x2340(r31) # current hand rotation
-            lfs f0, -0x57E8(rtoc) # 0
-            fsubs f1, f2, f1
-            fcmpo cr0, f1, f0
-            bge- CurrentBiggerThanTarget
+            data.table CommonDataTable
+            data.end r3
+
+            lfs f3, xRadianOneDegree(r3)
+            fmuls f3, f3, fRotSpeedMulti
+            lfs f2, 0x2340(r31) # current hand rotation
+            lfs f4, -0x57E8(rtoc) # 0
+            fsubs f1, f1, f2 # desired dir - current dir
+            fcmpu cr0, f1, f4
+            bge- CurrentBiggerThanTarget_RotTowardsTarget
             fneg f0, f1
-            b CheckCurrent
+            b CheckCurrent_RotTowardsTarget
 
-            CurrentBiggerThanTarget:
+            CurrentBiggerThanTarget_RotTowardsTarget:
                 fmr f0, f1
             
-            CheckCurrent:
+            CheckCurrent_RotTowardsTarget:
                 fcmpo cr0, f0, f3
-                ble- HandCurrentLess
+                ble- ClampRot_RotTowardsTarget
 
-            lfs f0, -0x57E8(rtoc)
-            fcmpo cr0, f1, f0
-            ble- MoveDown
+            fcmpu cr0, f1, f4
+            ble- MoveDown_RotTowardsTarget
 
             fmr f0, f3
-            b SetRotation
+            b AddToRot_RotTowardsTarget
 
-            MoveDown:
+            MoveDown_RotTowardsTarget:
                 fneg f0, f3
             
-            SetRotation:
-                lfs f1, 0x2340(r31)
-                fadds f0, f1, f0
-                stfs f0, 0x2340(r31)
+            AddToRot_RotTowardsTarget:
+                fadds f0, f2, f0
+                stfs f0, 0x2340(rSrcData)    
+                b Rotate_RotTowardsTarget
 
-            b Exit_80153254
-            
-            HandCurrentLess:
-                lfs f1, 0x2340(r31)
-                nop
-                stfs f1, 0x2340(r31)
+            ClampRot_RotTowardsTarget:
+                fadds f1, f2, f1
+                stfs f1, 0x2340(rSrcData)
 
-        Exit_80153254:
-            lfs f1, 0x2340(r31)
-            mr r3, r31
-            li r4, 0
-            bla r12, 0x8007592C # ChangeRotation_Yaw
-            lwz r0, 0x4C(sp)
-            lwz r31, 0x44(sp)
-            lwz r30, 0x40(sp)
-            addi sp, sp, 0x48
-            mtlr r0
-            blr
+            Rotate_RotTowardsTarget:
+                lfs f1, 0x2340(rSrcData)
+                mr r3, rSrcData
+                li r4, 0
+                bla r12, 0x8007592C # ChangeRotation_Yaw
 
+            Epilog_RotTowardsTarget:
+                epilog
+                blr
+
+        OriginalExit_801533ac:
+            lfs f0, 0x2C(r30)
 
         # reset state var to 0 on yubideppou
         gecko 0x80153144
@@ -324,7 +293,7 @@ func patchYubideppou1Physics(): string =
         gecko 0x802f0ca0, nop # yubideppou bullet
         gecko 0x802f0de4, nop # yubideppou bullet rapid 
 
-        # patch item environment collision for bullet
+#[         # patch item environment collision for bullet
         # make bullets explode upon stage contact instead of bouncing off
         gecko 0x802f0eec
         bla r12, 0x8026DAA8 # check for stage collision
@@ -335,7 +304,7 @@ func patchYubideppou1Physics(): string =
         ba r12, 0x802f0ef4
 
         Exit_802f0eec:
-            ""
+            "" ]#
         gecko.end
 
 
