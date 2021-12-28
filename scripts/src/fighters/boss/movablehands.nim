@@ -39,7 +39,7 @@ func patchFighterOnLoadMasterHand(): string =
             0:
                 ".float" 5.0
             1:
-                ".float" 1.0
+                ".float" 2.0
             2:
                 ".float" 45.0
             3:
@@ -150,21 +150,22 @@ func patchYubideppou1Physics(): string =
     
     ]#
     result = ppc:
+        # yubideppou1 physics patch
         gecko 0x80153348
         lwz r3, 0(r31)
         lfs f1, 0x28(r30)
         bl RotTowardsTarget
         b OriginalExit_801533ac
 
-
+        # function for rotating fighter towards target
         RotTowardsTarget:
+            # uses 0x2340 of fighter data to store current rotation
             # inputs
             # r3 = source gobj
             # f1 = rotate speed multiplier
             prolog rSrcData, fRotSpeedMulti, xVec3, (0xC)
             lwz rSrcData, 0x2C(r3)
             fmr fRotSpeedMulti, f1
-
             regs (4), rTempVec
             addi rTempVec, sp, sp.xVec3
             # init temp vector to (0, 0, 0)
@@ -188,11 +189,8 @@ func patchYubideppou1Physics(): string =
             # calculate desired angle
             bla r12, {Atan2}
             # f1 = desired angle
-
-
             data.table CommonDataTable
             data.end r3
-
             lfs f3, xRadianOneDegree(r3)
             fmuls f3, f3, fRotSpeedMulti
             lfs f2, 0x2340(r31) # current hand rotation
@@ -232,7 +230,7 @@ func patchYubideppou1Physics(): string =
                 lfs f1, 0x2340(rSrcData)
                 mr r3, rSrcData
                 li r4, 0
-                bla r12, 0x8007592C # ChangeRotation_Yaw
+                bla r12, {FighterSetBoneRotX}
 
             Epilog_RotTowardsTarget:
                 epilog
@@ -241,49 +239,60 @@ func patchYubideppou1Physics(): string =
         OriginalExit_801533ac:
             lfs f0, 0x28(r30) # was 0x2C
 
-        # reset state var to 0 on yubideppou
+        # reset rotation state var to 0 on yubideppou1 change action state
         gecko 0x80153144
+        # r0 = 0
         stw r0, 0x2340(r31)
         lwz r0, 0x3C(sp) # orig code line
 
         # patch yubideppou2 action state start function
         # apply rotation
         gecko 0x80153450
+        # r31 = fighter data
         lfs f1, 0x2340(r31)
         mr r3, r31
         li r4, 0
-        bla r12, 0x8007592C # ChangeRotation_Yaw
+        bla r12, {FighterSetBoneRotX}
         lwz r0, 0x24(sp) # orig code line
 
         # patch yubideppou2 interrupt for rapid fire
-        # change rotation again since it gets reset upon rapid fire
+        # change rotation again since it gets reset when changing action state to yubideppou2 for rapid fire
         gecko 0x801534f4
         # r29 = fighter gobj
         # r30 = fighter data
         lfs f1, 0x2340(r30)
         mr r3, r30
         li r4, 0
-        bla r12, 0x8007592C # ChangeRotation_Yaw
+        bla r12, {FighterSetBoneRotX}
         mr r3, r29 # orig code line
 
         # patch yubideppou bullet spawn
         # update velocity directions to match rotation
         gecko 0x801536f8
-        lfs f1, 0x2340(r31)
-        bla r12, 0x80326240 # cos
-        stfs f1, 0x60(sp)
+        # f1 needs to be facing direction of fighter data
+        # f2 needs to be x velocity of bullet
+        # f3 needs to be y velocity of bullet
+        regs (1), fCurrentRot, fXVel, fYVel
 
-        lfs f1, 0x2340(r31)
-        bla r12, 0x803263d4 # sin
+        # calculate y velocity of bullet based on current fighter rotation
+        lfs fCurrentRot, 0x2340(r31)
+        bla r12, {Sin}
+        fmr f31, f1 # save y vel for later use
 
-        fmr f3, f1
+        # calculate x velocity of bullet based on current fighter rotation
+        lfs fCurrentRot, 0x2340(r31)
+        bla r12, {Cos} # cos
+        fmr fXVel, f1
+
+        # load facing direction and fix y bullet direction
+        fmr fYVel, f31 # restore y vel
         lfs f1, 0x2C(r31) # facing direction
-        fmuls f3, f3, f1
-        lfs f2, 0x60(sp)
+        fmuls fYVel, fYVel, f1 # fix y bullet velocity direction
         
+        # apply speed multiplier
         lfs f0, 0xD4(r30) # 5.0 is now our speed multiplier
-        fmuls f2, f2, f0
-        fmuls f3, f3, f0
+        fmuls fXVel, fXVel, f0
+        fmuls fYVel, fYVel, f0
         
         mr r3, r28
         mr r7, r29
@@ -292,10 +301,10 @@ func patchYubideppou1Physics(): string =
         # patch yubideppou bullet adjust rotation
         gecko 0x802f0b80
         addi r31, r3, 0 # orig line
-        lwz r3, 0x2C(r30)
-        lwz r3, 0x2340(r3)
-        lwz r4, 0x28(r31)
-        stw r3, 0x1C(r4)
+        lwz r3, 0x2C(r30) # fighter data
+        lwz r3, 0x2340(r3) # get our current direction/rotation var
+        lwz r4, 0x28(r31) # get jobj of bullet
+        stw r3, 0x1C(r4) # set bone rot x
 
         # don't adjust bullet rotation with hardcoded attribute
         gecko 0x802f0ca0, nop # yubideppou bullet

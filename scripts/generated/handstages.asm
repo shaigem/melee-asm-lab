@@ -14,7 +14,7 @@ CommonDataTable:
 0:
 .float 5.0
 1:
-.float 1.0
+.float 2.0
 2:
 .float 45.0
 3:
@@ -173,18 +173,19 @@ li r4, 0
 bla r12, 2147965228
 mr r3, r29
 gecko 2148873976
-lfs f1, 0x00002340(r31)
-bla r12, 2150785600
-stfs f1, 0x00000060(sp)
-lfs f1, 0x00002340(r31)
+regs (1), fCurrentRot, fXVel, fYVel
+lfs fCurrentRot, 0x00002340(r31)
 bla r12, 2150786004
-fmr f3, f1
+fmr f31, f1
+lfs fCurrentRot, 0x00002340(r31)
+bla r12, 2150785600
+fmr fXVel, f1
+fmr fYVel, f31
 lfs f1, 0x0000002C(r31)
-fmuls f3, f3, f1
-lfs f2, 0x00000060(sp)
+fmuls fYVel, fYVel, f1
 lfs f0, 0x000000D4(r30)
-fmuls f2, f2, f0
-fmuls f3, f3, f0
+fmuls fXVel, fXVel, f0
+fmuls fYVel, fYVel, f0
 mr r3, r28
 mr r7, r29
 addi r4, sp, 40

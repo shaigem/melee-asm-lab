@@ -43,6 +43,9 @@ const
     ZeroDataLength* = 0x8000C160
     HumanOrCPUCheck* = 0x800a2040
     Atan2* = 0x80022c30
+    FighterSetBoneRotX* = 0x8007592C
+    Sin* = 0x803263d4
+    Cos* = 0x80326240
 
 func patchFighterDataAllocation*(gameData: GameData; dataSizeToAdd: int): string =
     result = ppc:
