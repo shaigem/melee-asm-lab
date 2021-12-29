@@ -86,6 +86,17 @@ gecko 0x8027058C
     li r5, 8
     Exit3:
 
+# Patch for Subaction_FastForward
+gecko 0x80073430
+    subi r0, r28, 10 # orig code line
+    cmpwi r28, eventId # Hitbox Extension Custom ID
+    bne OriginalExit_80073430
+    lwz r4, 0x8(r29) # current action ptr
+    addi r4, r4, 8
+    stw r4, 0x8(r29)
+    ba r12, 0x80073450
+    OriginalExit_80073430:
+
 # Patch for FastForwardSubactionPointer2
 gecko 0x80073578
     cmpwi r28, eventId
