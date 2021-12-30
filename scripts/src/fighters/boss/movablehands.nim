@@ -25,6 +25,8 @@ stage.GreatBay = 0x0D  # Great Bay
     # 0xA0 = Gootsubusuwait # of frames before punching down (default = 80 frames)
     # 0xA4 = Gootsubusuwait target move speed
     # 0xB8 = Paatsubusu target move speed
+    # 0xBC = Paatsubusu move to x start up
+    # 0xC0 = Paatsubusu move to y start up
     # 0x80 = Drill target move speed
     # 0xF4 = anim speed for rapid fire gun (default = 2.0)
     ]#
@@ -49,14 +51,17 @@ func patchFighterOnLoadMasterHand(): string =
             5:
                 ".float" 0.0174533
             6:
-                ".float" 0.872665
+                ".float" 93
+            7:
+                ".float" 42.0
         data.struct 0, "", xMainMoveSpeed, 
             xSecondaryMoveSpeed,
             xStartOffsetX,
             xStartOffsetY,
             xFreeMovementSpeed,
             xRadianOneDegree,
-            xRadianFiftyDegrees
+            xPaatsubusuStartFrame,
+            xPaatsubusuStartY
 
         data.table masterHandData
         0: ".float" -1.6
@@ -79,6 +84,9 @@ func patchFighterOnLoadMasterHand(): string =
 
         lfs f0, xMainMoveSpeed(r3)
         stfs f0, 0x2C(r31)
+
+        lfs f0, xPaatsubusuStartY(r3)
+        stfs f0, 0xC0(r31)
 
         data.get r3, masterHandData
         lfs f0, xYubideppou2AnimRate(r3)
@@ -109,6 +117,7 @@ func patchGenericMoveToPoint(): string =
         gecko 0x80154518, lfs f0, 0x28(r30) # was 0x2C, use the secondary move speed
 
         gecko 0x801549e8, nop # player gets out of grab, disable moving back to starting point
+        gecko 0x80152334, nop # used to set the x velocity of hand to 0 in drill physics
 
 func patchHarauMovementLoop(): string =
     result = ppc:
@@ -159,6 +168,7 @@ func patchYubideppou1Physics(): string =
 
         # function for rotating fighter towards target
         RotTowardsTarget:
+            # TODO to make this function reuseable, rewrite it to not use 0x2340 state_var
             # uses 0x2340 of fighter data to store current rotation
             # inputs
             # r3 = source gobj
@@ -324,6 +334,73 @@ func patchYubideppou1Physics(): string =
             "" ]#
         gecko.end
 
+func patchPaatsubusu*(): string =
+    # TODO customizable move speeds for gootsubusuwait? what if paatsubusu targets faster or slower?
+    const 
+        Gootsubusuup = 0x80152370
+    const
+        PaatsubusuActionStateId = 358
+        GootsubusudownActionStateId = 357
+        StateVarActionStateId = 0x2394
+        StateVarStartFrame = 0x2390
+    result = ppc:
+        # master hand research
+        # TODO for crazy hand now
+        #[mh research for gootsubusuup
+        
+        355/309 = gootsubusuup
+        801509D0 = player inputs this move
+        80150608 = cpu inputs this move
+        function 0x80152370
+        01 35 00 00 00 00 01 00 00 00 80 15 23 BC 80 15 24 14 80 15 24 58 80 15 24 78 80 07 61 C8
+        interrupt cb = 801523BC
+        - on frame end, instr at 801523f0 calls function 8015247C which is gootsubusuwait
+
+        356/310 = gootsubusuwait
+        interrput cb = 801524C8
+        - after var 0x2348 reaches 0, call func_801525E0 (gootsubusudown)
+
+        paatsubusu
+        358/312 = paatsubusu
+        801526D8 = start function
+        ]#
+        
+        # patch mh gootsubusuup function to use custom state_vars to store gootsubusudown
+        gecko 0x801523a8
+        # purpose of this patch is to always reset the state var to the default gootsubusudown action state
+        # r31 = fighter gobj
+        lwz r3, 0x2C(r31)
+        li r0, {GootsubusudownActionStateId}
+        stw r0, {StateVarActionStateId}(f3)
+        li r0, 0
+        stw r0, {StateVarStartFrame}(f3)
+        lwz r0, 0x1C(sp) # orig code line
+
+        # patch mh paatsubusu action state function to use gootsubusuup
+        gecko 0x80152708
+        # r3 = fighter gobj
+        # r31 = fighter data
+        # r30 = fighter gobj
+        bla r12, {Gootsubusuup}
+        li r0, {PaatsubusuActionStateId}
+        stw r0, {StateVarActionStateId}(r31)
+        data.table CommonDataTable
+        data.end r3
+        lfs f0, xPaatsubusuStartFrame(r3)
+        stfs f0, {StateVarStartFrame}(r31)
+        ba r12, 0x80152718 # epilog of function
+
+        # patch mh gootsubusudown to use paatsubusu
+        gecko 0x8015260c
+        # r5 = fighter data
+        lwz r4, {StateVarActionStateId}(r5)
+        lfs f1, {StateVarStartFrame}(r5)
+        OriginalExit_80152520:
+            li r5, 0 # original code line
+
+        # patch to make mh paatsubusu unable to move while slapped down
+        gecko 0x801527f4, fmr f1, f0 # set frames elasped to 1
+        gecko.end
 
 
 const
@@ -335,7 +412,7 @@ const
                 gecko 0x80156AFC, lwz r0, 0x65C(r6) # ch
     
     NoLerpMovement* =
-        createCode "MH/CH No Smooth Movement":
+        createCode "MH/CH No Lerp Movement":
             code: 
                 %patchFighterOnLoadMasterHand()
                 %patchGenericMoveToPoint()
@@ -349,7 +426,12 @@ const
     GunPointTowards* =
         createCode "MH Point Gun Towards Target":
             code:
-                %patchYubideppou1Physics()     
+                %patchYubideppou1Physics()
+
+    PaatsubusuFix* =
+        createCode "MH/CH Paatsubusu Uses Gootsubusu Action States":
+            code:
+                %patchPaatsubusu()
 
     NoAttackStartup* =
         createCode "MH/CH No Attack Startup":
@@ -361,4 +443,4 @@ const
 
 
 when isMainModule:
-    generate "./generated/handstages.asm", ControllableAllPorts, NoLerpMovement, HarauCleanMovement, NoAttackStartup, GunPointTowards
+    generate "./generated/handstages.asm", ControllableAllPorts, NoLerpMovement, HarauCleanMovement, NoAttackStartup, GunPointTowards, PaatsubusuFix

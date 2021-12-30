@@ -5,7 +5,7 @@ punkpc ppc
 # description: 
 gecko 2148862136, lwz r6, 0x0000065C(r4)
 gecko 2148887292, lwz r0, 0x0000065C(r6)
-# MH/CH No Smooth Movement
+# MH/CH No Lerp Movement
 # authors: @[]
 # description: 
 gecko 2148859064
@@ -24,8 +24,10 @@ CommonDataTable:
 5:
 .float 0.0174533
 6:
-.float 0.872665
-data.struct 0, "", xMainMoveSpeed, xSecondaryMoveSpeed, xStartOffsetX, xStartOffsetY, xFreeMovementSpeed, xRadianOneDegree, xRadianFiftyDegrees
+.float 93
+7:
+.float 42.0
+data.struct 0, "", xMainMoveSpeed, xSecondaryMoveSpeed, xStartOffsetX, xStartOffsetY, xFreeMovementSpeed, xRadianOneDegree, xPaatsubusuStartFrame, xPaatsubusuStartY
 data.table masterHandData
 0:
 .float -1.6
@@ -45,6 +47,8 @@ lfs f0, xSecondaryMoveSpeed(r3)
 stfs f0, 0x00000028(r31)
 lfs f0, xMainMoveSpeed(r3)
 stfs f0, 0x0000002C(r31)
+lfs f0, xPaatsubusuStartY(r3)
+stfs f0, 0x000000C0(r31)
 data.get r3, masterHandData
 lfs f0, xYubideppou2AnimRate(r3)
 stfs f0, 0x000000F4(r31)
@@ -59,6 +63,7 @@ gecko 2148873080, nop
 gecko 2148877640, nop
 gecko 2148877592, lfs f0, 0x00000028(r30)
 gecko 2148878824, nop
+gecko 2148868916, nop
 # MH/CH Harau Movement Fix
 # authors: @[]
 # description: 
@@ -197,4 +202,30 @@ lwz r4, 0x00000028(r31)
 stw r3, 0x0000001C(r4)
 gecko 2150567072, nop
 gecko 2150567396, nop
+gecko.end
+# MH/CH Paatsubusu Uses Gootsubusu Action States
+# authors: @[]
+# description: 
+gecko 2148869032
+lwz r3, 0x0000002C(r31)
+li r0, 357
+stw r0, 9108(f3)
+li r0, 0
+stw r0, 9104(f3)
+lwz r0, 0x0000001C(sp)
+gecko 2148869896
+bla r12, 2148868976
+li r0, 358
+stw r0, 9108(r31)
+data.table CommonDataTable
+data.end r3
+lfs f0, xPaatsubusuStartFrame(r3)
+stfs f0, 9104(r31)
+ba r12, 2148869912
+gecko 2148869644
+lwz r4, 9108(r5)
+lfs f1, 9104(r5)
+OriginalExit_80152520:
+li r5, 0
+gecko 2148870132, fmr f1, f0
 gecko.end
