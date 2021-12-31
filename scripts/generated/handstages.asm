@@ -209,23 +209,43 @@ gecko.end
 gecko 2148869032
 lwz r3, 0x0000002C(r31)
 li r0, 357
-stw r0, 9108(f3)
+stw r0, 9108(r3)
 li r0, 0
-stw r0, 9104(f3)
+stw r0, 9104(r3)
+lwz r0, 0x0000001C(sp)
+gecko 2148890912
+lwz r3, 0x0000002C(r31)
+li r0, 353
+stw r0, 9108(r3)
+li r0, 0
+stw r0, 9104(r3)
 lwz r0, 0x0000001C(sp)
 gecko 2148869896
 bla r12, 2148868976
-li r0, 358
-stw r0, 9108(r31)
+li r3, 358
+stw r3, 9108(r31)
 data.table CommonDataTable
 data.end r3
 lfs f0, xPaatsubusuStartFrame(r3)
 stfs f0, 9104(r31)
 ba r12, 2148869912
+gecko 2148891776
+bla r12, 2148890856
+li r3, 354
+stw r3, 9108(r31)
+data.table CommonDataTable
+data.end r3
+lfs f0, xPaatsubusuStartFrame(r3)
+stfs f0, 9104(r31)
+ba r12, 2148891792
 gecko 2148869644
 lwz r4, 9108(r5)
 lfs f1, 9104(r5)
-OriginalExit_80152520:
+li r5, 0
+gecko 2148891524
+lwz r4, 9108(r5)
+lfs f1, 9104(r5)
 li r5, 0
 gecko 2148870132, fmr f1, f0
+gecko 2148892012, fmr f1, f0
 gecko.end

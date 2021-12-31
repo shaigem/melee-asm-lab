@@ -337,10 +337,13 @@ func patchYubideppou1Physics(): string =
 func patchPaatsubusu*(): string =
     # TODO customizable move speeds for gootsubusuwait? what if paatsubusu targets faster or slower?
     const 
-        Gootsubusuup = 0x80152370
+        MasterHandGootsubusuup = 0x80152370
+        CrazyHandGootsubusuup = 0x801578E8
     const
-        PaatsubusuActionStateId = 358
-        GootsubusudownActionStateId = 357
+        MhPaatsubusuActionStateId = 358
+        ChPaatsubusuActionStateId = 354
+        MhGootsubusudownActionStateId = 357
+        ChGootsubusudownActionStateId = 353
         StateVarActionStateId = 0x2394
         StateVarStartFrame = 0x2390
     result = ppc:
@@ -363,43 +366,76 @@ func patchPaatsubusu*(): string =
         paatsubusu
         358/312 = paatsubusu
         801526D8 = start function
+
+        crazy hand research
+        354/308 = paatsubusu
+        CrazyHandGootsubusuup = 0x801578E8
+
         ]#
         
         # patch mh gootsubusuup function to use custom state_vars to store gootsubusudown
-        gecko 0x801523a8
+        gecko 0x801523a8 # for mh
         # purpose of this patch is to always reset the state var to the default gootsubusudown action state
         # r31 = fighter gobj
         lwz r3, 0x2C(r31)
-        li r0, {GootsubusudownActionStateId}
-        stw r0, {StateVarActionStateId}(f3)
+        li r0, {MhGootsubusudownActionStateId}
+        stw r0, {StateVarActionStateId}(r3)
         li r0, 0
-        stw r0, {StateVarStartFrame}(f3)
+        stw r0, {StateVarStartFrame}(r3)
         lwz r0, 0x1C(sp) # orig code line
 
-        # patch mh paatsubusu action state function to use gootsubusuup
-        gecko 0x80152708
+        # patch ch gootsubusuup function to use custom state_vars to store gootsubusudown
+        gecko 0x80157920 # for ch
+        lwz r3, 0x2C(r31)
+        li r0, {ChGootsubusudownActionStateId}
+        stw r0, {StateVarActionStateId}(r3)
+        li r0, 0
+        stw r0, {StateVarStartFrame}(r3)
+        lwz r0, 0x1C(sp) # orig code line
+
+        # patch paatsubusu action state functions to use gootsubusuup
+        gecko 0x80152708 # for mh
         # r3 = fighter gobj
         # r31 = fighter data
         # r30 = fighter gobj
-        bla r12, {Gootsubusuup}
-        li r0, {PaatsubusuActionStateId}
-        stw r0, {StateVarActionStateId}(r31)
+        bla r12, {MasterHandGootsubusuup}
+        li r3, {MhPaatsubusuActionStateId}
+        stw r3, {StateVarActionStateId}(r31)
         data.table CommonDataTable
         data.end r3
         lfs f0, xPaatsubusuStartFrame(r3)
         stfs f0, {StateVarStartFrame}(r31)
         ba r12, 0x80152718 # epilog of function
 
+        gecko 0x80157c80 # for ch
+        # r3 = fighter gobj
+        # r31 = fighter data
+        # r30 = fighter gobj
+        bla r12, {CrazyHandGootsubusuup}
+        li r3, {ChPaatsubusuActionStateId}
+        stw r3, {StateVarActionStateId}(r31)
+        data.table CommonDataTable
+        data.end r3
+        lfs f0, xPaatsubusuStartFrame(r3)
+        stfs f0, {StateVarStartFrame}(r31)
+        ba r12, 0x80157c90 # epilog of function
+
         # patch mh gootsubusudown to use paatsubusu
         gecko 0x8015260c
         # r5 = fighter data
         lwz r4, {StateVarActionStateId}(r5)
         lfs f1, {StateVarStartFrame}(r5)
-        OriginalExit_80152520:
-            li r5, 0 # original code line
+        li r5, 0 # original code line
 
-        # patch to make mh paatsubusu unable to move while slapped down
-        gecko 0x801527f4, fmr f1, f0 # set frames elasped to 1
+        # patch ch gootsubusudown to use paatsubusu
+        gecko 0x80157b84
+        lwz r4, {StateVarActionStateId}(r5)
+        lfs f1, {StateVarStartFrame}(r5)
+        li r5, 0 # original code line
+
+        # patch to make paatsubusu unable to move while slapped down
+        gecko 0x801527f4, fmr f1, f0 # mh set frames elasped to 1
+        gecko 0x80157d6c, fmr f1, f0 # ch set frames elasped to 1
         gecko.end
 
 
