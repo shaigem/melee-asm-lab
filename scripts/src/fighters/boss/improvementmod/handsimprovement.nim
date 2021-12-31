@@ -1,4 +1,5 @@
-import ../../melee
+import ../../../melee
+import freemovement
 
 
 #[ 
@@ -343,7 +344,6 @@ func patchPaatsubusu*(): string =
         StateVarStartFrame = 0x2390
     result = ppc:
         # master hand research
-        # TODO for crazy hand now
         #[mh research for gootsubusuup
         
         355/309 = gootsubusuup
@@ -432,7 +432,6 @@ func patchPaatsubusu*(): string =
         gecko 0x801527f4, fmr f1, f0 # mh set frames elasped to 1
         gecko 0x80157d6c, fmr f1, f0 # ch set frames elasped to 1
         gecko.end
-
 
 const
     ControllableAllPorts* =
