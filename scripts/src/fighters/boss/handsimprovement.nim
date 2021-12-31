@@ -92,7 +92,6 @@ func patchFighterOnLoadMasterHand(): string =
         lfs f0, xYubideppou2AnimRate(r3)
         stfs f0, 0xF4(r31)
 
-        # 80d43b8c
         lwz r0, 0x8(r4) # orig code line
         gecko.end
 
@@ -154,10 +153,6 @@ func patchHarauMovementLoop(): string =
         gecko.end
 
 func patchYubideppou1Physics(): string =
-    #[ 00 00 01 3E 00 00 00 00 01 00 00 00 80 15 31 60 80 15 32 10 80 15 32 54 80 15 33 C8 80 07 61 C8 
-    80153254 - physics cb follow player
-    
-    ]#
     result = ppc:
         # yubideppou1 physics patch
         gecko 0x80153348
