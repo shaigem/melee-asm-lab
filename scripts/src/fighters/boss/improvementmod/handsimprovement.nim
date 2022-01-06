@@ -1,5 +1,5 @@
 import ../../../melee
-import freemovement
+import ../controlallports
 
 
 #[ 
@@ -44,21 +44,15 @@ func patchFighterOnLoadMasterHand(): string =
             1:
                 ".float" 2.0
             2:
-                ".float" 45.0
-            3:
-                ".float" 45.0
-            4:
                 ".float" 2.0
-            5:
+            3:
                 ".float" 0.0174533
-            6:
+            4:
                 ".float" 93
-            7:
+            5:
                 ".float" 42.0
         data.struct 0, "", xMainMoveSpeed, 
             xSecondaryMoveSpeed,
-            xStartOffsetX,
-            xStartOffsetY,
             xFreeMovementSpeed,
             xRadianOneDegree,
             xPaatsubusuStartFrame,
@@ -67,18 +61,21 @@ func patchFighterOnLoadMasterHand(): string =
         data.table masterHandData
         0: ".float" -1.6
         1: ".float" 3.25
-        data.struct 0, "", xHarauLoopXVel, xYubideppou2AnimRate
+        2: ".float" 45.0
+        3: ".float" 45.0
+        data.struct 0, "mh.", xHarauLoopXVel, 
+            xYubideppou2AnimRate,
+            xStartOffsetX,
+            xStartOffsetY
 
         data.table crazyHandData
         0: ".float" 1.4
-        data.struct 0, "", xHarauLoopXVel
+        1: ".float" -45.0
+        2: ".float" -45.0
+        data.struct 0, "ch.", xHarauLoopXVel,
+            xStartOffsetX,
+            xStartOffsetY
         data.end r3
-
-        lfs f0, xStartOffsetX(r3)
-        stfs f0, 0x30(r31)
-
-        lfs f0, xStartOffsetY(r3)
-        stfs f0, 0x34(r31)
 
         lfs f0, xSecondaryMoveSpeed(r3)
         stfs f0, 0x28(r31)
@@ -89,9 +86,37 @@ func patchFighterOnLoadMasterHand(): string =
         lfs f0, xPaatsubusuStartY(r3)
         stfs f0, 0xC0(r31)
 
+        # start mh specific attribute patches
         data.get r3, masterHandData
-        lfs f0, xYubideppou2AnimRate(r3)
+        lfs f0, mh.xStartOffsetX(r3)
+        stfs f0, 0x30(r31)
+
+        lfs f0, mh.xStartOffsetY(r3)
+        stfs f0, 0x34(r31)
+
+        lfs f0, mh.xYubideppou2AnimRate(r3)
         stfs f0, 0xF4(r31)
+
+        lwz r0, 0x8(r4) # orig code line
+
+        gecko 0x80155e68 # patch fighter on load for crazy hand
+        data.table CommonDataTable
+        data.end r3
+
+        lfs f0, xSecondaryMoveSpeed(r3)
+        stfs f0, 0x10(r31)
+
+        lfs f0, xMainMoveSpeed(r3)
+        stfs f0, 0x14(r31)
+
+        # ch specific attribute patches
+        data.get r3, crazyHandData
+        # TODO need to redo how custom data works...    
+        # lfs f0, ch.xStartOffsetX(r3)
+        # stfs f0, 0x18(r31)
+
+        # lfs f0, ch.xStartOffsetY(r3)
+        # stfs f0, 0x1C(r31)
 
         lwz r0, 0x8(r4) # orig code line
         gecko.end
@@ -115,9 +140,19 @@ func patchGenericMoveToPoint(): string =
         # grab targeting move
         gecko 0x80154548, nop
         gecko 0x80154518, lfs f0, 0x28(r30) # was 0x2C, use the secondary move speed
-
         gecko 0x801549e8, nop # player gets out of grab, disable moving back to starting point
+
         gecko 0x80152334, nop # used to set the x velocity of hand to 0 in drill physics
+
+        # ch patches
+        # poke targeting move
+        gecko 0x801580f0, nop
+        gecko 0x801580c0, lfs f0, 0x10(r30) # was 0x14, use the secondary move speed
+
+        # grab targeting move
+        gecko 0x80158da4, nop
+        gecko 0x80158d74, lfs f0, 0x10(r30) # was 0x14, use the secondary move speed
+        gecko 0x80159244, nop # player gets out of grab, disable moving back to starting point
 
 func patchHarauMovementLoop(): string =
     result = ppc:
@@ -433,14 +468,17 @@ func patchPaatsubusu*(): string =
         gecko 0x80157d6c, fmr f1, f0 # ch set frames elasped to 1
         gecko.end
 
+func patchCrazyHandLaserSpawn(): string =
+    let codeLine = "li r7, 0x7F"
+    result = ppc:
+        gecko 0x80158584, {codeLine}
+        gecko 0x801585B8, {codeLine}
+        gecko 0x801585EC, {codeLine}
+        gecko 0x80158620, {codeLine}
+#    for i in 0..3:
+#        result &= "gecko " & $(baseAddr + (i * 52)) & ", " & codeLine & "\n"
+
 const
-    ControllableAllPorts* =
-        createCode "MH & CH Controlled by All Ports":
-            code:
-                # TODO grab doesn't work for MH
-                gecko 0x801508b8, lwz r6, 0x65C(r4) # mh
-                gecko 0x80156AFC, lwz r0, 0x65C(r6) # ch
-    
     NoLerpMovement* =
         createCode "MH/CH No Lerp Movement":
             code: 
@@ -471,6 +509,11 @@ const
                 bla r12, 0x80152BCC
                 gecko.end
 
+    CHUseOwnLasers* =
+        createCode "CH Uses His Own Lasers":
+            code:
+                %patchCrazyHandLaserSpawn()
+
 
 when isMainModule:
-    generate "./generated/handstages.asm", ControllableAllPorts, NoLerpMovement, HarauCleanMovement, NoAttackStartup, GunPointTowards, PaatsubusuFix
+    generate "./generated/handstages.asm", ControllableAnyPorts, NoLerpMovement, HarauCleanMovement, NoAttackStartup, GunPointTowards, PaatsubusuFix, CHUseOwnLasers

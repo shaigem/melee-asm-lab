@@ -15,4 +15,5 @@ requires "geckon >= 0.1.0"
 
 task generate, "generate all of the codes":
     exec "nim r ./" & srcDir & "/fighters/boss/vibrateonhit"
+    exec "nim r ./" & srcDir & "/fighters/boss/controlallports"
     exec "nim r ./" & srcDir & "/fighters/boss/improvementmod/handsimprovement"

@@ -1,9 +1,15 @@
 .include "punkpc.s"
 punkpc ppc
-# MH & CH Controlled by All Ports
-# authors: @[]
-# description: 
-gecko 2148862136, lwz r6, 0x0000065C(r4)
+# MH/CH Control with Any Ports
+# authors: @["sushie", "Achilles1515"]
+# description: Enables you to control MH/CH with any ports instead of being restricted to ports 3 & 4
+gecko 2148862136
+regs rInputStructStart, rFighterData, (6), rInputStruct
+lbz rInputStruct, 0x0000000C(rFighterData)
+mulli rInputStruct, rInputStruct, 0x00000044
+add rInputStruct, rInputStruct, rInputStructStart
+lwz r6, 0(rInputStruct)
+gecko.end
 gecko 2148887292, lwz r0, 0x0000065C(r6)
 # MH/CH No Lerp Movement
 # authors: @[]
@@ -16,33 +22,33 @@ CommonDataTable:
 1:
 .float 2.0
 2:
-.float 45.0
-3:
-.float 45.0
-4:
 .float 2.0
-5:
+3:
 .float 0.0174533
-6:
+4:
 .float 93
-7:
+5:
 .float 42.0
-data.struct 0, "", xMainMoveSpeed, xSecondaryMoveSpeed, xStartOffsetX, xStartOffsetY, xFreeMovementSpeed, xRadianOneDegree, xPaatsubusuStartFrame, xPaatsubusuStartY
+data.struct 0, "", xMainMoveSpeed, xSecondaryMoveSpeed, xFreeMovementSpeed, xRadianOneDegree, xPaatsubusuStartFrame, xPaatsubusuStartY
 data.table masterHandData
 0:
 .float -1.6
 1:
 .float 3.25
-data.struct 0, "", xHarauLoopXVel, xYubideppou2AnimRate
+2:
+.float 45.0
+3:
+.float 45.0
+data.struct 0, "mh.", xHarauLoopXVel, xYubideppou2AnimRate, xStartOffsetX, xStartOffsetY
 data.table crazyHandData
 0:
 .float 1.4
-data.struct 0, "", xHarauLoopXVel
+1:
+.float -45.0
+2:
+.float -45.0
+data.struct 0, "ch.", xHarauLoopXVel, xStartOffsetX, xStartOffsetY
 data.end r3
-lfs f0, xStartOffsetX(r3)
-stfs f0, 0x00000030(r31)
-lfs f0, xStartOffsetY(r3)
-stfs f0, 0x00000034(r31)
 lfs f0, xSecondaryMoveSpeed(r3)
 stfs f0, 0x00000028(r31)
 lfs f0, xMainMoveSpeed(r3)
@@ -50,8 +56,21 @@ stfs f0, 0x0000002C(r31)
 lfs f0, xPaatsubusuStartY(r3)
 stfs f0, 0x000000C0(r31)
 data.get r3, masterHandData
-lfs f0, xYubideppou2AnimRate(r3)
+lfs f0, mh.xStartOffsetX(r3)
+stfs f0, 0x00000030(r31)
+lfs f0, mh.xStartOffsetY(r3)
+stfs f0, 0x00000034(r31)
+lfs f0, mh.xYubideppou2AnimRate(r3)
 stfs f0, 0x000000F4(r31)
+lwz r0, 0x00000008(r4)
+gecko 2148884072
+data.table CommonDataTable
+data.end r3
+lfs f0, xSecondaryMoveSpeed(r3)
+stfs f0, 0x00000010(r31)
+lfs f0, xMainMoveSpeed(r3)
+stfs f0, 0x00000014(r31)
+data.get r3, crazyHandData
 lwz r0, 0x00000008(r4)
 gecko.end
 gecko 2148908832, fmuls f0, f0, f30
@@ -64,6 +83,11 @@ gecko 2148877640, nop
 gecko 2148877592, lfs f0, 0x00000028(r30)
 gecko 2148878824, nop
 gecko 2148868916, nop
+gecko 2148892912, nop
+gecko 2148892864, lfs f0, 0x00000010(r30)
+gecko 2148896164, nop
+gecko 2148896116, lfs f0, 0x00000010(r30)
+gecko 2148897348, nop
 # MH/CH Harau Movement Fix
 # authors: @[]
 # description: 
@@ -249,3 +273,10 @@ li r5, 0
 gecko 2148870132, fmr f1, f0
 gecko 2148892012, fmr f1, f0
 gecko.end
+# CH Uses His Own Lasers
+# authors: @[]
+# description: 
+gecko 2148894084, li r7, 0x7F
+gecko 2148894136, li r7, 0x7F
+gecko 2148894188, li r7, 0x7F
+gecko 2148894240, li r7, 0x7F
