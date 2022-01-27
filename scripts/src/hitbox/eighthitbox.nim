@@ -25,7 +25,8 @@ const
     ExtItemDataSize = (ItHit7 + ItHitSize)
 
 func calcOffsetFtData*(gameData: GameData, varOff: int): int = gameData.fighterDataSize + varOff
-func genericLoop(gameData: GameData; loopAddr, countAddr: int64; regPtrFtHit, regHitboxId, regFtData, regNextFtHitPtr: Register): string =
+func genericLoop(gameData: GameData; loopAddr, countAddr: int64; regPtrFtHit, regHitboxId, regFtData, regNextFtHitPtr: Register; checkState: bool = false): string =
+    let checkStateInstr = if checkState: ppc: lwz r0, 0({regPtrFtHit}) else: ""
     result = ppc:
         gecko {loopAddr}
         cmplwi {regHitboxId}, {OldHitboxCount}
@@ -39,12 +40,12 @@ func genericLoop(gameData: GameData; loopAddr, countAddr: int64; regPtrFtHit, re
         
         %("UseNewOffsets_" & loopAddr.toHex(8) & ":")
         mr {regPtrFtHit}, {regNextFtHitPtr}
+        %checkStateInstr
 
         %("OrigExit_" & loopAddr.toHex(8) & ":")
         ""
         # patch the check maximum hitbox ids
         gecko {countAddr}, cmplwi {regHitboxId}, {NewHitboxCount}
-
 
 func patchSubactionEventParsing(gameData: GameData): string =
     result = ppc:
@@ -91,13 +92,15 @@ func patchRemoveAllHitboxes(gameData: GameData): string =
 func patchAttackLogic(gameData: GameData): string =
     result = ppc:
         # Hitbox_MeleeAttackLogicMain Patches
-        # %genericLoop(gameData, loopAddr = 0x80078d88, countAddr = 0x80078e2c, r4, regHitboxId = r23, regFtData = r28, r30)
-        # %genericLoop(gameData, loopAddr = 0x80078e48, countAddr = 0x8007922c, r23, regHitboxId = r30, regFtData = r28, r29)
+
+        %genericLoop(gameData, loopAddr = 0x80078d88, countAddr = 0x80078e2c, r4, regHitboxId = r23, regFtData = r28, r30, checkState = true)
+        %genericLoop(gameData, loopAddr = 0x80078e48, countAddr = 0x8007922c, r23, regHitboxId = r30, regFtData = r24, r29, checkState = true)
         # %genericLoop(gameData, loopAddr = 0x80078f7c, countAddr = 0x80078fc4, r16, regHitboxId = r18, regFtData = r28, r19)
 
-        # # Hitbox_MeleeAttackLogicOnPlayer Patches
-        # %genericLoop(gameData, loopAddr = 0x8007706c, countAddr = 0x80077098, r3, regHitboxId = r30, regFtData = r26, r24)
-        # %genericLoop(gameData, loopAddr = 0x80077210, countAddr = 0x8007723c, r3, regHitboxId = r25, regFtData = r26, r23)
+        # Hitbox_MeleeAttackLogicOnPlayer Patches
+
+        #%genericLoop2(gameData, loopAddr = 0x8007706c, countAddr = 0x80077098, r3, regHitboxId = r30, regFtData = r26, r24)
+        %genericLoop(gameData, loopAddr = 0x80077210, countAddr = 0x8007723c, r3, regHitboxId = r25, regFtData = r26, r23, checkState = true)
 
         gecko.end
 
