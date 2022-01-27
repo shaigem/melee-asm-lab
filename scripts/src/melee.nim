@@ -14,6 +14,7 @@ type
         fdSelfVelY = 0x84
         fdelfVelZ = 0x88
         fdScript = 0x3E4
+        fdFtHit = 0x914
 
     Script* = enum
         sEventTimer = 0x0
@@ -35,7 +36,7 @@ const
 
     # as of commit #f779005 Nov-29-2021 @ 1:28 AM EST
     MexGameData* = GameData(dataType: GameDataType.Mex,
-    fighterDataSize: FighterDataOrigSize + 16 + 32,
+    fighterDataSize: FighterDataOrigSize + 52,
     itemDataSize: ItemDataOrigSize + 0x4)
 
 const 
@@ -67,13 +68,13 @@ func patchFighterDataAllocation*(gameData: GameData; dataSizeToAdd: int): string
         addi r30, r3, 0 # backup data pointer
         load r4, 0x80458fd0
         lwz r4, 0x20(r4)
-        bla r12, %ZeroDataLength
+        bla r12, {ZeroDataLength}
         # exit
         mr r3, r30
         lis r4, 0x8046
 
         # next patch, adjust the fighter data size
-        gecko 0x800679BC, li r4, %(gameData.fighterDataSize + dataSizeToAdd)
+        gecko 0x800679BC, li r4, {gameData.fighterDataSize + dataSizeToAdd}
 
         # finally, any specific game mod patches
         block:
@@ -89,13 +90,13 @@ func patchItemDataAllocation*(gameData: GameData; dataSizeToAdd: int): string =
     let newDataSize = gameData.itemDataSize + dataSizeToAdd
     result = ppc:
         # size patch
-        gecko 0x80266FD8, li r4, %newDataSize
+        gecko 0x80266FD8, li r4, {newDataSize}
         # init extended item data patch
         gecko 0x80268754
         addi r29, r3, 0 # backup r3
-        li r4, %newDataSize
-        bla r12, %ZeroDataLength
+        li r4, {newDataSize}
+        bla r12, {ZeroDataLength}
         # _return
         mr r3, r29 # restore r3
-        `mr.` r6, r3
+        "mr." r6, r3
         gecko.end

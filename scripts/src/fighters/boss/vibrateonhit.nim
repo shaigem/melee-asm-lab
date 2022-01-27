@@ -21,7 +21,7 @@ const
                 lwz r5, 0x183C(r30)
                 lwz r6, 0x10(r30)
                 # lwz r7, 0xE0(r30)
-                li r7, 0
+                li r7, 0 # vibrate side to side
                 lfs f1, 0x1960(r30)
                 bla r12, 0x80090594 # call Damage_AddHitlag? func
                 cmpwi r31, 0 # original code line

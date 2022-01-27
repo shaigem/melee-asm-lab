@@ -42,7 +42,7 @@ func patchFighterOnLoadMasterHand(): string =
             0:
                 ".float" 5.0
             1:
-                ".float" 2.0
+                ".float" 3.0
             2:
                 ".float" 2.0
             3:
@@ -516,4 +516,4 @@ const
 
 
 when isMainModule:
-    generate "./generated/handstages.asm", ControllableAnyPorts, NoLerpMovement, HarauCleanMovement, NoAttackStartup, GunPointTowards, PaatsubusuFix, CHUseOwnLasers
+    generate "./generated/handstages.asm", ControllableAnyPort, NoLerpMovement, HarauCleanMovement, NoAttackStartup, GunPointTowards, PaatsubusuFix, CHUseOwnLasers
