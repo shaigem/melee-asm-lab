@@ -16,6 +16,9 @@ type
         fdScript = 0x3E4
         fdFtHit = 0x914
 
+    ItemData* = enum
+        idItHit = 0x5D4
+
     Script* = enum
         sEventTimer = 0x0
         sFrameTimer = 0x4
