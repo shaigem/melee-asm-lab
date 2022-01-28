@@ -151,6 +151,8 @@ func patchAttackLogic(gameData: GameData): string =
         # Hitbox_EntityVSMeleeMain - Hits an Item (e.g. Goomba) with Melee Patches
         %genericLoop(gameData, loopAddr = 0x802704c4, countAddr = 0x802706a0, r26, regHitboxId = r27, regFtData = r28, r31, checkState = true)
 
+        # Hitbox_MeleeAttackLogicOnShield - Melee on Shield
+        %genericLoop(gameData, loopAddr = 0x80076ce4, countAddr = 0x80076d10, r3, regHitboxId = r28, regFtData = r29, r27, checkState = true)
         gecko.end
 
 proc patchMain(gameData: GameData): string =
