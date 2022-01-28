@@ -83,8 +83,7 @@ asm\melee\ft\chara\ftyoshi.s:/* 8012F9E8 0012C5C8  38 66 09 14 */	addi r3, r6, 0
 asm\melee\ft\chara\ftyoshi.s:/* 80130890 0012D470  80 04 09 14 */	lwz r0, 0x914(r4)
 asm\melee\ft\chara\ftyoshi.s:/* 801308B8 0012D498  80 06 09 14 */	lwz r0, 0x914(r6)
 asm\melee\ft\chara\ftyoshi.s:/* 80130948 0012D528  38 66 09 14 */	addi r3, r6, 0x914
-asm\melee\ft\code_8008521C.s:/* 800BB134 000B7D14  80 1F 09 14 */	lwz r0, 0x914(r31)
-asm\melee\ft\code_8008521C.s:/* 800BB138 000B7D18  3B BF 09 14 */	addi r29, r31, 0x914
+
 asm\melee\ft\code_8008521C.s:/* 800BDD8C 000BA96C  38 7F 09 14 */	addi r3, r31, 0x914
 
 
@@ -146,3 +145,5 @@ asm\melee\ft\ftcoll.s:/* 8007B078 00077C58  3B E4 09 14 */	addi r31, r4, 0x914
 
 asm\melee\ft\ftaction.s:/* 8007165C 0006E23C  38 63 09 14 */	addi r3, r3, 0x914
 asm\melee\ft\ftaction.s:/* 80071728 0006E308  38 A5 09 14 */	addi r5, r5, 0x914
+asm\melee\ft\code_8008521C.s:/* 800BB134 000B7D14  80 1F 09 14 */	lwz r0, 0x914(r31)
+asm\melee\ft\code_8008521C.s:/* 800BB138 000B7D18  3B BF 09 14 */	addi r29, r31, 0x914

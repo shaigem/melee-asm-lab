@@ -245,6 +245,14 @@ func patchAttackLogic(gameData: GameData): string =
         # Hitbox_GrabAttackLogic Patches - Grabbing
         %reversedLoop(gameData, loopAddr = 0x80078b10, countAddr = 0x80078c40, r3, regHitboxId = r27, regFtData = r30, r31)
 
+        # CPU_CheckForNearbyMeleeHitbox(r3=CPUData,r4=OpponentData) - Fighters
+        gecko 0x800bb12c
+        # save opponent data to stack
+        li r30, 0 # orig code line
+        stw r4, 0x10(sp)
+        %genericLoop(gameData, loopAddr = 0x800bb138, countAddr = 0x800bb1f4, r29, regHitboxId = r30, regFtData = r31, r31, checkState = true,
+        onCalcNewHitOffset = "lwz r31, 0x10(sp)")
+
         # Hitbox_RefreshHitbox(r3=player,r4=hitboxID) - Fighter Hitboxes Only
         # Links Down Air uses this
         # r3 = fighter gobj
