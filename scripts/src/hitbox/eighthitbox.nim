@@ -132,6 +132,27 @@ func patchSubactionEventParsing(gameData: GameData): string =
         Exit_8007afcc:
             mulli rHitboxId, rHitboxId, 312
 
+        # Hitbox_RefreshHitbox(r3=player,r4=hitboxID) - Fighter Hitboxes Only
+        # Links Down Air uses this
+        # r3 = fighter gobj
+        # r4 = hitbox id
+        gecko 0x8007b068
+        mr r5, r4 # backup hitbox id to r5 for later use
+        mulli r4, r4, 312
+        gecko 0x8007b078
+        regs (5), rHitboxId, (31), rNextHitOff
+
+        cmplwi rHitboxId, {OldHitboxCount}
+        addi rNextHitOff, r4, {fdFtHit.int}
+        blt+ OrigExit_8007b078 # id < 4
+        
+        subi rNextHitOff, rHitboxId, {OldHitboxCount} # new hitbox id = (id - 4)
+        mulli rNextHitOff, rNextHitOff, {FtHitSize} # id * ft/it hitbox size
+        addi rNextHitOff, rNextHitOff, {calcOffsetFtData(gameData, FtHit4)}
+
+        OrigExit_8007b078:
+            ""
+
         gecko.end
 
 func patchCollisionDrawLogic(gameData: GameData): string =
