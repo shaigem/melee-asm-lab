@@ -139,7 +139,6 @@ func patchAttackLogic(gameData: GameData): string =
         # Hitbox_MeleeAttackLogicMain Patches
         %genericLoop(gameData, loopAddr = 0x80078d88, countAddr = 0x80078e2c, r4, regHitboxId = r23, regFtData = r28, r30, checkState = true)
         %genericLoop(gameData, loopAddr = 0x80078e48, countAddr = 0x8007922c, r23, regHitboxId = r30, regFtData = r24, r29, checkState = true)
-        # %genericLoop(gameData, loopAddr = 0x80078f7c, countAddr = 0x80078fc4, r16, regHitboxId = r18, regFtData = r28, r19)
 
         # Hitbox_MeleeAttackLogicOnPlayer Patches
         #%genericLoop2(gameData, loopAddr = 0x8007706c, countAddr = 0x80077098, r3, regHitboxId = r30, regFtData = r26, r24)
@@ -153,6 +152,10 @@ func patchAttackLogic(gameData: GameData): string =
 
         # Hitbox_MeleeAttackLogicOnShield - Melee on Shield
         %genericLoop(gameData, loopAddr = 0x80076ce4, countAddr = 0x80076d10, r3, regHitboxId = r28, regFtData = r29, r27, checkState = true)
+        
+        # MeleeAttackLogic_Clank - Fighters Clanking with Melee
+        %genericLoop(gameData, loopAddr = 0x80076a78, countAddr = 0x80076ab0, r3, regHitboxId = r26, regFtData = r30, r24, checkState = true)
+        %genericLoop(gameData, loopAddr = 0x80078f7c, countAddr = 0x80078fc4, r16, regHitboxId = r18, regFtData = r28, r19)
         gecko.end
 
 proc patchMain(gameData: GameData): string =
