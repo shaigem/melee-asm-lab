@@ -21,7 +21,7 @@ const
     ItHit7 = ItHit6 + ItHitSize
     
 const 
-    ExtFighterDataSize = (FtHit7 + ItHitSize)
+    ExtFighterDataSize = (FtHit7 + FtHitSize)
     ExtItemDataSize = (ItHit7 + ItHitSize)
 
 func calcOffsetFtData*(gameData: GameData, varOff: int): int = gameData.fighterDataSize + varOff
