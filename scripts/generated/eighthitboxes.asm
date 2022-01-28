@@ -233,5 +233,17 @@ lwz r0, 0(r3)
 OrigExit_80077A4C:
 
 gecko 2147973764, cmplwi r26, 8
+gecko 2147978000
+cmplwi r27, 4
+lwz r0, 0x00000914(r31)
+bgt UseNewOffsets_80078B10
+bne+ OrigExit_80078B10
+addi r31, r30, 9248
+UseNewOffsets_80078B10:
+mr r3, r31
+lwz r0, 0(r3)
+OrigExit_80078B10:
+
+gecko 2147978304, cmplwi r27, 8
 gecko.end
 gecko.end

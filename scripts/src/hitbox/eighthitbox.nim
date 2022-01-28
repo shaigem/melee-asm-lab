@@ -172,6 +172,8 @@ func patchAttackLogic(gameData: GameData): string =
         # Rebound with a hittable item
         %genericLoop(gameData, loopAddr = 0x80077a4c, countAddr = 0x80077a84, r3, regHitboxId = r26, regFtData = r30, r24, checkState = true)
 
+        # Hitbox_GrabAttackLogic Patches - Grabbing
+        %reversedLoop(gameData, loopAddr = 0x80078b10, countAddr = 0x80078c40, r3, regHitboxId = r27, regFtData = r30, r31)
 
         gecko.end
 
