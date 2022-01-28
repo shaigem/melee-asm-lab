@@ -89,14 +89,14 @@ asm\melee\ft\code_8008521C.s:/* 800BDD8C 000BA96C  38 7F 09 14 */	addi r3, r31, 
 asm\melee\ft\ftaction.s:/* 8007165C 0006E23C  38 63 09 14 */	addi r3, r3, 0x914
 asm\melee\ft\ftaction.s:/* 80071728 0006E308  38 A5 09 14 */	addi r5, r5, 0x914
 
-asm\melee\ft\ftcoll.s:/* 800768A4 00073484  38 C3 09 14 */	addi r6, r3, 0x914
-asm\melee\ft\ftcoll.s:/* 800768E4 000734C4  38 C3 09 14 */	addi r6, r3, 0x914
 
-asm\melee\ft\ftcoll.s:/* 80076BC0 000737A0  80 17 09 14 */	lwz r0, 0x914(r23)
-asm\melee\ft\ftcoll.s:/* 80076BC4 000737A4  38 77 09 14 */	addi r3, r23, 0x914
+asm\melee\ft\ftcoll.s:/* 800768A4 00073484  38 C3 09 14 */	addi r6, r3, 0x914 # UNSURE
+asm\melee\ft\ftcoll.s:/* 800768E4 000734C4  38 C3 09 14 */	addi r6, r3, 0x914 # UNSURE
+
+
 
 asm\melee\ft\ftcoll.s:/* 80077068 00073C48  80 18 09 14 */	lwz r0, 0x914(r24)
-asm\melee\ft\ftcoll.s:/* 8007706C 00073C4C  38 78 09 14 */	addi r3, r24, 0x914
+asm\melee\ft\ftcoll.s:/* 8007706C 00073C4C  38 78 09 14 */	addi r3, r24, 0x914 # seems to be for phantom hits
 asm\melee\ft\ftcoll.s:/* 80077A48 00074628  80 18 09 14 */	lwz r0, 0x914(r24)
 asm\melee\ft\ftcoll.s:/* 80077A4C 0007462C  38 78 09 14 */	addi r3, r24, 0x914
 asm\melee\ft\ftcoll.s:/* 80078B0C 000756EC  38 7F 09 14 */	addi r3, r31, 0x914
@@ -142,3 +142,6 @@ asm\melee\ft\ftcoll.s:/* 80076A78 00073658  38 78 09 14 */	addi r3, r24, 0x914
 asm\melee\ft\ftcoll.s:/* 80078F7C 00075B5C  3A 13 09 14 */	addi r16, r19, 0x914
 asm\melee\ft\ftcoll.s:/* 80076838 00073418  80 1E 09 14 */	lwz r0, 0x914(r30)
 asm\melee\ft\ftcoll.s:/* 8007683C 0007341C  38 7E 09 14 */	addi r3, r30, 0x914
+
+asm\melee\ft\ftcoll.s:/* 80076BC0 000737A0  80 17 09 14 */	lwz r0, 0x914(r23)
+asm\melee\ft\ftcoll.s:/* 80076BC4 000737A4  38 77 09 14 */	addi r3, r23, 0x914

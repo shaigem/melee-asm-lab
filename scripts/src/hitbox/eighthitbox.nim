@@ -165,6 +165,7 @@ func patchAttackLogic(gameData: GameData): string =
         # MeleeAttackLogic_Clank - Fighters Clanking with Melee
         %genericLoop(gameData, loopAddr = 0x80076a78, countAddr = 0x80076ab0, r3, regHitboxId = r26, regFtData = r30, r24, checkState = true)
         %genericLoop(gameData, loopAddr = 0x80078f7c, countAddr = 0x80078fc4, r16, regHitboxId = r18, regFtData = r28, r19)
+        %genericLoop(gameData, loopAddr = 0x80076bc4, countAddr = 0x80076bf0, r3, regHitboxId = r26, regFtData = r28, r23, checkState = true)
 
         gecko.end
 

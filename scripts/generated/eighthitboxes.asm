@@ -194,5 +194,18 @@ mr r16, r19
 OrigExit_80078F7C:
 
 gecko 2147979204, cmplwi r18, 8
+gecko 2147969988
+cmplwi r26, 4
+addi r3, r23, 2324
+bgt UseNewOffsets_80076BC4
+bne+ OrigExit_80076BC4
+
+addi r23, r28, 9248
+UseNewOffsets_80076BC4:
+mr r3, r23
+lwz r0, 0(r3)
+OrigExit_80076BC4:
+
+gecko 2147970032, cmplwi r26, 8
 gecko.end
 gecko.end
