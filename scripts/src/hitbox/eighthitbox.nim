@@ -132,27 +132,19 @@ func patchSubactionEventParsing(gameData: GameData): string =
         Exit_8007afcc:
             mulli rHitboxId, rHitboxId, 312
 
-        # Hitbox_RefreshHitbox(r3=player,r4=hitboxID) - Fighter Hitboxes Only
-        # Links Down Air uses this
-        # r3 = fighter gobj
-        # r4 = hitbox id
-        gecko 0x8007b068
-        mr r5, r4 # backup hitbox id to r5 for later use
-        mulli r4, r4, 312
-        gecko 0x8007b078
-        regs (5), rHitboxId, (31), rNextHitOff
+        # SubactionEvent_0x30_DecayHitboxDamage - Fighter Hitboxes
+        gecko 0x80071660
+        # r6 = fighter data
 
-        cmplwi rHitboxId, {OldHitboxCount}
-        addi rNextHitOff, r4, {fdFtHit.int}
-        blt+ OrigExit_8007b078 # id < 4
-        
-        subi rNextHitOff, rHitboxId, {OldHitboxCount} # new hitbox id = (id - 4)
-        mulli rNextHitOff, rNextHitOff, {FtHitSize} # id * ft/it hitbox size
-        addi rNextHitOff, rNextHitOff, {calcOffsetFtData(gameData, FtHit4)}
+        cmplwi r0, {OldHitboxCount}
+        blt+ OrigExit_80071660 # id < 4
 
-        OrigExit_8007b078:
-            ""
-
+        mr r3, r0
+        subi r3, r3, {OldHitboxCount} # new hitbox id = (id - 4)
+        mulli r3, r3, {FtHitSize} # id * ft hitbox size
+        addi r3, r3, {calcOffsetFtData(gameData, FtHit4)}
+        OrigExit_80071660:
+            add r3, r6, r3
         gecko.end
 
 func patchCollisionDrawLogic(gameData: GameData): string =
@@ -219,6 +211,26 @@ func patchAttackLogic(gameData: GameData): string =
         # Hitbox_GrabAttackLogic Patches - Grabbing
         %reversedLoop(gameData, loopAddr = 0x80078b10, countAddr = 0x80078c40, r3, regHitboxId = r27, regFtData = r30, r31)
 
+        # Hitbox_RefreshHitbox(r3=player,r4=hitboxID) - Fighter Hitboxes Only
+        # Links Down Air uses this
+        # r3 = fighter gobj
+        # r4 = hitbox id
+        gecko 0x8007b068
+        mr r5, r4 # backup hitbox id to r5 for later use
+        mulli r4, r4, 312
+        gecko 0x8007b078
+        regs (5), rHitboxId, (31), rNextHitOff
+
+        cmplwi rHitboxId, {OldHitboxCount}
+        addi rNextHitOff, r4, {fdFtHit.int}
+        blt+ OrigExit_8007b078 # id < 4
+        
+        subi rNextHitOff, rHitboxId, {OldHitboxCount} # new hitbox id = (id - 4)
+        mulli rNextHitOff, rNextHitOff, {FtHitSize} # id * ft/it hitbox size
+        addi rNextHitOff, rNextHitOff, {calcOffsetFtData(gameData, FtHit4)}
+
+        OrigExit_8007b078:
+            ""
         gecko.end
 
 proc patchMain(gameData: GameData): string =

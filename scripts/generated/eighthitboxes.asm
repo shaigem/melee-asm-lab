@@ -47,19 +47,15 @@ stw r0, 0(rNextHitOff)
 blr
 Exit_8007afcc:
 mulli rHitboxId, rHitboxId, 312
-gecko 2147987560
-mr r5, r4
-mulli r4, r4, 312
-gecko 2147987576
-regs (5), rHitboxId, (31), rNextHitOff
-cmplwi rHitboxId, 4
-addi rNextHitOff, r4, 2324
-blt+ OrigExit_8007b078
-subi rNextHitOff, rHitboxId, 4
-mulli rNextHitOff, rNextHitOff, 312
-addi rNextHitOff, rNextHitOff, 9248
-OrigExit_8007b078:
-
+gecko 2147948128
+cmplwi r0, 4
+blt+ OrigExit_80071660
+mr r3, r0
+subi r3, r3, 4
+mulli r3, r3, 312
+addi r3, r3, 9248
+OrigExit_80071660:
+add r3, r6, r3
 gecko.end
 gecko 2148009492
 cmplwi r25, 4
@@ -273,5 +269,18 @@ lwz r0, 0(r3)
 OrigExit_80078B10:
 
 gecko 2147978304, cmplwi r27, 8
+gecko 2147987560
+mr r5, r4
+mulli r4, r4, 312
+gecko 2147987576
+regs (5), rHitboxId, (31), rNextHitOff
+cmplwi rHitboxId, 4
+addi rNextHitOff, r4, 2324
+blt+ OrigExit_8007b078
+subi rNextHitOff, rHitboxId, 4
+mulli rNextHitOff, rNextHitOff, 312
+addi rNextHitOff, rNextHitOff, 9248
+OrigExit_8007b078:
+
 gecko.end
 gecko.end
