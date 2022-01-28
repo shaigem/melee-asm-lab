@@ -69,6 +69,18 @@ OrigExit_800716d4:
 addi r0, r5, 2352
 Exit_800716d4:
 
+gecko 2147948328, nop
+gecko 2147948324
+cmplwi r0, 4
+addi r5, r5, 2324
+blt+ OrigExit_80071724
+regs (5), rFtHitPtr
+mr rFtHitPtr, r0
+subi rFtHitPtr, rFtHitPtr, 4
+mulli rFtHitPtr, rFtHitPtr, 312
+addi r5, rFtHitPtr, 9248
+OrigExit_80071724:
+rlwinm r0, r3, 31, 31, 31
 gecko.end
 gecko 2148009492
 cmplwi r25, 4
