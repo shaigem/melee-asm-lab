@@ -88,8 +88,7 @@ asm\melee\ft\code_8008521C.s:/* 800BB138 000B7D18  3B BF 09 14 */	addi r29, r31,
 asm\melee\ft\code_8008521C.s:/* 800BDD8C 000BA96C  38 7F 09 14 */	addi r3, r31, 0x914
 asm\melee\ft\ftaction.s:/* 8007165C 0006E23C  38 63 09 14 */	addi r3, r3, 0x914
 asm\melee\ft\ftaction.s:/* 80071728 0006E308  38 A5 09 14 */	addi r5, r5, 0x914
-asm\melee\ft\ftcoll.s:/* 80076838 00073418  80 1E 09 14 */	lwz r0, 0x914(r30)
-asm\melee\ft\ftcoll.s:/* 8007683C 0007341C  38 7E 09 14 */	addi r3, r30, 0x914
+
 asm\melee\ft\ftcoll.s:/* 800768A4 00073484  38 C3 09 14 */	addi r6, r3, 0x914
 asm\melee\ft\ftcoll.s:/* 800768E4 000734C4  38 C3 09 14 */	addi r6, r3, 0x914
 
@@ -98,14 +97,11 @@ asm\melee\ft\ftcoll.s:/* 80076BC4 000737A4  38 77 09 14 */	addi r3, r23, 0x914
 
 asm\melee\ft\ftcoll.s:/* 80077068 00073C48  80 18 09 14 */	lwz r0, 0x914(r24)
 asm\melee\ft\ftcoll.s:/* 8007706C 00073C4C  38 78 09 14 */	addi r3, r24, 0x914
-asm\melee\ft\ftcoll.s:/* 8007720C 00073DEC  80 17 09 14 */	lwz r0, 0x914(r23)
 asm\melee\ft\ftcoll.s:/* 80077A48 00074628  80 18 09 14 */	lwz r0, 0x914(r24)
 asm\melee\ft\ftcoll.s:/* 80077A4C 0007462C  38 78 09 14 */	addi r3, r24, 0x914
 asm\melee\ft\ftcoll.s:/* 80078B0C 000756EC  38 7F 09 14 */	addi r3, r31, 0x914
 asm\melee\ft\ftcoll.s:/* 80078B10 000756F0  80 1F 09 14 */	lwz r0, 0x914(r31)
 asm\melee\ft\ftcoll.s:/* 80078D84 00075964  80 1E 09 14 */	lwz r0, 0x914(r30)
-asm\melee\ft\ftcoll.s:/* 80078E44 00075A24  80 1D 09 14 */	lwz r0, 0x914(r29)
-asm\melee\ft\ftcoll.s:/* 80078F7C 00075B5C  3A 13 09 14 */	addi r16, r19, 0x914
 asm\melee\ft\ftcoll.s:/* 80079378 00075F58  38 76 09 14 */	addi r3, r22, 0x914
 asm\melee\ft\ftcoll.s:/* 8007968C 0007626C  38 94 09 14 */	addi r4, r20, 0x914
 asm\melee\ft\ftcoll.s:/* 8007AFDC 00077BBC  38 64 09 14 */	addi r3, r4, 0x914
@@ -125,8 +121,14 @@ asm\melee\ft\ftdrawcommon.s:/* 80080614 0007D1F4  38 7A 09 14 */	addi r3, r26, 0
 asm\melee\ft\ftcoll.s:/* 8007AEAC 00077A8C  38 9F 09 14 */	addi r4, r31, 0x914
 asm\melee\ft\ftcoll.s:/* 8007B020 00077C00  38 7F 09 14 */	addi r3, r31, 0x914
 asm\melee\ft\ftcoll.s:/* 80078D88 00075968  38 9E 09 14 */	addi r4, r30, 0x914
+
 asm\melee\ft\ftcoll.s:/* 80078E48 00075A28  3A FD 09 14 */	addi r23, r29, 0x914
+asm\melee\ft\ftcoll.s:/* 80078E44 00075A24  80 1D 09 14 */	lwz r0, 0x914(r29)
+
+
 asm\melee\ft\ftcoll.s:/* 80077210 00073DF0  38 77 09 14 */	addi r3, r23, 0x914
+asm\melee\ft\ftcoll.s:/* 8007720C 00073DEC  80 17 09 14 */	lwz r0, 0x914(r23)
+
 asm\melee\ft\ftcoll.s:/* 8007937C 00075F5C  80 16 09 14 */	lwz r0, 0x914(r22) # UNSURE
 
 asm\melee\ft\ftcoll.s:/* 80076CE0 000738C0  80 1B 09 14 */	lwz r0, 0x914(r27)
@@ -137,3 +139,6 @@ asm\melee\it\code_80266F3C.s:/* 802704C4 0026D0A4  3B 5F 09 14 */	addi r26, r31,
 
 asm\melee\ft\ftcoll.s:/* 80076A74 00073654  80 18 09 14 */	lwz r0, 0x914(r24)
 asm\melee\ft\ftcoll.s:/* 80076A78 00073658  38 78 09 14 */	addi r3, r24, 0x914
+asm\melee\ft\ftcoll.s:/* 80078F7C 00075B5C  3A 13 09 14 */	addi r16, r19, 0x914
+asm\melee\ft\ftcoll.s:/* 80076838 00073418  80 1E 09 14 */	lwz r0, 0x914(r30)
+asm\melee\ft\ftcoll.s:/* 8007683C 0007341C  38 7E 09 14 */	addi r3, r30, 0x914

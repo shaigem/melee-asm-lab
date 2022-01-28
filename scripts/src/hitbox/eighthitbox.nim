@@ -27,7 +27,7 @@ const
 func calcOffsetFtData*(gameData: GameData, varOff: int): int = gameData.fighterDataSize + varOff
 func calcOffsetItData*(gameData: GameData, varOff: int): int = gameData.itemDataSize + varOff
 
-func genericLoop(gameData: GameData; loopAddr, countAddr: int64; regPtrFtHit, regHitboxId, regFtData, regNextFtHitPtr: Register; checkState: bool = false; isItem: bool = false;): string =
+func genericLoop(gameData: GameData; loopAddr, countAddr: int64; regPtrFtHit, regHitboxId, regFtData, regNextFtHitPtr: Register; checkState: bool = false; isItem: bool = false; onCalcNewHitOffset: string = ""): string =
     let checkStateInstr = if checkState: ppc: lwz r0, 0({regPtrFtHit}) else: ""
     let hitPtrOffset = if isItem: idItHit.int else: fdFtHit.int
     let newHitPtrOffset = if isItem: calcOffsetItData(gameData, ItHit4) else: calcOffsetFtData(gameData, FtHit4)
@@ -41,6 +41,7 @@ func genericLoop(gameData: GameData; loopAddr, countAddr: int64; regPtrFtHit, re
 
         # when id == 4
         # calculate using new starting Hit offset
+        %onCalcNewHitOffset
         %calcNewOffsetInstr
         
         %("UseNewOffsets_" & loopAddr.toHex(8) & ":")
@@ -144,18 +145,27 @@ func patchAttackLogic(gameData: GameData): string =
         #%genericLoop2(gameData, loopAddr = 0x8007706c, countAddr = 0x80077098, r3, regHitboxId = r30, regFtData = r26, r24)
         %genericLoop(gameData, loopAddr = 0x80077210, countAddr = 0x8007723c, r3, regHitboxId = r25, regFtData = r26, r23, checkState = true)
 
-        # Hitbox_ProjectileHitboxAndFighterHitbox Patches???
+        # Hitbox_ProjectileHitboxAndFighterHitbox Patches - Not sure what this part does TODO
         %reversedLoop(gameData, loopAddr = 0x8007937c, countAddr = 0x80079410, r3, regHitboxId = r20, regFtData = r27, r22)
 
         # Hitbox_EntityVSMeleeMain - Hits an Item (e.g. Goomba) with Melee Patches
         %genericLoop(gameData, loopAddr = 0x802704c4, countAddr = 0x802706a0, r26, regHitboxId = r27, regFtData = r28, r31, checkState = true)
-
+        # LoopThroughPlayerHitboxes - Patches
+        gecko 0x80076828
+        # store fighter data in stack for later use
+        # this function doesn't save it :(
+        addi r30, r3, 0 # orig code line
+        stw r30, 0x10(sp)
+        %genericLoop(gameData, loopAddr = 0x8007683c, countAddr = 0x8007687c, r3, regHitboxId = r28, regFtData = r30, r30, checkState = true, 
+        onCalcNewHitOffset = "lwz r30, 0x10(sp)") # restore fighter data that is used to calculate new hit offset
+        
         # Hitbox_MeleeAttackLogicOnShield - Melee on Shield
         %genericLoop(gameData, loopAddr = 0x80076ce4, countAddr = 0x80076d10, r3, regHitboxId = r28, regFtData = r29, r27, checkState = true)
         
         # MeleeAttackLogic_Clank - Fighters Clanking with Melee
         %genericLoop(gameData, loopAddr = 0x80076a78, countAddr = 0x80076ab0, r3, regHitboxId = r26, regFtData = r30, r24, checkState = true)
         %genericLoop(gameData, loopAddr = 0x80078f7c, countAddr = 0x80078fc4, r16, regHitboxId = r18, regFtData = r28, r19)
+
         gecko.end
 
 proc patchMain(gameData: GameData): string =

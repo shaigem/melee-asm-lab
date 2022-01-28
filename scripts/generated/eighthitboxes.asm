@@ -38,6 +38,7 @@ cmplwi r25, 4
 addi r3, r26, 2324
 bgt UseNewOffsets_80080614
 bne+ OrigExit_80080614
+
 addi r26, r31, 9248
 UseNewOffsets_80080614:
 mr r3, r26
@@ -51,6 +52,7 @@ cmplwi r29, 4
 addi r4, r31, 2324
 bgt UseNewOffsets_8007AEAC
 bne+ OrigExit_8007AEAC
+
 addi r31, r30, 9248
 UseNewOffsets_8007AEAC:
 mr r4, r31
@@ -64,6 +66,7 @@ cmplwi r29, 4
 addi r3, r31, 2324
 bgt UseNewOffsets_8007B020
 bne+ OrigExit_8007B020
+
 addi r31, r30, 9248
 UseNewOffsets_8007B020:
 mr r3, r31
@@ -77,6 +80,7 @@ cmplwi r23, 4
 addi r4, r30, 2324
 bgt UseNewOffsets_80078D88
 bne+ OrigExit_80078D88
+
 addi r30, r28, 9248
 UseNewOffsets_80078D88:
 mr r4, r30
@@ -89,6 +93,7 @@ cmplwi r30, 4
 addi r23, r29, 2324
 bgt UseNewOffsets_80078E48
 bne+ OrigExit_80078E48
+
 addi r29, r24, 9248
 UseNewOffsets_80078E48:
 mr r23, r29
@@ -101,6 +106,7 @@ cmplwi r25, 4
 addi r3, r23, 2324
 bgt UseNewOffsets_80077210
 bne+ OrigExit_80077210
+
 addi r23, r26, 9248
 UseNewOffsets_80077210:
 mr r3, r23
@@ -125,6 +131,7 @@ cmplwi r27, 4
 addi r26, r31, 2324
 bgt UseNewOffsets_802704C4
 bne+ OrigExit_802704C4
+
 addi r31, r28, 9248
 UseNewOffsets_802704C4:
 mr r26, r31
@@ -132,11 +139,28 @@ lwz r0, 0(r26)
 OrigExit_802704C4:
 
 gecko 2150041248, cmplwi r27, 8
+gecko 2147969064
+addi r30, r3, 0
+stw r30, 0x00000010(sp)
+gecko 2147969084
+cmplwi r28, 4
+addi r3, r30, 2324
+bgt UseNewOffsets_8007683C
+bne+ OrigExit_8007683C
+lwz r30, 0x10(sp)
+addi r30, r30, 9248
+UseNewOffsets_8007683C:
+mr r3, r30
+lwz r0, 0(r3)
+OrigExit_8007683C:
+
+gecko 2147969148, cmplwi r28, 8
 gecko 2147970276
 cmplwi r28, 4
 addi r3, r27, 2324
 bgt UseNewOffsets_80076CE4
 bne+ OrigExit_80076CE4
+
 addi r27, r29, 9248
 UseNewOffsets_80076CE4:
 mr r3, r27
@@ -149,6 +173,7 @@ cmplwi r26, 4
 addi r3, r24, 2324
 bgt UseNewOffsets_80076A78
 bne+ OrigExit_80076A78
+
 addi r24, r30, 9248
 UseNewOffsets_80076A78:
 mr r3, r24
@@ -161,6 +186,7 @@ cmplwi r18, 4
 addi r16, r19, 2324
 bgt UseNewOffsets_80078F7C
 bne+ OrigExit_80078F7C
+
 addi r19, r28, 9248
 UseNewOffsets_80078F7C:
 mr r16, r19
