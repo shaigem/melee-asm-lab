@@ -147,6 +147,7 @@ func patchAttackLogic(gameData: GameData): string =
 
         # Hitbox_ProjectileHitboxAndFighterHitbox Patches - Not sure what this part does TODO
         %reversedLoop(gameData, loopAddr = 0x8007937c, countAddr = 0x80079410, r3, regHitboxId = r20, regFtData = r27, r22)
+        %genericLoop(gameData, loopAddr = 0x8007968c, countAddr = 0x80079748, r4, regHitboxId = r19, regFtData = r27, r20)
 
         # Hitbox_EntityVSMeleeMain - Hits an Item (e.g. Goomba) with Melee Patches
         %genericLoop(gameData, loopAddr = 0x802704c4, countAddr = 0x802706a0, r26, regHitboxId = r27, regFtData = r28, r31, checkState = true)
@@ -166,6 +167,11 @@ func patchAttackLogic(gameData: GameData): string =
         %genericLoop(gameData, loopAddr = 0x80076a78, countAddr = 0x80076ab0, r3, regHitboxId = r26, regFtData = r30, r24, checkState = true)
         %genericLoop(gameData, loopAddr = 0x80078f7c, countAddr = 0x80078fc4, r16, regHitboxId = r18, regFtData = r28, r19)
         %genericLoop(gameData, loopAddr = 0x80076bc4, countAddr = 0x80076bf0, r3, regHitboxId = r26, regFtData = r28, r23, checkState = true)
+
+        # Hitbox_ProjectileLogicOnHittableProjectile Patches
+        # Rebound with a hittable item
+        %genericLoop(gameData, loopAddr = 0x80077a4c, countAddr = 0x80077a84, r3, regHitboxId = r26, regFtData = r30, r24, checkState = true)
+
 
         gecko.end
 
