@@ -145,6 +145,24 @@ func patchSubactionEventParsing(gameData: GameData): string =
         addi r3, r3, {calcOffsetFtData(gameData, FtHit4)}
         OrigExit_80071660:
             add r3, r6, r3
+
+        # SubactionEvent_0x34_ModifyHitboxSize - Fighter Hitboxes
+        gecko 0x800716d4
+        # r0 = hitbox id
+        cmplwi r0, {OldHitboxCount}
+        blt+ OrigExit_800716d4 # id < 4
+        regs (5), rFtHitSizePtr
+        mr rFtHitSizePtr, r0
+        subi rFtHitSizePtr, rFtHitSizePtr, {OldHitboxCount} # new hitbox id = (id - 4)
+        mulli rFtHitSizePtr, rFtHitSizePtr, {FtHitSize} # id * ft hitbox size
+        addi r0, rFtHitSizePtr, {calcOffsetFtData(gameData, FtHit4) + 0x1C} # point to size of hitbox
+        b Exit_800716d4
+        
+        OrigExit_800716d4:
+            addi r0, r5, {fdFtHit.int + 0x1C}
+
+        Exit_800716d4:
+            ""
         gecko.end
 
 func patchCollisionDrawLogic(gameData: GameData): string =

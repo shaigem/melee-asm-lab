@@ -56,6 +56,19 @@ mulli r3, r3, 312
 addi r3, r3, 9248
 OrigExit_80071660:
 add r3, r6, r3
+gecko 2147948244
+cmplwi r0, 4
+blt+ OrigExit_800716d4
+regs (5), rFtHitSizePtr
+mr rFtHitSizePtr, r0
+subi rFtHitSizePtr, rFtHitSizePtr, 4
+mulli rFtHitSizePtr, rFtHitSizePtr, 312
+addi r0, rFtHitSizePtr, 9276
+b Exit_800716d4
+OrigExit_800716d4:
+addi r0, r5, 2352
+Exit_800716d4:
+
 gecko.end
 gecko 2148009492
 cmplwi r25, 4
