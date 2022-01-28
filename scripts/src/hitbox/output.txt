@@ -98,11 +98,8 @@ asm\melee\ft\ftcoll.s:/* 800768E4 000734C4  38 C3 09 14 */	addi r6, r3, 0x914 # 
 asm\melee\ft\ftcoll.s:/* 80077068 00073C48  80 18 09 14 */	lwz r0, 0x914(r24)
 asm\melee\ft\ftcoll.s:/* 8007706C 00073C4C  38 78 09 14 */	addi r3, r24, 0x914
 
-asm\melee\ft\ftcoll.s:/* 80078B0C 000756EC  38 7F 09 14 */	addi r3, r31, 0x914
-asm\melee\ft\ftcoll.s:/* 80078B10 000756F0  80 1F 09 14 */	lwz r0, 0x914(r31)
-asm\melee\ft\ftcoll.s:/* 80078D84 00075964  80 1E 09 14 */	lwz r0, 0x914(r30)
+
 asm\melee\ft\ftcoll.s:/* 80079378 00075F58  38 76 09 14 */	addi r3, r22, 0x914
-asm\melee\ft\ftcoll.s:/* 8007AFDC 00077BBC  38 64 09 14 */	addi r3, r4, 0x914
 asm\melee\ft\ftcoll.s:/* 8007B078 00077C58  3B E4 09 14 */	addi r31, r4, 0x914
 asm\melee\ft\ftcoll.s:/* 8007BCFC 000788DC  38 7B 09 14 */	addi r3, r27, 0x914
 asm\melee\ft\ftcoll.s:/* 8007BD00 000788E0  80 1B 09 14 */	lwz r0, 0x914(r27)
@@ -147,3 +144,7 @@ asm\melee\ft\ftcoll.s:/* 80076BC4 000737A4  38 77 09 14 */	addi r3, r23, 0x914
 asm\melee\ft\ftcoll.s:/* 8007968C 0007626C  38 94 09 14 */	addi r4, r20, 0x914
 asm\melee\ft\ftcoll.s:/* 80077A48 00074628  80 18 09 14 */	lwz r0, 0x914(r24)
 asm\melee\ft\ftcoll.s:/* 80077A4C 0007462C  38 78 09 14 */	addi r3, r24, 0x914 # rebound with flipper
+asm\melee\ft\ftcoll.s:/* 80078B0C 000756EC  38 7F 09 14 */	addi r3, r31, 0x914
+asm\melee\ft\ftcoll.s:/* 80078B10 000756F0  80 1F 09 14 */	lwz r0, 0x914(r31)
+asm\melee\ft\ftcoll.s:/* 80078D84 00075964  80 1E 09 14 */	lwz r0, 0x914(r30)
+asm\melee\ft\ftcoll.s:/* 8007AFDC 00077BBC  38 64 09 14 */	addi r3, r4, 0x914

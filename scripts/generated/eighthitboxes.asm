@@ -25,13 +25,28 @@ gecko.end
 gecko 2147947140
 regs rHitboxId, (30), rFtHitPtr, rFighterData
 cmplwi r0, 4
-blt+ OrigExit_8007127C
+blt+ OrigExit_80071284
 mr rHitboxId, r0
 subi rHitboxId, rHitboxId, 4
 mulli r3, rHitboxId, 312
 addi rFtHitPtr, r3, 9248
-OrigExit_8007127C:
+OrigExit_80071284:
 add rFtHitPtr, rFighterData, rFtHitPtr
+gecko 2147987404
+regs (3), rGObj, rHitboxId
+cmplwi rHitboxId, 4
+blt+ Exit_8007afcc
+lwz r3, 0x0000002C(rGObj)
+subi rHitboxId, rHitboxId, 4
+mulli r4, rHitboxId, 312
+regs (3), rData, rNextHitOff
+addi rNextHitOff, rNextHitOff, 9248
+add rNextHitOff, rNextHitOff, rData
+li r0, 0
+stw r0, 0(rNextHitOff)
+blr
+Exit_8007afcc:
+mulli rHitboxId, rHitboxId, 312
 gecko.end
 gecko 2148009492
 cmplwi r25, 4

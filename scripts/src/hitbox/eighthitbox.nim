@@ -84,14 +84,14 @@ func patchSubactionEventParsing(gameData: GameData): string =
         regs rHitboxId, (30), rFtHitPtr, rFighterData
 
         cmplwi r0, {OldHitboxCount}
-        blt+ OrigExit_8007127C # id < 4
+        blt+ OrigExit_80071284 # id < 4
 
         mr rHitboxId, r0
         subi rHitboxId, rHitboxId, {OldHitboxCount} # new hitbox id = (id - 4)
         mulli r3, rHitboxId, {FtHitSize} # id * ft hitbox size
         addi rFtHitPtr, r3, {calcOffsetFtData(gameData, FtHit4)}
 
-        OrigExit_8007127C:
+        OrigExit_80071284:
             add rFtHitPtr, rFighterData, rFtHitPtr
 
         # # Patch Parse Event 0x2C - Create Hitbox Projectile
@@ -108,7 +108,30 @@ func patchSubactionEventParsing(gameData: GameData): string =
 
         # OrigExit_802790F8:
         #     add rItHitPtr, rItemData, rItHitPtr
+
+        # SubactionEvent_0x3C_MeleeHitboxRemoveSpecific
+        # r3 = fighter gobj
+        # r4 = hitbox id
+        gecko 0x8007afcc
+        regs (3), rGObj, rHitboxId
+
+        cmplwi rHitboxId, {OldHitboxCount}
+        blt+ Exit_8007afcc # id < 4
+
+        lwz r3, 0x2C(rGObj)
+        subi rHitboxId, rHitboxId, {OldHitboxCount} # new hitbox id = (id - 4)
+        mulli r4, rHitboxId, {FtHitSize} # id * ft/it hitbox size
         
+        regs (3), rData, rNextHitOff
+        addi rNextHitOff, rNextHitOff, {calcOffsetFtData(gameData, FtHit4)}
+        add rNextHitOff, rNextHitOff, rData
+        # set hitbox state to 0
+        li r0, 0
+        stw r0, 0(rNextHitOff)
+        blr
+        Exit_8007afcc:
+            mulli rHitboxId, rHitboxId, 312
+
         gecko.end
 
 func patchCollisionDrawLogic(gameData: GameData): string =
