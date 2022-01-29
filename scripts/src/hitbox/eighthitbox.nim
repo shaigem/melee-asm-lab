@@ -239,11 +239,15 @@ func patchAttackLogic(gameData: GameData): string =
         # Hitbox_MeleeAttackLogicOnPlayer Patches
         %genericLoop(gameData, loopAddr = 0x80077210, countAddr = 0x8007723c, r3, regHitboxId = r25, regFtData = r26, r23, checkState = true)
         %genericLoop(gameData, loopAddr = 0x8007706c, countAddr = 0x80077098, r3, regHitboxId = r30, regFtData = r26, r24, checkState = true)
+        
+        # ProjectileLogicOnEntity Patches - Stores Victim
+        %genericLoop(gameData, loopAddr = 0x8026fb9c, countAddr = 0x8026fbdc, r3, regHitboxId = r25, regFtData = r26, r23, checkState = true, isItem = true)
 
-        # Hitbox_ProjectileHitboxAndFighterHitbox Patches - Not sure what this part does TODO
+        # Hitbox_ProjectileHitboxAndFighterHitbox Patches
         %reversedLoop(gameData, loopAddr = 0x8007937c, countAddr = 0x80079410, r3, regHitboxId = r20, regFtData = r27, r22)
         %genericLoop(gameData, loopAddr = 0x8007968c, countAddr = 0x80079748, r4, regHitboxId = r19, regFtData = r27, r20)
-
+        %genericLoop(gameData, loopAddr = 0x8007942c, countAddr = 0x80079a7c, r23, regHitboxId = r28, regFtData = r24, r29, checkState = true, isItem = true)
+        
         # Hitbox_EntityVSMeleeMain - Hits an Item (e.g. Goomba) with Melee Patches
         %genericLoop(gameData, loopAddr = 0x802704c4, countAddr = 0x802706a0, r26, regHitboxId = r27, regFtData = r28, r31, checkState = true)
         # LoopThroughPlayerHitboxes - Patches
@@ -254,7 +258,16 @@ func patchAttackLogic(gameData: GameData): string =
         stw r30, 0x10(sp)
         %genericLoop(gameData, loopAddr = 0x8007683c, countAddr = 0x8007687c, r3, regHitboxId = r28, regFtData = r30, r30, checkState = true, 
         onCalcNewHitOffset = "lwz r30, 0x10(sp)") # restore fighter data that is used to calculate new hit offset
-        
+
+        # Item_ResetAllHitboxesHitPlayers - Patches
+        gecko 0x8027148c
+        # store item data in stack for later use
+        # this function doesn't save it :(
+        add r31, r3, r0
+        stw r3, 0xC(sp)
+        %genericLoop(gameData, loopAddr = 0x80271490, countAddr = 0x8027149c, r3, regHitboxId = r30, regFtData = r31, r31, isItem = true,
+        onCalcNewHitOffset = "lwz r31, 0xC(sp)") # restore item data that is used to calculate new hit offset
+
         # Hitbox_MeleeAttackLogicOnShield - Melee on Shield
         %genericLoop(gameData, loopAddr = 0x80076ce4, countAddr = 0x80076d10, r3, regHitboxId = r28, regFtData = r29, r27, checkState = true)
         
