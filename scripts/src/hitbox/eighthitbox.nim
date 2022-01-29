@@ -85,7 +85,6 @@ func patchSubactionEventParsing(gameData: GameData): string =
 
         cmplwi r0, {OldHitboxCount}
         blt+ OrigExit_80071284 # id < 4
-
         mr rHitboxId, r0
         subi rHitboxId, rHitboxId, {OldHitboxCount} # new hitbox id = (id - 4)
         mulli r3, rHitboxId, {FtHitSize} # id * ft hitbox size
@@ -93,7 +92,35 @@ func patchSubactionEventParsing(gameData: GameData): string =
 
         OrigExit_80071284:
             add rFtHitPtr, rFighterData, rFtHitPtr
+        
+        # Fighter_InitHitbox UNK - Patch
+        gecko 0x80076984
+        # r3 - 0x270/624 = fighter data
+        # r4 - fthit, never changes
+        li r7, {NewHitboxCount - OldHitboxCount}
+        addi r6, r3, {calcOffsetFtData(gameData, FtHit4) - 624} # previous instructions added 624
+        b LoopBody_80076984
 
+        Loop_80076984:
+            "subic." r7, r7, 1
+            beq- InitVictimArray_80076984
+            addi r6, r6, {FtHitSize}
+            LoopBody_80076984:
+                cmplw r6, r4
+                beq Loop_80076984
+                lwz r0, 0(r6)
+                cmpwi r0, 0
+                beq Loop_80076984
+                lwz r5, 0x4(r6)
+                lwz r0, 0x4(r4)
+                cmplw r5, r0
+                bne Loop_80076984
+                mr r3, r6
+                bla r12, 0x800084fc
+
+        InitVictimArray_80076984:
+            mr r3, r4
+        
         # # Patch Parse Event 0x2C - Create Hitbox Projectile
         # # r30 = item data
         # # r4 = hitbox id

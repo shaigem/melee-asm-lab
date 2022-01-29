@@ -32,6 +32,28 @@ mulli r3, rHitboxId, 312
 addi rFtHitPtr, r3, 9248
 OrigExit_80071284:
 add rFtHitPtr, rFighterData, rFtHitPtr
+gecko 2147969412
+li r7, 4
+addi r6, r3, 8624
+b LoopBody_80076984
+Loop_80076984:
+subic. r7, r7, 1
+beq- InitVictimArray_80076984
+addi r6, r6, 312
+LoopBody_80076984:
+cmplw r6, r4
+beq Loop_80076984
+lwz r0, 0(r6)
+cmpwi r0, 0
+beq Loop_80076984
+lwz r5, 0x00000004(r6)
+lwz r0, 0x00000004(r4)
+cmplw r5, r0
+bne Loop_80076984
+mr r3, r6
+bla r12, 2147517692
+InitVictimArray_80076984:
+mr r3, r4
 gecko 2147987404
 regs (3), rGObj, rHitboxId
 cmplwi rHitboxId, 4
