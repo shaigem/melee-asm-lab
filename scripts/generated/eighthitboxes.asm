@@ -180,6 +180,33 @@ mr r3, r31
 OrigExit_8007B020:
 
 gecko 2147987500, cmplwi r29, 8
+gecko 2150049284
+cmplwi r29, 4
+addi r3, r31, 1492
+bgt UseNewOffsets_80272604
+bne+ OrigExit_80272604
+
+addi r31, r30, 4048
+UseNewOffsets_80272604:
+mr r3, r31
+
+OrigExit_80272604:
+
+gecko 2150049296, cmplwi r29, 8
+gecko 2150049328, cmplwi r31, 8
+gecko 2150044320
+mr r5, r4
+mulli r4, r4, 316
+gecko 2150044340
+regs (5), rHitboxId, (30), rItHitPtr
+cmplwi rHitboxId, 4
+addi rItHitPtr, r4, 1492
+blt+ OrigExit_802712b4
+subi r30, r5, 4
+mulli r30, r30, 316
+addi r30, r30, 4048
+OrigExit_802712b4:
+
 gecko.end
 gecko 2147978632
 cmplwi r23, 4

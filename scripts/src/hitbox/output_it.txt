@@ -68,7 +68,6 @@ asm\melee\it\code_8027CF30.s:/* 802EB1C0 002E7DA0  38 7E 05 D4 */	addi r3, r30, 
 asm\melee\it\code_8027CF30.s:/* 802EB320 002E7F00  38 7F 05 D4 */	addi r3, r31, 0x5d4
 asm\melee\it\code_8027CF30.s:/* 802EB34C 002E7F2C  38 7F 05 D4 */	addi r3, r31, 0x5d4
 asm\melee\it\code_8027CF30.s:/* 802EF68C 002EC26C  38 7F 05 D4 */	addi r3, r31, 0x5d4
-asm\melee\text_3.s:/* 80231A54 0022E634  3A 9F 05 D4 */	addi r20, r31, 0x5d4
 
 Completed
 

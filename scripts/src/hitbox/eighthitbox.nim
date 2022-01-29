@@ -230,6 +230,22 @@ func patchRemoveAllHitboxes(gameData: GameData): string =
     result = ppc:
         # Hitbox_Deactivate_All - SubactionEvent Clear All Fighter Hitboxes
         %genericLoop(gameData, loopAddr = 0x8007b020, countAddr = 0x8007b02c, r3, regHitboxId = r29, regFtData = r30, r31)
+        # Items_RemoveAllHitboxes - Clear All Item Hitboxes
+        %genericLoop(gameData, loopAddr = 0x80272604, countAddr = 0x80272610, r3, regHitboxId = r29, regFtData = r30, r31, isItem = true)
+        gecko 0x80272630, cmplwi r31, {NewHitboxCount}
+        # Unknown Item Hitbox Function Patch
+        gecko 0x802712a0
+        mr r5, r4 # store hitbox id to r5 for later use
+        mulli r4, r4, {ItHitSize} # orig code line
+        gecko 0x802712b4
+        # r5 = hitbox id
+        regs (5), rHitboxId, (30), rItHitPtr
+        cmplwi rHitboxId, {OldHitboxCount}
+        addi rItHitPtr, r4, {idItHit.int} # use old r4 orig line
+        blt+ OrigExit_802712b4
+        %o(gameData, regHitboxId = r5, regResultHitPtr = r30, hitSize = ItHitSize, extDataOffset = calcOffsetItData(gameData, ItHit4))
+        OrigExit_802712b4:
+            ""
         gecko.end
 
 func patchAttackLogic(gameData: GameData): string =
