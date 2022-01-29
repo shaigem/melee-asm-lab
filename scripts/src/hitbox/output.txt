@@ -83,14 +83,11 @@ asm\melee\ft\chara\ftyoshi.s:/* 8012F9E8 0012C5C8  38 66 09 14 */	addi r3, r6, 0
 asm\melee\ft\chara\ftyoshi.s:/* 80130890 0012D470  80 04 09 14 */	lwz r0, 0x914(r4)
 asm\melee\ft\chara\ftyoshi.s:/* 801308B8 0012D498  80 06 09 14 */	lwz r0, 0x914(r6)
 asm\melee\ft\chara\ftyoshi.s:/* 80130948 0012D528  38 66 09 14 */	addi r3, r6, 0x914
-
-
-
-
 asm\melee\it\code_8027CF30.s:/* 802B718C 002B3D6C  3B E3 09 14 */	addi r31, r3, 0x914 # samus extender hitbox?
 
 
-completed
+
+completed (core)
 
 asm\melee\ft\ftaction.s:/* 80071280 0006DE60  3B C3 09 14 */	addi r30, r3, 0x914
 asm\melee\ft\ftdrawcommon.s:/* 80080614 0007D1F4  38 7A 09 14 */	addi r3, r26, 0x914
