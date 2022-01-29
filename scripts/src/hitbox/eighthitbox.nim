@@ -53,17 +53,19 @@ func genericLoop(gameData: GameData; loopAddr, countAddr: int64; regPtrFtHit, re
         # patch the check maximum hitbox ids
         gecko {countAddr}, cmplwi {regHitboxId}, {NewHitboxCount}
 
-func reversedLoop(gameData: GameData; loopAddr, countAddr: int64; regPtrFtHit, regHitboxId, regFtData, regNextFtHitPtr: Register): string =
+func reversedLoop(gameData: GameData; loopAddr, countAddr: int64; regPtrFtHit, regHitboxId, regFtData, regNextFtHitPtr: Register; isItem: bool = false): string =
+    let hitboxOffsetInstr = if isItem: ppc: lwz r0, 0x5D4({regNextFtHitPtr}) else: ppc: lwz r0, 0x914({regNextFtHitPtr})
+    let newHitPtrOffset = if isItem: calcOffsetItData(gameData, ItHit4) else: calcOffsetFtData(gameData, FtHit4)
     result = ppc:
         gecko {loopAddr}
         cmplwi {regHitboxId}, {OldHitboxCount}
-        lwz r0, 0x914({regNextFtHitPtr})
+        %hitboxOffsetInstr
         bgt {"UseNewOffsets_" & loopAddr.toHex(8)} # id > 4
         "bne+" {"OrigExit_" & loopAddr.toHex(8)} # id != 4
 
         # when id == 4
         # calculate using new starting FtHit offset
-        addi {regNextFtHitPtr}, {regFtData}, {calcOffsetFtData(gameData, FtHit4)}
+        addi {regNextFtHitPtr}, {regFtData}, {newHitPtrOffset}
         
         %("UseNewOffsets_" & loopAddr.toHex(8) & ":")
         mr {regPtrFtHit}, {regNextFtHitPtr}
@@ -241,7 +243,13 @@ func patchAttackLogic(gameData: GameData): string =
         %genericLoop(gameData, loopAddr = 0x8007706c, countAddr = 0x80077098, r3, regHitboxId = r30, regFtData = r26, r24, checkState = true)
         
         # ProjectileLogicOnEntity Patches - Stores Victim
-        %genericLoop(gameData, loopAddr = 0x8026fb9c, countAddr = 0x8026fbdc, r3, regHitboxId = r25, regFtData = r26, r23, checkState = true, isItem = true)
+        gecko 0x8026fae4
+        addi r31, r7, 0 # orig code line
+        stw r27, 0x20(sp) # save item data for later use
+#        %genericLoop(gameData, loopAddr = 0x8026fb28, countAddr = 0x8026fb68, r3, regHitboxId = r25, regFtData = r24, r24, checkState = true, isItem = true,
+#        onCalcNewHitOffset = "lwz r24, 0x20(sp)") TODO test later
+        %genericLoop(gameData, loopAddr = 0x8026fb9c, countAddr = 0x8026fbdc, r3, regHitboxId = r25, regFtData = r23, r23, checkState = true, isItem = true,
+        onCalcNewHitOffset = "lwz r23, 0x20(sp)")
 
         # Hitbox_ProjectileHitboxAndFighterHitbox Patches
         %reversedLoop(gameData, loopAddr = 0x8007937c, countAddr = 0x80079410, r3, regHitboxId = r20, regFtData = r27, r22)
@@ -250,6 +258,10 @@ func patchAttackLogic(gameData: GameData): string =
         
         # Hitbox_EntityVSMeleeMain - Hits an Item (e.g. Goomba) with Melee Patches
         %genericLoop(gameData, loopAddr = 0x802704c4, countAddr = 0x802706a0, r26, regHitboxId = r27, regFtData = r28, r31, checkState = true)
+        # Hitbox_EntityVSProjectileMain = Projectile Hits an Item Patches
+        %reversedLoop(gameData, loopAddr = 0x80270808, countAddr = 0x80270880, r3, regHitboxId = r20, regFtData = r31, r23, isItem = true)
+        %genericLoop(gameData, loopAddr = 0x8027089c, countAddr = 0x80270ca4, r19, regHitboxId = r20, regFtData = r27, r21, checkState = true, isItem = true)
+
         # LoopThroughPlayerHitboxes - Patches
         gecko 0x80076828
         # store fighter data in stack for later use
