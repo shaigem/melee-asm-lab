@@ -1,10 +1,4 @@
-asm\melee\ft\code_8008521C.s:/* 800BB3E4 000B7FC4  80 1D 05 D4 */	lwz r0, 0x5d4(r29)
-asm\melee\ft\code_8008521C.s:/* 800BB3E8 000B7FC8  3B 3D 05 D4 */	addi r25, r29, 0x5d4
-asm\melee\ft\code_8008521C.s:/* 800BB4FC 000B80DC  80 1D 05 D4 */	lwz r0, 0x5d4(r29)
-asm\melee\ft\code_8008521C.s:/* 800BB500 000B80E0  3B 3D 05 D4 */	addi r25, r29, 0x5d4
-asm\melee\ft\code_8008521C.s:/* 800BB638 000B8218  80 1A 05 D4 */	lwz r0, 0x5d4(r26)
-asm\melee\ft\code_8008521C.s:/* 800BB63C 000B821C  3B 3A 05 D4 */	addi r25, r26, 0x5d4
-asm\melee\ft\code_8008521C.s:/* 800D5648 000D2228  80 06 05 D4 */	lwz r0, 0x5d4(r6)
+
 asm\melee\ft\ftanim.s:/* 800703EC 0006CFCC  90 7B 05 D4 */	stw r3, 0x5d4(r27)
 asm\melee\ft\ftanim.s:/* 800703F0 0006CFD0  80 7B 05 D4 */	lwz r3, 0x5d4(r27)
 asm\melee\ft\ftanim.s:/* 8007041C 0006CFFC  80 7B 05 D4 */	lwz r3, 0x5d4(r27)
@@ -74,9 +68,6 @@ asm\melee\it\code_8027CF30.s:/* 802EB1C0 002E7DA0  38 7E 05 D4 */	addi r3, r30, 
 asm\melee\it\code_8027CF30.s:/* 802EB320 002E7F00  38 7F 05 D4 */	addi r3, r31, 0x5d4
 asm\melee\it\code_8027CF30.s:/* 802EB34C 002E7F2C  38 7F 05 D4 */	addi r3, r31, 0x5d4
 asm\melee\it\code_8027CF30.s:/* 802EF68C 002EC26C  38 7F 05 D4 */	addi r3, r31, 0x5d4
-asm\melee\lb\code_8001E2F8.s:/* 8002343C 0002001C  38 9F 05 D4 */	addi r4, r31, 0x5d4
-asm\melee\lb\code_8001E2F8.s:/* 80023580 00020160  38 9F 05 D4 */	addi r4, r31, 0x5d4
-asm\melee\lb\code_8001E2F8.s:/* 80023B64 00020744  38 7F 05 D4 */	addi r3, r31, 0x5d4
 asm\melee\text_3.s:/* 80231A54 0022E634  3A 9F 05 D4 */	addi r20, r31, 0x5d4
 
 Completed
@@ -92,3 +83,9 @@ asm\melee\it\code_80266F3C.s:/* 80271490 0026E070  38 7F 05 D4 */	addi r3, r31, 
 asm\melee\ft\ftcoll.s:/* 80079428 00076008  80 1D 05 D4 */	lwz r0, 0x5d4(r29)
 asm\melee\it\code_80266F3C.s:/* 80270808 0026D3E8  80 17 05 D4 */	lwz r0, 0x5d4(r23)
 asm\melee\it\code_80266F3C.s:/* 8027089C 0026D47C  3A 75 05 D4 */	addi r19, r21, 0x5d4
+asm\melee\ft\code_8008521C.s:/* 800BB3E8 000B7FC8  3B 3D 05 D4 */	addi r25, r29, 0x5d4
+asm\melee\ft\code_8008521C.s:/* 800BB500 000B80E0  3B 3D 05 D4 */	addi r25, r29, 0x5d4
+asm\melee\ft\code_8008521C.s:/* 800BB63C 000B821C  3B 3A 05 D4 */	addi r25, r26, 0x5d4
+asm\melee\ft\code_8008521C.s:/* 800BB3E4 000B7FC4  80 1D 05 D4 */	lwz r0, 0x5d4(r29)
+asm\melee\ft\code_8008521C.s:/* 800BB4FC 000B80DC  80 1D 05 D4 */	lwz r0, 0x5d4(r29)
+asm\melee\ft\code_8008521C.s:/* 800BB638 000B8218  80 1A 05 D4 */	lwz r0, 0x5d4(r26)

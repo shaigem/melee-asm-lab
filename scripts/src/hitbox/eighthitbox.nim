@@ -305,6 +305,21 @@ func patchAttackLogic(gameData: GameData): string =
         %genericLoop(gameData, loopAddr = 0x800bb138, countAddr = 0x800bb1f4, r29, regHitboxId = r30, regFtData = r31, r31, checkState = true,
         onCalcNewHitOffset = "lwz r31, 0x10(sp)")
 
+        # CPU_CheckForNearbyItemHitbox(r3=CPUData,r4=ItemData) - Items
+        gecko 0x800bb240
+        # save item data to stack for later use
+        mr r29, r4 # orig code line, store item data
+        stw r4, 0x10(sp)
+
+        %genericLoop(gameData, loopAddr = 0x800bb3e8, countAddr = 0x800bb4e8, r25, regHitboxId = r31, regFtData = r29, r29, checkState = true, isItem = true,
+        onCalcNewHitOffset = "lwz r29, 0x10(sp)")
+
+        %genericLoop(gameData, loopAddr = 0x800bb500, countAddr = 0x800bb614, r25, regHitboxId = r31, regFtData = r29, r29, checkState = true, isItem = true,
+        onCalcNewHitOffset = "lwz r29, 0x10(sp)")
+
+        %genericLoop(gameData, loopAddr = 0x800bb63c, countAddr = 0x800bb73c, r25, regHitboxId = r27, regFtData = r26, r26, checkState = true, isItem = true,
+        onCalcNewHitOffset = "lwz r26, 0x10(sp)")
+
         # Hitbox_RefreshHitbox(r3=player,r4=hitboxID) - Fighter Hitboxes Only
         # Links Down Air uses this
         # r3 = fighter gobj
