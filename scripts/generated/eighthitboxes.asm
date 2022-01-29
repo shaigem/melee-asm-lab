@@ -41,6 +41,18 @@ mulli r29, r29, 316
 addi r29, r29, 4048
 OrigExit_802790F8:
 add rItHitPtr, rItemData, rItHitPtr
+gecko 2150061460, nop
+gecko 2150061468
+regs (3), rItHitPtr, rHitboxId
+cmplwi rHitboxId, 4
+mulli rItHitPtr, rHitboxId, 316
+addi rItHitPtr, rItHitPtr, 1492
+blt+ OrigExit_8027559c
+subi r3, r4, 4
+mulli r3, r3, 316
+addi r3, r3, 4048
+OrigExit_8027559c:
+
 gecko 2147969412
 li r7, 4
 addi r6, r3, 8624

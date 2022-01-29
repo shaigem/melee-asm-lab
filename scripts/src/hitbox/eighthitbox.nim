@@ -108,6 +108,19 @@ func patchSubactionEventParsing(gameData: GameData): string =
         OrigExit_802790F8:
             add rItHitPtr, rItemData, rItHitPtr
 
+        # Item Hitbox Multiply Size - Patch
+        gecko 0x80275594, nop
+        gecko 0x8027559c
+        # r4 = hitbox id
+        regs (3), rItHitPtr, rHitboxId
+        cmplwi rHitboxId, {OldHitboxCount}
+        mulli rItHitPtr, rHitboxId, {ItHitSize}
+        addi rItHitPtr, rItHitPtr, {idItHit.int}
+        blt+ OrigExit_8027559c
+        %o(gameData, regHitboxId = r4, regResultHitPtr = r3, hitSize = ItHitSize, extDataOffset = calcOffsetItData(gameData, ItHit4))
+        OrigExit_8027559c:
+            ""
+
         # Fighter_InitHitbox UNK - Patch
         gecko 0x80076984
         # r3 - 0x270/624 = fighter data
