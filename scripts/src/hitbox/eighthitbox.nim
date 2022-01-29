@@ -239,8 +239,8 @@ func patchAttackLogic(gameData: GameData): string =
         %genericLoop(gameData, loopAddr = 0x80078e48, countAddr = 0x8007922c, r23, regHitboxId = r30, regFtData = r24, r29, checkState = true)
 
         # Hitbox_MeleeAttackLogicOnPlayer Patches
-        #%genericLoop2(gameData, loopAddr = 0x8007706c, countAddr = 0x80077098, r3, regHitboxId = r30, regFtData = r26, r24)
         %genericLoop(gameData, loopAddr = 0x80077210, countAddr = 0x8007723c, r3, regHitboxId = r25, regFtData = r26, r23, checkState = true)
+        %genericLoop(gameData, loopAddr = 0x8007706c, countAddr = 0x80077098, r3, regHitboxId = r30, regFtData = r26, r24, checkState = true)
 
         # Hitbox_ProjectileHitboxAndFighterHitbox Patches - Not sure what this part does TODO
         %reversedLoop(gameData, loopAddr = 0x8007937c, countAddr = 0x80079410, r3, regHitboxId = r20, regFtData = r27, r22)
@@ -271,6 +271,8 @@ func patchAttackLogic(gameData: GameData): string =
 
         # Hitbox_GrabAttackLogic Patches - Grabbing
         %reversedLoop(gameData, loopAddr = 0x80078b10, countAddr = 0x80078c40, r3, regHitboxId = r27, regFtData = r30, r31)
+        # Grab_CheckForGrabBoxOverlap - Grabbing Items like Goombas Patches
+        %reversedLoop(gameData, loopAddr = 0x8007bd00, countAddr = 0x8007be0c, r3, regHitboxId = r26, regFtData = r31, r27)
 
         # CPU_CheckForNearbyMeleeHitbox(r3=CPUData,r4=OpponentData) - Fighters
         gecko 0x800bb12c

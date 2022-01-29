@@ -185,6 +185,19 @@ lwz r0, 0(r3)
 OrigExit_80077210:
 
 gecko 2147971644, cmplwi r25, 8
+gecko 2147971180
+cmplwi r30, 4
+addi r3, r24, 2324
+bgt UseNewOffsets_8007706C
+bne+ OrigExit_8007706C
+
+addi r24, r26, 9248
+UseNewOffsets_8007706C:
+mr r3, r24
+lwz r0, 0(r3)
+OrigExit_8007706C:
+
+gecko 2147971224, cmplwi r30, 8
 gecko 2147980156
 cmplwi r20, 4
 lwz r0, 0x00000914(r22)
@@ -316,6 +329,18 @@ lwz r0, 0(r3)
 OrigExit_80078B10:
 
 gecko 2147978304, cmplwi r27, 8
+gecko 2147990784
+cmplwi r26, 4
+lwz r0, 0x00000914(r27)
+bgt UseNewOffsets_8007BD00
+bne+ OrigExit_8007BD00
+addi r27, r31, 9248
+UseNewOffsets_8007BD00:
+mr r3, r27
+lwz r0, 0(r3)
+OrigExit_8007BD00:
+
+gecko 2147991052, cmplwi r26, 8
 gecko 2148249900
 li r30, 0
 stw r4, 0x00000010(sp)

@@ -86,12 +86,7 @@ asm\melee\ft\chara\ftyoshi.s:/* 80130948 0012D528  38 66 09 14 */	addi r3, r6, 0
 
 
 
-asm\melee\ft\ftcoll.s:/* 80077068 00073C48  80 18 09 14 */	lwz r0, 0x914(r24)
-asm\melee\ft\ftcoll.s:/* 8007706C 00073C4C  38 78 09 14 */	addi r3, r24, 0x914
 
-
-asm\melee\ft\ftcoll.s:/* 8007BCFC 000788DC  38 7B 09 14 */	addi r3, r27, 0x914
-asm\melee\ft\ftcoll.s:/* 8007BD00 000788E0  80 1B 09 14 */	lwz r0, 0x914(r27)
 asm\melee\it\code_8027CF30.s:/* 802B718C 002B3D6C  3B E3 09 14 */	addi r31, r3, 0x914 # samus extender hitbox?
 
 
@@ -144,3 +139,9 @@ asm\melee\ft\code_8008521C.s:/* 800BB138 000B7D18  3B BF 09 14 */	addi r29, r31,
 asm\melee\ft\ftcoll.s:/* 800768A4 00073484  38 C3 09 14 */	addi r6, r3, 0x914 # UNSURE
 asm\melee\ft\ftcoll.s:/* 800768E4 000734C4  38 C3 09 14 */	addi r6, r3, 0x914 # UNSURE
 
+
+
+asm\melee\ft\ftcoll.s:/* 80077068 00073C48  80 18 09 14 */	lwz r0, 0x914(r24)
+asm\melee\ft\ftcoll.s:/* 8007706C 00073C4C  38 78 09 14 */	addi r3, r24, 0x914
+asm\melee\ft\ftcoll.s:/* 8007BCFC 000788DC  38 7B 09 14 */	addi r3, r27, 0x914
+asm\melee\ft\ftcoll.s:/* 8007BD00 000788E0  80 1B 09 14 */	lwz r0, 0x914(r27)
