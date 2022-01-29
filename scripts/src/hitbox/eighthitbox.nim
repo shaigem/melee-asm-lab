@@ -74,6 +74,12 @@ func reversedLoop(gameData: GameData; loopAddr, countAddr: int64; regPtrFtHit, r
         # patch the check maximum hitbox ids
         gecko {countAddr}, cmplwi {regHitboxId}, {NewHitboxCount}
 
+func o(gameData: GameData; regHitboxId, regResultHitPtr: Register; hitSize, extDataOffset: int): string =
+    result = ppc:
+        subi {regResultHitPtr}, {regHitboxId}, {OldHitboxCount}
+        mulli {regResultHitPtr}, {regResultHitPtr}, {hitSize}
+        addi {regResultHitPtr}, {regResultHitPtr}, {extDataOffset}
+
 func patchSubactionEventParsing(gameData: GameData): string =
     result = ppc:
 
@@ -82,17 +88,24 @@ func patchSubactionEventParsing(gameData: GameData): string =
         # r0 = hitbox id
         gecko 0x80071284
         regs rHitboxId, (30), rFtHitPtr, rFighterData
-
         cmplwi r0, {OldHitboxCount}
         blt+ OrigExit_80071284 # id < 4
         mr rHitboxId, r0
-        subi rHitboxId, rHitboxId, {OldHitboxCount} # new hitbox id = (id - 4)
-        mulli r3, rHitboxId, {FtHitSize} # id * ft hitbox size
-        addi rFtHitPtr, r3, {calcOffsetFtData(gameData, FtHit4)}
-
+        %o(gameData, regHitboxId = r3, regResultHitPtr = r30, hitSize = FtHitSize, extDataOffset = calcOffsetFtData(gameData, FtHit4))
         OrigExit_80071284:
             add rFtHitPtr, rFighterData, rFtHitPtr
-        
+
+        # Patch Parse Event 0x2C - Create Hitbox Projectile
+        # r30 = item data
+        # r4 = hitbox id
+        gecko 0x802790F8
+        regs (0), rItemData, (29), rItHitPtr
+        cmplwi r4, {OldHitboxCount}
+        blt+ OrigExit_802790F8 # id < 4
+        %o(gameData, regHitboxId = r4, regResultHitPtr = r29, hitSize = ItHitSize, extDataOffset = calcOffsetItData(gameData, ItHit4))
+        OrigExit_802790F8:
+            add rItHitPtr, rItemData, rItHitPtr
+
         # Fighter_InitHitbox UNK - Patch
         gecko 0x80076984
         # r3 - 0x270/624 = fighter data
@@ -120,21 +133,6 @@ func patchSubactionEventParsing(gameData: GameData): string =
 
         InitVictimArray_80076984:
             mr r3, r4
-        
-        # # Patch Parse Event 0x2C - Create Hitbox Projectile
-        # # r30 = item data
-        # # r4 = hitbox id
-        # gecko 0x802790F8
-        # regs (0), rItemData, (29), rItHitPtr
-
-        # cmplwi r4, {OldHitboxCount}
-        # blt+ OrigExit_802790F8 # id < 4
-        # subi r3, r4, {OldHitboxCount} # new hitbox id = (id - 4)
-        # mulli r3, r3, {ItHitSize} # id * it hitbox size
-        # addi rItHitPtr, r3, {calcOffsetItData(gameData, ItHit4)}
-
-        # OrigExit_802790F8:
-        #     add rItHitPtr, rItemData, rItHitPtr
 
         # SubactionEvent_0x3C_MeleeHitboxRemoveSpecific
         # r3 = fighter gobj
@@ -215,7 +213,7 @@ func patchCollisionDrawLogic(gameData: GameData): string =
         # r31 = fighter data
         %genericLoop(gameData, loopAddr = 0x80080614, countAddr = 0x8008062c, r3, regHitboxId = r25, regFtData = r31, r26)
         # ItemHitbox_Draw - Collision Bubbles for Item
-#        %genericLoop(gameData, loopAddr = 0x8026ed70, countAddr = 0x8026ed88, r3, regHitboxId = r27, regFtData = r31, r28, isItem = true)
+        %genericLoop(gameData, loopAddr = 0x8026ed70, countAddr = 0x8026ed88, r3, regHitboxId = r27, regFtData = r31, r28, isItem = true)
         gecko.end
 
 func patchUpdateHitboxPositions(gameData: GameData): string =
@@ -223,7 +221,7 @@ func patchUpdateHitboxPositions(gameData: GameData): string =
         # Hitbox_UpdateAllHitboxPositions - Update Positions for Fighter Hitboxes
         %genericLoop(gameData, loopAddr = 0x8007aeac, countAddr = 0x8007aeb8, r4, regHitboxId = r29, regFtData = r30, r31)
         # Item_UpdateHitboxPositions - Item Hitboxes
-#        %genericLoop(gameData, loopAddr = 0x8027139c, countAddr = 0x8027144c, r29, regHitboxId = r28, regFtData = rNone, r31, isItem = true)        
+        %genericLoop(gameData, loopAddr = 0x8027139c, countAddr = 0x8027144c, r29, regHitboxId = r28, regFtData = rNone, r31, isItem = true)        
         gecko.end
 
 func patchRemoveAllHitboxes(gameData: GameData): string =

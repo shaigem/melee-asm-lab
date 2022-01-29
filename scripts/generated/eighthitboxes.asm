@@ -27,11 +27,20 @@ regs rHitboxId, (30), rFtHitPtr, rFighterData
 cmplwi r0, 4
 blt+ OrigExit_80071284
 mr rHitboxId, r0
-subi rHitboxId, rHitboxId, 4
-mulli r3, rHitboxId, 312
-addi rFtHitPtr, r3, 9248
+subi r30, r3, 4
+mulli r30, r30, 312
+addi r30, r30, 9248
 OrigExit_80071284:
 add rFtHitPtr, rFighterData, rFtHitPtr
+gecko 2150076664
+regs (0), rItemData, (29), rItHitPtr
+cmplwi r4, 4
+blt+ OrigExit_802790F8
+subi r29, r4, 4
+mulli r29, r29, 316
+addi r29, r29, 4048
+OrigExit_802790F8:
+add rItHitPtr, rItemData, rItHitPtr
 gecko 2147969412
 li r7, 4
 addi r6, r3, 8624
@@ -117,6 +126,19 @@ mr r3, r26
 OrigExit_80080614:
 
 gecko 2148009516, cmplwi r25, 8
+gecko 2150034800
+cmplwi r27, 4
+addi r3, r28, 1492
+bgt UseNewOffsets_8026ED70
+bne+ OrigExit_8026ED70
+
+addi r28, r31, 4048
+UseNewOffsets_8026ED70:
+mr r3, r28
+
+OrigExit_8026ED70:
+
+gecko 2150034824, cmplwi r27, 8
 gecko.end
 gecko 2147987116
 cmplwi r29, 4
@@ -131,6 +153,19 @@ mr r4, r31
 OrigExit_8007AEAC:
 
 gecko 2147987128, cmplwi r29, 8
+gecko 2150044572
+cmplwi r28, 4
+addi r29, r31, 1492
+bgt UseNewOffsets_8027139C
+bne+ OrigExit_8027139C
+
+li r31, 4048
+UseNewOffsets_8027139C:
+mr r29, r31
+
+OrigExit_8027139C:
+
+gecko 2150044748, cmplwi r28, 8
 gecko.end
 gecko 2147987488
 cmplwi r29, 4

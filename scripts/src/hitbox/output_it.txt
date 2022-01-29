@@ -35,7 +35,6 @@ asm\melee\it\code_80266F3C.s:/* 80270898 0026D478  80 15 05 D4 */	lwz r0, 0x5d4(
 asm\melee\it\code_80266F3C.s:/* 8027089C 0026D47C  3A 75 05 D4 */	addi r19, r21, 0x5d4
 asm\melee\it\code_80266F3C.s:/* 80270938 0026D518  38 97 05 D4 */	addi r4, r23, 0x5d4
 asm\melee\it\code_80266F3C.s:/* 802712B4 0026DE94  3B C4 05 D4 */	addi r30, r4, 0x5d4
-asm\melee\it\code_80266F3C.s:/* 8027139C 0026DF7C  3B BF 05 D4 */	addi r29, r31, 0x5d4
 asm\melee\it\code_80266F3C.s:/* 80271490 0026E070  38 7F 05 D4 */	addi r3, r31, 0x5d4
 asm\melee\it\code_80266F3C.s:/* 80272584 0026F164  38 64 05 D4 */	addi r3, r4, 0x5d4
 asm\melee\it\code_80266F3C.s:/* 80272604 0026F1E4  38 7F 05 D4 */	addi r3, r31, 0x5d4
@@ -58,7 +57,6 @@ asm\melee\it\code_80266F3C.s:/* 802758DC 002724BC  80 04 05 D4 */	lwz r0, 0x5d4(
 asm\melee\it\code_80266F3C.s:/* 80275940 00272520  80 04 05 D4 */	lwz r0, 0x5d4(r4)
 asm\melee\it\code_80266F3C.s:/* 80275944 00272524  38 A4 05 D4 */	addi r5, r4, 0x5d4
 asm\melee\it\code_80266F3C.s:/* 8027596C 0027254C  38 A3 05 D4 */	addi r5, r3, 0x5d4
-asm\melee\it\code_80266F3C.s:/* 802790F4 00275CD4  3B A3 05 D4 */	addi r29, r3, 0x5d4
 asm\melee\it\code_80266F3C.s:/* 8027959C 0027617C  3B E3 05 D4 */	addi r31, r3, 0x5d4
 asm\melee\it\code_80266F3C.s:/* 80279634 00276214  38 A5 05 D4 */	addi r5, r5, 0x5d4
 asm\melee\it\code_8027CF30.s:/* 8028DE94 0028AA74  80 04 05 D4 */	lwz r0, 0x5d4(r4)
@@ -91,3 +89,5 @@ asm\melee\text_3.s:/* 80231A54 0022E634  3A 9F 05 D4 */	addi r20, r31, 0x5d4
 Completed
 
 asm\melee\it\code_80266F3C.s:/* 8026ED70 0026B950  38 7C 05 D4 */	addi r3, r28, 0x5d4
+asm\melee\it\code_80266F3C.s:/* 802790F4 00275CD4  3B A3 05 D4 */	addi r29, r3, 0x5d4
+asm\melee\it\code_80266F3C.s:/* 8027139C 0026DF7C  3B BF 05 D4 */	addi r29, r31, 0x5d4
