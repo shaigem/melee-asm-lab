@@ -189,6 +189,17 @@ func patchSubactionEventParsing(gameData: GameData): string =
         OrigExit_80279590:
             ""
 
+        # Item Hitbox Deactivate Specific ID Patch
+        gecko 0x80272564
+        # r3 = hitbox id
+        regs (4), rHitboxId
+        cmplwi rHitboxId, {OldHitboxCount}
+        mulli rHitboxId, rHitboxId, {ItHitSize} # orig code line
+        blt+ OrigExit_80272564
+        addi rHitboxId, rHitboxId, {offsetToNewHit(gameData, isItem = true)}
+        OrigExit_80272564:
+            ""
+
         # Fighter_InitHitbox UNK - Patch
         gecko 0x80076984
         # r3 - 0x270/624 = fighter data

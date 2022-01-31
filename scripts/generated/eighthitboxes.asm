@@ -65,6 +65,14 @@ blt+ OrigExit_80279590
 addi rHitboxId, rHitboxId, 1292
 OrigExit_80279590:
 
+gecko 2150049124
+regs (4), rHitboxId
+cmplwi rHitboxId, 4
+mulli rHitboxId, rHitboxId, 316
+blt+ OrigExit_80272564
+addi rHitboxId, rHitboxId, 1292
+OrigExit_80272564:
+
 gecko 2147969412
 li r7, 4
 addi r6, r3, 8624
