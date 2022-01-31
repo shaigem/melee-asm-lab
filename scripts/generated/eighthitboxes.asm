@@ -606,5 +606,12 @@ addi r30, r30, 1292
 OrigExit_8026FA5C:
 lwz r0, 1492(r30)
 gecko 0x8026FAA0, cmplwi r28, 8
+gecko 0x80275670
+cmplwi r30, 4
+bne+ OrigExit_80275670
+addi r31, r31, 1292
+OrigExit_80275670:
+lwz r0, 1492(r31)
+gecko 0x802756A0, cmplwi r30, 8
 gecko.end
 gecko.end

@@ -467,6 +467,9 @@ func patchAttackLogic(gameData: GameData): string =
 
         # Unknown Item Storing Victim
         %genericLoopPatch(gameData, patchAddr = 0x8026fa5c, hitboxCountAddr = 0x8026faa0, regData = rNone, regHitboxId = r28, regNextHitPtr = r30, isItem = true)
+        # Related to Item Hitboxes When Touching Ground (e.g. apple falling)
+        %genericLoopPatch(gameData, patchAddr = 0x80275670, hitboxCountAddr = 0x802756a0, regData = rNone, regHitboxId = r30, regNextHitPtr = r31, isItem = true)
+
         gecko.end
 
 proc patchMain(gameData: GameData): string =
