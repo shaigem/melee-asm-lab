@@ -134,7 +134,6 @@ bne+ OrigExit_80080614
 addi r26, r31, 9248
 UseNewOffsets_80080614:
 mr r3, r26
-
 OrigExit_80080614:
 
 gecko 2148009516, cmplwi r25, 8
@@ -147,7 +146,6 @@ bne+ OrigExit_8026ED70
 addi r28, r31, 4048
 UseNewOffsets_8026ED70:
 mr r3, r28
-
 OrigExit_8026ED70:
 
 gecko 2150034824, cmplwi r27, 8
@@ -161,7 +159,6 @@ bne+ OrigExit_8007AEAC
 addi r31, r30, 9248
 UseNewOffsets_8007AEAC:
 mr r4, r31
-
 OrigExit_8007AEAC:
 
 gecko 2147987128, cmplwi r29, 8
@@ -174,7 +171,6 @@ bne+ OrigExit_8027139C
 li r31, 4048
 UseNewOffsets_8027139C:
 mr r29, r31
-
 OrigExit_8027139C:
 
 gecko 2150044748, cmplwi r28, 8
@@ -188,7 +184,6 @@ bne+ OrigExit_8007B020
 addi r31, r30, 9248
 UseNewOffsets_8007B020:
 mr r3, r31
-
 OrigExit_8007B020:
 
 gecko 2147987500, cmplwi r29, 8
@@ -201,7 +196,6 @@ bne+ OrigExit_80272604
 addi r31, r30, 4048
 UseNewOffsets_80272604:
 mr r3, r31
-
 OrigExit_80272604:
 
 gecko 2150049296, cmplwi r29, 8
@@ -309,7 +303,6 @@ bne+ OrigExit_8007968C
 addi r20, r27, 9248
 UseNewOffsets_8007968C:
 mr r4, r20
-
 OrigExit_8007968C:
 
 gecko 2147981128, cmplwi r19, 8
@@ -392,7 +385,6 @@ lwz r31, 0xC(sp)
 addi r31, r31, 4048
 UseNewOffsets_80271490:
 mr r3, r31
-
 OrigExit_80271490:
 
 gecko 2150044828, cmplwi r30, 8
@@ -431,7 +423,6 @@ bne+ OrigExit_80078F7C
 addi r19, r28, 9248
 UseNewOffsets_80078F7C:
 mr r16, r19
-
 OrigExit_80078F7C:
 
 gecko 2147979204, cmplwi r18, 8
@@ -568,5 +559,12 @@ mulli rNextHitOff, rNextHitOff, 312
 addi rNextHitOff, rNextHitOff, 9248
 OrigExit_8007b078:
 
+gecko 0x8026A020
+cmplwi r28, 4
+bne+ OrigExit_8026A020
+addi r29, r31, 2556
+OrigExit_8026A020:
+lwz r0, 1492(r29)
+gecko 0x8026A074, cmplwi r28, 8
 gecko.end
 gecko.end
