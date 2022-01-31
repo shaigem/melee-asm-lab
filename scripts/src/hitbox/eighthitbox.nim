@@ -405,6 +405,23 @@ func patchAttackLogic(gameData: GameData): string =
         %genericLoop(gameData, loopAddr = 0x800bb138, countAddr = 0x800bb1f4, r29, regHitboxId = r30, regFtData = r31, r31, checkState = true,
         onCalcNewHitOffset = "lwz r31, 0x10(sp)")
 
+        # Check if Item has an Active Hitbox Patch
+        gecko 0x802758cc
+        addi r3, r3, {offsetToNewHit(gameData, isItem = true) + ItHitSize}
+        li r0, {NewHitboxCount - OldHitboxCount}
+        mtctr r0
+        Loop_802758cc:
+            lwz r0, {idItHit.int + ItHitSize}(r3)
+            addi r3, r3, {ItHitSize}
+            cmpwi r0, 0
+            "bdnzt+" eq, Loop_802758cc
+        # loop exit
+        li r3, 0
+        beq Exit_802758cc
+        li r3, 1
+        Exit_802758cc:
+            ""
+
         # CPU_CheckForNearbyItemHitbox(r3=CPUData,r4=ItemData) - Items
         gecko 0x800bb240
         # save item data to stack for later use

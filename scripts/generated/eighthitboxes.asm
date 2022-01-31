@@ -516,6 +516,20 @@ lwz r0, 0(r29)
 OrigExit_800BB138:
 
 gecko 2148250100, cmplwi r30, 8
+gecko 2150062284
+addi r3, r3, 1608
+li r0, 4
+mtctr r0
+Loop_802758cc:
+lwz r0, 1808(r3)
+addi r3, r3, 316
+cmpwi r0, 0
+bdnzt+ eq, Loop_802758cc
+li r3, 0
+beq Exit_802758cc
+li r3, 1
+Exit_802758cc:
+
 gecko 2148250176
 mr r29, r4
 stw r4, 0x00000010(sp)
