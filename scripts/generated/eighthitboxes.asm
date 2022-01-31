@@ -554,6 +554,29 @@ CheckToLoop:
 bdnz+ Loop_80275590
 Exit_80275590:
 blr
+gecko 2150039084
+addi r5, r5, 1608
+li r7, 5
+Loop_8026fe2c:
+subic. r7, r7, 1
+li r0, 0
+beq- Exit_8026fe2c
+addi r3, r5, 1808
+cmplw r3, r30
+addi r5, r5, 316
+beq Loop_8026fe2c
+lwz r0, 0(r3)
+cmpwi r0, 0
+beq Loop_8026fe2c
+lwz r4, 0x00000004(r3)
+lwz r0, 0x00000004(r30)
+cmplw r4, r0
+bne Loop_8026fe2c
+mr r4, r30
+bla r12, 2147517692
+li r0, 1
+Exit_8026fe2c:
+
 gecko 2148250176
 mr r29, r4
 stw r4, 0x00000010(sp)

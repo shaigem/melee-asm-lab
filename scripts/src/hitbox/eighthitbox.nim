@@ -451,6 +451,33 @@ func patchAttackLogic(gameData: GameData): string =
         Exit_80275590:
             blr
 
+        # Unknown Item Patch Victim Array
+        gecko 0x8026fe2c
+        addi r5, r5, {offsetToNewHit(gameData, isItem = true) + ItHitSize}
+        li r7, {(NewHitboxCount - OldHitboxCount) + 1}
+
+        Loop_8026fe2c:
+            "subic." r7, r7, 1
+            li r0, 0
+            beq- Exit_8026fe2c
+            addi r3, r5, {idItHit.int + ItHitSize}
+            cmplw r3, r30
+            addi r5, r5, {ItHitSize}
+            beq Loop_8026fe2c
+            lwz r0, 0(r3)
+            cmpwi r0, 0
+            beq Loop_8026fe2c
+            lwz r4, 0x4(r3)
+            lwz r0, 0x4(r30)
+            cmplw r4, r0
+            bne Loop_8026fe2c
+            mr r4, r30
+            bla r12, 0x800084FC
+            li r0, 1
+
+        Exit_8026fe2c:
+            ""
+
         # CPU_CheckForNearbyItemHitbox(r3=CPUData,r4=ItemData) - Items
         gecko 0x800bb240
         # save item data to stack for later use
