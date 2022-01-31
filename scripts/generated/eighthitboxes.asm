@@ -61,6 +61,14 @@ blt+ OrigExit_80279634
 addi rItHitPtr, rItHitPtr, 1292
 OrigExit_80279634:
 
+gecko 2150077840
+regs (3), rHitboxId
+cmplwi rHitboxId, 4
+mulli rHitboxId, rHitboxId, 316
+blt+ OrigExit_80279590
+addi rHitboxId, rHitboxId, 1292
+OrigExit_80279590:
+
 gecko 2147969412
 li r7, 4
 addi r6, r3, 8624
