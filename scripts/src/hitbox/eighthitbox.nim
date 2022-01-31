@@ -354,8 +354,6 @@ func patchAttackLogic(gameData: GameData): string =
         gecko 0x8026fae4
         addi r31, r7, 0 # orig code line
         stw r27, 0x20(sp) # save item data for later use
-#        %genericLoop(gameData, loopAddr = 0x8026fb28, countAddr = 0x8026fb68, r3, regHitboxId = r25, regFtData = r24, r24, checkState = true, isItem = true,
-#        onCalcNewHitOffset = "lwz r24, 0x20(sp)") TODO test later
         %genericLoop(gameData, loopAddr = 0x8026fb9c, countAddr = 0x8026fbdc, r3, regHitboxId = r25, regFtData = r23, r23, checkState = true, isItem = true,
         onCalcNewHitOffset = "lwz r23, 0x20(sp)")
 
@@ -525,6 +523,13 @@ func patchAttackLogic(gameData: GameData): string =
         %genericLoopPatch(gameData, patchAddr = 0x8026fa5c, hitboxCountAddr = 0x8026faa0, regData = rNone, regHitboxId = r28, regNextHitPtr = r30, isItem = true)
         # Related to Item Hitboxes When Touching Ground (e.g. apple falling)
         %genericLoopPatch(gameData, patchAddr = 0x80275670, hitboxCountAddr = 0x802756a0, regData = rNone, regHitboxId = r30, regNextHitPtr = r31, isItem = true)
+        # Unknown Projectile Logic On Entity
+        #        %genericLoop(gameData, loopAddr = 0x8026fb28, countAddr = 0x8026fb68, r3, regHitboxId = r25, regFtData = r24, r24, checkState = true, isItem = true,
+        #        onCalcNewHitOffset = "lwz r24, 0x20(sp)") TODO test later
+        %genericLoopPatch(gameData, patchAddr = 0x8026fb24, hitboxCountAddr = 0x8026fb68, regData = rNone, regHitboxId = r25, regNextHitPtr = r24, isItem = true)
+        # Unknown Projectile Logic On Player
+        %genericLoopPatch(gameData, patchAddr = 0x8026fc54, hitboxCountAddr = 0x8026fc84, regData = rNone, regHitboxId = r27, regNextHitPtr = r26, isItem = true)
+        %genericLoopPatch(gameData, patchAddr = 0x8026fca8, hitboxCountAddr = 0x8026fcd8, regData = rNone, regHitboxId = r27, regNextHitPtr = r26, isItem = true)
 
         gecko.end
 
