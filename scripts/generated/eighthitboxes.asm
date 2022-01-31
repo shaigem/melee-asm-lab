@@ -53,6 +53,14 @@ mulli r3, r3, 316
 addi r3, r3, 4048
 OrigExit_8027559c:
 
+gecko 2150078004
+regs (4), rHitboxId, rItHitPtr
+cmplwi rHitboxId, 4
+addi rItHitPtr, rItHitPtr, 1492
+blt+ OrigExit_80279634
+addi rItHitPtr, rItHitPtr, 1292
+OrigExit_80279634:
+
 gecko 2147969412
 li r7, 4
 addi r6, r3, 8624

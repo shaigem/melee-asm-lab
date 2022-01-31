@@ -40,6 +40,12 @@ proc genericOrigReturn(gameData: GameData, regData, regHitboxId, regNextHitPtr: 
     result = ppc:
         lwz r0, {dataHitOffset}({regNextHitPtr})
 
+proc offsetToNewHit(gameData: GameData, isItem: bool = false): int =
+    let extHitOffset = if isItem: (calcOffsetItData(gameData, ItHit4)) else: (calcOffsetFtData(gameData, FtHit4))
+    let hitSize = if isItem: ItHitSize else: FtHitSize
+    let hitOffset = if isItem: idItHit.int else: fdFtHit.int
+    result = extHitOffset - ((OldHitboxCount * hitSize) + hitOffset)
+
 func genericLoopPatch(gameData: GameData, patchAddr, hitboxCountAddr: int64; regData, regHitboxId, regNextHitPtr: Register; 
     onCalcNewHitOffset: LoopPatch = genericCalcNewHitOffset, onOrigReturn: LoopPatch = genericOrigReturn, isItem: bool = false): string =
     let patchAddr = patchAddr.toHex(8)
@@ -161,6 +167,16 @@ func patchSubactionEventParsing(gameData: GameData): string =
         blt+ OrigExit_8027559c
         %o(gameData, regHitboxId = r4, regResultHitPtr = r3, hitSize = ItHitSize, extDataOffset = calcOffsetItData(gameData, ItHit4))
         OrigExit_8027559c:
+            ""
+
+        # Item Hitbox Set Size Event - Patch
+        gecko 0x80279634
+        regs (4), rHitboxId, rItHitPtr
+        cmplwi rHitboxId, {OldHitboxCount}
+        addi rItHitPtr, rItHitPtr, {idItHit.int} # orig code line
+        blt+ OrigExit_80279634
+        addi rItHitPtr, rItHitPtr, {offsetToNewHit(gameData, isItem = true)}
+        OrigExit_80279634:
             ""
 
         # Fighter_InitHitbox UNK - Patch
@@ -417,6 +433,9 @@ func patchAttackLogic(gameData: GameData): string =
 
         # Items_OnReflect - Patches
         %genericLoopPatch(gameData, patchAddr = 0x8026a020, hitboxCountAddr = 0x8026a074, regData = r31, regHitboxId = r28, regNextHitPtr = r29, isItem = true)
+        
+        # Hitbox_EntityVSProjectileMain = Projectile Hits an Item Clanking?
+
         gecko.end
 
 proc patchMain(gameData: GameData): string =
