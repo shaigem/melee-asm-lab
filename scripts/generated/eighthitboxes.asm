@@ -578,6 +578,13 @@ addi r29, r29, 1292
 OrigExit_8026A020:
 lwz r0, 1492(r29)
 gecko 0x8026A074, cmplwi r28, 8
+gecko 0x80270938
+cmplwi r18, 4
+blt+ OrigExit_80270938
+addi r23, r23, 1292
+OrigExit_80270938:
+addi r4, r23, 1492
+gecko 0x80270A1C, cmplwi r18, 8
 gecko 0x8026FA5C
 cmplwi r28, 4
 bne+ OrigExit_8026FA5C

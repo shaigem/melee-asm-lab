@@ -1,5 +1,5 @@
 import ../melee
-import strutils
+import strutils, sugar
 
 const 
     FtHitSize = 312
@@ -47,13 +47,14 @@ proc genericOrigReturn(gameData: GameData, regData, regHitboxId, regNextHitPtr: 
         lwz r0, {dataHitOffset}({regNextHitPtr})
 
 func genericLoopPatch(gameData: GameData, patchAddr, hitboxCountAddr: int64; regData, regHitboxId, regNextHitPtr: Register; 
-    onCalcNewHitOffset: LoopPatch = genericCalcNewHitOffset, onOrigReturn: LoopPatch = genericOrigReturn, isItem: bool = false): string =
+    onCalcNewHitOffset: LoopPatch = genericCalcNewHitOffset, onOrigReturn: LoopPatch = genericOrigReturn, isItem: bool = false, exitBranchType: string = "bne+"): string =
     let patchAddr = patchAddr.toHex(8)
     let hitboxCountAddr = hitboxCountAddr.toHex(8)
+    let exitBranchInstr = exitBranchType & " OrigExit_" & patchAddr
     result = ppc:
         gecko {"0x" & patchAddr}
         cmplwi {regHitboxId}, {OldHitboxCount}
-        "bne+" {"OrigExit_" & patchAddr} # id != 4
+        %exitBranchInstr
 
         # when id == 4
         # calculate using new starting Hit offset
@@ -65,8 +66,8 @@ func genericLoopPatch(gameData: GameData, patchAddr, hitboxCountAddr: int64; reg
         gecko {"0x" & hitboxCountAddr}, cmplwi {regHitboxId}, {NewHitboxCount}
 
 
-func genericLoop(gameData: GameData; loopAddr, countAddr: int64; regPtrFtHit, regHitboxId, regFtData, regNextFtHitPtr: Register; checkState: bool = false; isItem: bool = false; 
-    onCalcNewHitOffset, onOrigReturn, onUseNewOffsets: string = ""): string =
+func genericLoop(gameData: GameData; loopAddr, countAddr: int64; regPtrFtHit, regHitboxId, regFtData, regNextFtHitPtr: Register; 
+    checkState: bool = false; isItem: bool = false; onCalcNewHitOffset, onOrigReturn, onUseNewOffsets: string = ""): string =
     let checkStateInstr = if checkState: ppc: lwz r0, 0({regPtrFtHit}) else: ""
     let hitPtrOffset = if isItem: idItHit.int else: fdFtHit.int
     let newHitPtrOffset = if isItem: calcOffsetItData(gameData, ItHit4) else: calcOffsetFtData(gameData, FtHit4)
@@ -442,7 +443,11 @@ func patchAttackLogic(gameData: GameData): string =
 
         # Items_OnReflect - Patches
         %genericLoopPatch(gameData, patchAddr = 0x8026a020, hitboxCountAddr = 0x8026a074, regData = r31, regHitboxId = r28, regNextHitPtr = r29, isItem = true)
-        
+
+        # Hitbox_EntityVSProjectileMain = Projectile Hits an Item Clank
+        %genericLoopPatch(gameData, patchAddr = 0x80270938, hitboxCountAddr = 0x80270a1c, regData = rNone, regHitboxId = r18, regNextHitPtr = r23, isItem = true,
+        exitBranchType = "blt+", onOrigReturn = (gameData, regData, regHitboxId, regNextHitPtr, isItem) => (ppc do: addi r4, {regNextHitPtr}, {idItHit.int}))
+
         # Unknown Item Storing Victim
         %genericLoopPatch(gameData, patchAddr = 0x8026fa5c, hitboxCountAddr = 0x8026faa0, regData = rNone, regHitboxId = r28, regNextHitPtr = r30, isItem = true)
         gecko.end

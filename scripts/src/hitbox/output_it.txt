@@ -8,11 +8,10 @@ asm\melee\it\code_80266F3C.s:/* 8026FCAC 0026C88C  38 7A 05 D4 */	addi r3, r26, 
 asm\melee\it\code_80266F3C.s:/* 8026FD44 0026C924  38 65 05 D4 */	addi r3, r5, 0x5d4
 asm\melee\it\code_80266F3C.s:/* 8026FD80 0026C960  38 65 05 D4 */	addi r3, r5, 0x5d4 # init it hitbox unk
 
-asm\melee\it\code_80266F3C.s:/* 80270938 0026D518  38 97 05 D4 */	addi r4, r23, 0x5d4
-asm\melee\it\code_80266F3C.s:/* 80272584 0026F164  38 64 05 D4 */	addi r3, r4, 0x5d4
-asm\melee\it\code_80266F3C.s:/* 8027269C 0026F27C  38 7E 05 D4 */	addi r3, r30, 0x5d4
-asm\melee\it\code_80266F3C.s:/* 802726B8 0026F298  3B BE 05 D4 */	addi r29, r30, 0x5d4
-asm\melee\it\code_80266F3C.s:/* 802727B4 0026F394  38 7F 05 D4 */	addi r3, r31, 0x5d4
+asm\melee\it\code_80266F3C.s:/* 80272584 0026F164  38 64 05 D4 */	addi r3, r4, 0x5d4 # flipper hitbox deactivating
+asm\melee\it\code_80266F3C.s:/* 8027269C 0026F27C  38 7E 05 D4 */	addi r3, r30, 0x5d4 # flipper hitbox activating
+asm\melee\it\code_80266F3C.s:/* 802726B8 0026F298  3B BE 05 D4 */	addi r29, r30, 0x5d4 # flipper hitbox activating
+asm\melee\it\code_80266F3C.s:/* 802727B4 0026F394  38 7F 05 D4 */	addi r3, r31, 0x5d4 # hammer hitbox activation
 asm\melee\it\code_80266F3C.s:/* 80275538 00272118  80 03 05 D4 */	lwz r0, 0x5d4(r3)
 asm\melee\it\code_80266F3C.s:/* 8027553C 0027211C  38 83 05 D4 */	addi r4, r3, 0x5d4
 asm\melee\it\code_80266F3C.s:/* 802755C4 002721A4  80 03 05 D4 */	lwz r0, 0x5d4(r3)
@@ -21,8 +20,8 @@ asm\melee\it\code_80266F3C.s:/* 80275670 00272250  80 1F 05 D4 */	lwz r0, 0x5d4(
 asm\melee\it\code_80266F3C.s:/* 80275674 00272254  3B BF 05 D4 */	addi r29, r31, 0x5d4
 asm\melee\it\code_80266F3C.s:/* 80275794 00272374  80 07 05 D4 */	lwz r0, 0x5d4(r7)
 asm\melee\it\code_80266F3C.s:/* 80275798 00272378  38 A7 05 D4 */	addi r5, r7, 0x5d4
-asm\melee\it\code_80266F3C.s:/* 802757BC 0027239C  38 A6 05 D4 */	addi r5, r6, 0x5d4
-asm\melee\it\code_80266F3C.s:/* 80275828 00272408  38 C6 05 D4 */	addi r6, r6, 0x5d4
+asm\melee\it\code_80266F3C.s:/* 802757BC 0027239C  38 A6 05 D4 */	addi r5, r6, 0x5d4 # master hand's lasers related
+asm\melee\it\code_80266F3C.s:/* 80275828 00272408  38 C6 05 D4 */	addi r6, r6, 0x5d4 # manual interpolation of hitboxes (master hand's lasers)
 asm\melee\it\code_80266F3C.s:/* 80275874 00272454  80 03 05 D4 */	lwz r0, 0x5d4(r3)
 asm\melee\it\code_80266F3C.s:/* 802758DC 002724BC  80 04 05 D4 */	lwz r0, 0x5d4(r4)
 asm\melee\it\code_80266F3C.s:/* 80275940 00272520  80 04 05 D4 */	lwz r0, 0x5d4(r4)
@@ -84,3 +83,4 @@ asm\melee\it\code_80266F3C.s:/* 80279634 00276214  38 A5 05 D4 */	addi r5, r5, 0
 asm\melee\it\code_80266F3C.s:/* 8027959C 0027617C  3B E3 05 D4 */	addi r31, r3, 0x5d4
 asm\melee\it\code_80266F3C.s:/* 8026FA5C 0026C63C  80 1E 05 D4 */	lwz r0, 0x5d4(r30)
 asm\melee\it\code_80266F3C.s:/* 8026FA60 0026C640  38 7E 05 D4 */	addi r3, r30, 0x5d4
+asm\melee\it\code_80266F3C.s:/* 80270938 0026D518  38 97 05 D4 */	addi r4, r23, 0x5d4
