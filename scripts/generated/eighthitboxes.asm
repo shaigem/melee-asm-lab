@@ -1,27 +1,8 @@
 .include "punkpc.s"
 punkpc ppc
-# Eight Hitboxes
-# authors: @[]
-# description: 
-gecko 2147913452
-
-addi r30, r3, 0
-load r4, 2152042448
-lwz r4, 0x00000020(r4)
-bla r12, 2147533152
-mr r3, r30
-lis r4, 0x00008046
-gecko 2147908028, li r4, 10496
-
-gecko.end
-gecko 2150002648, li r4, 5312
-gecko 2150008660
-addi r29, r3, 0
-li r4, 5312
-bla r12, 2147533152
-mr r3, r29
-mr. r6, r3
-gecko.end
+# Enable Eight Hitboxes
+# authors: @["sushie"]
+# description: Enables up to 8 active hitboxes for Melee
 gecko 2147947140
 regs rHitboxId, (30), rFtHitPtr, rFighterData
 cmplwi r0, 4

@@ -1,52 +1,26 @@
 import ../melee
+import "../shared/dataexpansion"
 import strutils, sugar
 
-const 
-    FtHitSize = 312
-    ItHitSize = 316
-    OldHitboxCount = 4
-    NewHitboxCount = 8
+type LoopPatch = proc(gameData: GameHeaderInfo, regData, regHitboxId, regNextHitPtr: Register, isItem: bool = false): string
 
-# New variable pointer offsets for FIGHTERS only
-const
-    FtHit4 = 0x0
-    FtHit5 = FtHit4 + FtHitSize
-    FtHit6 = FtHit5 + FtHitSize
-    FtHit7 = FtHit6 + FtHitSize
-    
-# New variable pointer offsets for ITEMS only
-const
-    ItHit4 = 0x0
-    ItHit5 = ItHit4 + ItHitSize
-    ItHit6 = ItHit5 + ItHitSize
-    ItHit7 = ItHit6 + ItHitSize
-    
-const 
-    ExtFighterDataSize = (FtHit7 + FtHitSize)
-    ExtItemDataSize = (ItHit7 + ItHitSize)
-
-type LoopPatch = proc(gameData: GameData, regData, regHitboxId, regNextHitPtr: Register, isItem: bool = false): string
-
-func calcOffsetFtData*(gameData: GameData, varOff: int): int = gameData.fighterDataSize + varOff
-func calcOffsetItData*(gameData: GameData, varOff: int): int = gameData.itemDataSize + varOff
-
-proc offsetToNewHit(gameData: GameData, isItem: bool = false): int =
-    let extHitOffset = if isItem: (calcOffsetItData(gameData, ItHit4)) else: (calcOffsetFtData(gameData, FtHit4))
+proc offsetToNewHit(gameData: GameHeaderInfo, isItem: bool = false): int =
+    let extHitOffset = if isItem: (gameData.extItDataOff(ExtData, specialHits)) else: (gameData.extFtDataOff(ExtData, specialHits))
     let hitSize = if isItem: ItHitSize else: FtHitSize
     let hitOffset = if isItem: idItHit.int else: fdFtHit.int
     result = extHitOffset - ((OldHitboxCount * hitSize) + hitOffset)
 
-proc genericCalcNewHitOffset(gameData: GameData, regData, regHitboxId, regNextHitPtr: Register, isItem: bool = false): string =
+proc genericCalcNewHitOffset(gameData: GameHeaderInfo, regData, regHitboxId, regNextHitPtr: Register, isItem: bool = false): string =
     let hitOffset = offsetToNewHit(gameData, isItem)
     result = ppc:
         addi {regNextHitPtr}, {regNextHitPtr}, {hitOffset}
 
-proc genericOrigReturn(gameData: GameData, regData, regHitboxId, regNextHitPtr: Register, isItem: bool = false): string =
+proc genericOrigReturn(gameData: GameHeaderInfo, regData, regHitboxId, regNextHitPtr: Register, isItem: bool = false): string =
     let dataHitOffset = if isItem: idItHit.int else: fdFtHit.int
     result = ppc:
         lwz r0, {dataHitOffset}({regNextHitPtr})
 
-func genericLoopPatch(gameData: GameData, patchAddr, hitboxCountAddr: int64; regData, regHitboxId, regNextHitPtr: Register; 
+func genericLoopPatch(gameData: GameHeaderInfo, patchAddr, hitboxCountAddr: int64; regData, regHitboxId, regNextHitPtr: Register; 
     onCalcNewHitOffset: LoopPatch = genericCalcNewHitOffset, onOrigReturn: LoopPatch = genericOrigReturn, isItem: bool = false, exitBranchType: string = "bne+"): string =
     let patchAddr = patchAddr.toHex(8)
     let hitboxCountAddr = hitboxCountAddr.toHex(8)
@@ -66,11 +40,11 @@ func genericLoopPatch(gameData: GameData, patchAddr, hitboxCountAddr: int64; reg
         gecko {"0x" & hitboxCountAddr}, cmplwi {regHitboxId}, {NewHitboxCount}
 
 
-func genericLoop(gameData: GameData; loopAddr, countAddr: int64; regPtrFtHit, regHitboxId, regFtData, regNextFtHitPtr: Register; 
+func genericLoop(gameData: GameHeaderInfo; loopAddr, countAddr: int64; regPtrFtHit, regHitboxId, regFtData, regNextFtHitPtr: Register; 
     checkState: bool = false; isItem: bool = false; onCalcNewHitOffset, onOrigReturn, onUseNewOffsets: string = ""): string =
     let checkStateInstr = if checkState: ppc: lwz r0, 0({regPtrFtHit}) else: ""
     let hitPtrOffset = if isItem: idItHit.int else: fdFtHit.int
-    let newHitPtrOffset = if isItem: calcOffsetItData(gameData, ItHit4) else: calcOffsetFtData(gameData, FtHit4)
+    let newHitPtrOffset = if isItem: gameData.extItDataOff(ExtData, specialHits) else: gameData.extFtDataOff(ExtData, specialHits)
     let calcNewOffsetInstr = if regFtData == rNone: ppc: li {regNextFtHitPtr}, {newHitPtrOffset} else: ppc: addi {regNextFtHitPtr}, {regFtData}, {newHitPtrOffset}
     let onOrigReturn = if onOrigReturn.isEmptyOrWhitespace(): ppc: addi {regPtrFtHit}, {regNextFtHitPtr}, {hitPtrOffset} else: onOrigReturn
     let onUseNewOffsets = 
@@ -102,9 +76,9 @@ func genericLoop(gameData: GameData; loopAddr, countAddr: int64; regPtrFtHit, re
         # patch the check maximum hitbox ids
         gecko {countAddr}, cmplwi {regHitboxId}, {NewHitboxCount}
 
-func reversedLoop(gameData: GameData; loopAddr, countAddr: int64; regPtrFtHit, regHitboxId, regFtData, regNextFtHitPtr: Register; isItem: bool = false): string =
+func reversedLoop(gameData: GameHeaderInfo; loopAddr, countAddr: int64; regPtrFtHit, regHitboxId, regFtData, regNextFtHitPtr: Register; isItem: bool = false): string =
     let hitboxOffsetInstr = if isItem: ppc: lwz r0, 0x5D4({regNextFtHitPtr}) else: ppc: lwz r0, 0x914({regNextFtHitPtr})
-    let newHitPtrOffset = if isItem: calcOffsetItData(gameData, ItHit4) else: calcOffsetFtData(gameData, FtHit4)
+    let newHitPtrOffset = if isItem: gameData.extItDataOff(ExtData, specialHits) else: gameData.extFtDataOff(ExtData, specialHits)
     result = ppc:
         gecko {loopAddr}
         cmplwi {regHitboxId}, {OldHitboxCount}
@@ -125,13 +99,13 @@ func reversedLoop(gameData: GameData; loopAddr, countAddr: int64; regPtrFtHit, r
         # patch the check maximum hitbox ids
         gecko {countAddr}, cmplwi {regHitboxId}, {NewHitboxCount}
 
-func o(gameData: GameData; regHitboxId, regResultHitPtr: Register; hitSize, extDataOffset: int): string =
+func o(gameData: GameHeaderInfo; regHitboxId, regResultHitPtr: Register; hitSize, extDataOffset: int): string =
     result = ppc:
         subi {regResultHitPtr}, {regHitboxId}, {OldHitboxCount}
         mulli {regResultHitPtr}, {regResultHitPtr}, {hitSize}
         addi {regResultHitPtr}, {regResultHitPtr}, {extDataOffset}
 
-func patchSubactionEventParsing(gameData: GameData): string =
+func patchSubactionEventParsing(gameData: GameHeaderInfo): string =
     result = ppc:
 
         # Patch Parse Event 0x2C - Create Fighter Hitbox
@@ -142,7 +116,7 @@ func patchSubactionEventParsing(gameData: GameData): string =
         cmplwi r0, {OldHitboxCount}
         blt+ OrigExit_80071284 # id < 4
         mr rHitboxId, r0
-        %o(gameData, regHitboxId = r3, regResultHitPtr = r30, hitSize = FtHitSize, extDataOffset = calcOffsetFtData(gameData, FtHit4))
+        %o(gameData, regHitboxId = r3, regResultHitPtr = r30, hitSize = FtHitSize, extDataOffset = gameData.extFtDataOff(ExtData, specialHits))
         OrigExit_80071284:
             add rFtHitPtr, rFighterData, rFtHitPtr
 
@@ -153,7 +127,7 @@ func patchSubactionEventParsing(gameData: GameData): string =
         regs (0), rItemData, (29), rItHitPtr
         cmplwi r4, {OldHitboxCount}
         blt+ OrigExit_802790F8 # id < 4
-        %o(gameData, regHitboxId = r4, regResultHitPtr = r29, hitSize = ItHitSize, extDataOffset = calcOffsetItData(gameData, ItHit4))
+        %o(gameData, regHitboxId = r4, regResultHitPtr = r29, hitSize = ItHitSize, extDataOffset = gameData.extItDataOff(ExtData, specialHits))
         OrigExit_802790F8:
             add rItHitPtr, rItemData, rItHitPtr
 
@@ -216,7 +190,7 @@ func patchSubactionEventParsing(gameData: GameData): string =
         # r3 - 0x270/624 = fighter data
         # r4 - fthit, never changes
         li r7, {NewHitboxCount - OldHitboxCount}
-        addi r6, r3, {calcOffsetFtData(gameData, FtHit4) - 624} # previous instructions added 624
+        addi r6, r3, {gameData.extFtDataOff(ExtData, specialHits) - 624} # previous instructions added 624
         b LoopBody_80076984
 
         Loop_80076984:
@@ -253,7 +227,7 @@ func patchSubactionEventParsing(gameData: GameData): string =
         mulli r4, rHitboxId, {FtHitSize} # id * ft/it hitbox size
         
         regs (3), rData, rNextHitOff
-        addi rNextHitOff, rNextHitOff, {calcOffsetFtData(gameData, FtHit4)}
+        addi rNextHitOff, rNextHitOff, {gameData.extFtDataOff(ExtData, specialHits)}
         add rNextHitOff, rNextHitOff, rData
         # set hitbox state to 0
         li r0, 0
@@ -272,7 +246,7 @@ func patchSubactionEventParsing(gameData: GameData): string =
         mr r3, r0
         subi r3, r3, {OldHitboxCount} # new hitbox id = (id - 4)
         mulli r3, r3, {FtHitSize} # id * ft hitbox size
-        addi r3, r3, {calcOffsetFtData(gameData, FtHit4)}
+        addi r3, r3, {gameData.extFtDataOff(ExtData, specialHits)}
         OrigExit_80071660:
             add r3, r6, r3
 
@@ -285,7 +259,7 @@ func patchSubactionEventParsing(gameData: GameData): string =
         mr rFtHitSizePtr, r0
         subi rFtHitSizePtr, rFtHitSizePtr, {OldHitboxCount} # new hitbox id = (id - 4)
         mulli rFtHitSizePtr, rFtHitSizePtr, {FtHitSize} # id * ft hitbox size
-        addi r0, rFtHitSizePtr, {calcOffsetFtData(gameData, FtHit4) + 0x1C} # point to size of hitbox
+        addi r0, rFtHitSizePtr, {gameData.extFtDataOff(ExtData, specialHits) + 0x1C} # point to size of hitbox
         b Exit_800716d4
         
         OrigExit_800716d4:
@@ -305,13 +279,13 @@ func patchSubactionEventParsing(gameData: GameData): string =
         mr rFtHitPtr, r0
         subi rFtHitPtr, rFtHitPtr, {OldHitboxCount} # new hitbox id = (id - 4)
         mulli rFtHitPtr, rFtHitPtr, {FtHitSize} # id * ft hitbox size
-        addi r5, rFtHitPtr, {calcOffsetFtData(gameData, FtHit4)}    
+        addi r5, rFtHitPtr, {gameData.extFtDataOff(ExtData, specialHits)}    
         OrigExit_80071724:
             rlwinm r0, r3, 31, 31, 31
 
         gecko.end
 
-func patchCollisionDrawLogic(gameData: GameData): string =
+func patchCollisionDrawLogic(gameData: GameHeaderInfo): string =
     result = ppc:
         # PlayerDisplayState_Draw_Logic - Collision Bubbles for Fighters
         # r25 = hitbox id
@@ -321,7 +295,7 @@ func patchCollisionDrawLogic(gameData: GameData): string =
         %genericLoop(gameData, loopAddr = 0x8026ed70, countAddr = 0x8026ed88, r3, regHitboxId = r27, regFtData = r31, r28, isItem = true)
         gecko.end
 
-func patchUpdateHitboxPositions(gameData: GameData): string =
+func patchUpdateHitboxPositions(gameData: GameHeaderInfo): string =
     result = ppc:
         # Hitbox_UpdateAllHitboxPositions - Update Positions for Fighter Hitboxes
         %genericLoop(gameData, loopAddr = 0x8007aeac, countAddr = 0x8007aeb8, r4, regHitboxId = r29, regFtData = r30, r31)
@@ -329,7 +303,7 @@ func patchUpdateHitboxPositions(gameData: GameData): string =
         %genericLoop(gameData, loopAddr = 0x8027139c, countAddr = 0x8027144c, r29, regHitboxId = r28, regFtData = rNone, r31, isItem = true)        
         gecko.end
 
-func patchRemoveAllHitboxes(gameData: GameData): string =
+func patchRemoveAllHitboxes(gameData: GameHeaderInfo): string =
     result = ppc:
         # Hitbox_Deactivate_All - SubactionEvent Clear All Fighter Hitboxes
         %genericLoop(gameData, loopAddr = 0x8007b020, countAddr = 0x8007b02c, r3, regHitboxId = r29, regFtData = r30, r31)
@@ -346,12 +320,12 @@ func patchRemoveAllHitboxes(gameData: GameData): string =
         cmplwi rHitboxId, {OldHitboxCount}
         addi rItHitPtr, r4, {idItHit.int} # use old r4 orig line
         blt+ OrigExit_802712b4
-        %o(gameData, regHitboxId = r5, regResultHitPtr = r30, hitSize = ItHitSize, extDataOffset = calcOffsetItData(gameData, ItHit4))
+        %o(gameData, regHitboxId = r5, regResultHitPtr = r30, hitSize = ItHitSize, extDataOffset = gameData.extItDataOff(ExtData, specialHits))
         OrigExit_802712b4:
             ""
         gecko.end
 
-func patchAttackLogic(gameData: GameData): string =
+func patchAttackLogic(gameData: GameHeaderInfo): string =
     result = ppc:
         # Hitbox_MeleeAttackLogicMain Patches
         %genericLoop(gameData, loopAddr = 0x80078d88, countAddr = 0x80078e2c, r4, regHitboxId = r23, regFtData = r28, r30, checkState = true)
@@ -575,7 +549,7 @@ func patchAttackLogic(gameData: GameData): string =
         
         subi rNextHitOff, rHitboxId, {OldHitboxCount} # new hitbox id = (id - 4)
         mulli rNextHitOff, rNextHitOff, {FtHitSize} # id * ft/it hitbox size
-        addi rNextHitOff, rNextHitOff, {calcOffsetFtData(gameData, FtHit4)}
+        addi rNextHitOff, rNextHitOff, {gameData.extFtDataOff(ExtData, specialHits)}
 
         OrigExit_8007b078:
             ""
@@ -601,21 +575,21 @@ func patchAttackLogic(gameData: GameData): string =
 
         gecko.end
 
-proc patchMain(gameData: GameData): string =
+proc patchMain(gameInfo: GameHeaderInfo): string =
     result = ppc:
-        %patchSubactionEventParsing(gameData)
-        %patchCollisionDrawLogic(gameData)
-        %patchUpdateHitboxPositions(gameData)
-        %patchRemoveAllHitboxes(gameData)
-        %patchAttackLogic(gameData)
+        %patchSubactionEventParsing(gameInfo)
+        %patchCollisionDrawLogic(gameInfo)
+        %patchUpdateHitboxPositions(gameInfo)
+        %patchRemoveAllHitboxes(gameInfo)
+        %patchAttackLogic(gameInfo)
         gecko.end
 
 const EightHitboxes* =
-    createCode "Eight Hitboxes":
+    createCode "Enable Eight Hitboxes":
+        description: "Enables up to 8 active hitboxes for Melee"
+        authors: ["sushie"]
         code:
-            %patchFighterDataAllocation(MexGameData, ExtFighterDataSize)
-            %patchItemDataAllocation(MexGameData, ExtItemDataSize)
-            %patchMain(MexGameData)
+            %patchMain(MexHeaderInfo)
 
 proc main() =
     generate "./generated/eighthitboxes.asm", EightHitboxes
