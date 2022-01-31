@@ -326,6 +326,9 @@ func patchAttackLogic(gameData: GameData): string =
         # Grab_CheckForGrabBoxOverlap - Grabbing Items like Goombas Patches
         %reversedLoop(gameData, loopAddr = 0x8007bd00, countAddr = 0x8007be0c, r3, regHitboxId = r26, regFtData = r31, r27)
 
+        # GrabLogic for Items - Like Like
+        %reversedLoop(gameData, loopAddr = 0x8027029c, countAddr = 0x802703bc, r3, regHitboxId = r26, regFtData = r31, r27, isItem = true)
+
         # CPU_CheckForNearbyMeleeHitbox(r3=CPUData,r4=OpponentData) - Fighters
         gecko 0x800bb12c
         # save opponent data to stack
