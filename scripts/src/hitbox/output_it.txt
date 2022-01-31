@@ -1,6 +1,4 @@
 
-asm\melee\it\code_80266F3C.s:/* 8026FA5C 0026C63C  80 1E 05 D4 */	lwz r0, 0x5d4(r30)
-asm\melee\it\code_80266F3C.s:/* 8026FA60 0026C640  38 7E 05 D4 */	addi r3, r30, 0x5d4
 asm\melee\it\code_80266F3C.s:/* 8026FB24 0026C704  80 18 05 D4 */	lwz r0, 0x5d4(r24)
 asm\melee\it\code_80266F3C.s:/* 8026FB28 0026C708  38 78 05 D4 */	addi r3, r24, 0x5d4
 asm\melee\it\code_80266F3C.s:/* 8026FC54 0026C834  80 1A 05 D4 */	lwz r0, 0x5d4(r26)
@@ -30,7 +28,6 @@ asm\melee\it\code_80266F3C.s:/* 802758DC 002724BC  80 04 05 D4 */	lwz r0, 0x5d4(
 asm\melee\it\code_80266F3C.s:/* 80275940 00272520  80 04 05 D4 */	lwz r0, 0x5d4(r4)
 asm\melee\it\code_80266F3C.s:/* 80275944 00272524  38 A4 05 D4 */	addi r5, r4, 0x5d4
 asm\melee\it\code_80266F3C.s:/* 8027596C 0027254C  38 A3 05 D4 */	addi r5, r3, 0x5d4
-asm\melee\it\code_80266F3C.s:/* 8027959C 0027617C  3B E3 05 D4 */	addi r31, r3, 0x5d4
 
 # seems all fighter related articles... below
 asm\melee\it\code_8027CF30.s:/* 8028DE94 0028AA74  80 04 05 D4 */	lwz r0, 0x5d4(r4)
@@ -84,3 +81,6 @@ asm\melee\it\code_80266F3C.s:/* 8027029C 0026CE7C  80 1B 05 D4 */	lwz r0, 0x5d4(
 asm\melee\it\code_80266F3C.s:/* 8026A020 00266C00  80 1D 05 D4 */	lwz r0, 0x5d4(r29)
 asm\melee\it\code_80266F3C.s:/* 8026A068 00266C48  38 7D 05 D4 */	addi r3, r29, 0x5d4
 asm\melee\it\code_80266F3C.s:/* 80279634 00276214  38 A5 05 D4 */	addi r5, r5, 0x5d4
+asm\melee\it\code_80266F3C.s:/* 8027959C 0027617C  3B E3 05 D4 */	addi r31, r3, 0x5d4
+asm\melee\it\code_80266F3C.s:/* 8026FA5C 0026C63C  80 1E 05 D4 */	lwz r0, 0x5d4(r30)
+asm\melee\it\code_80266F3C.s:/* 8026FA60 0026C640  38 7E 05 D4 */	addi r3, r30, 0x5d4

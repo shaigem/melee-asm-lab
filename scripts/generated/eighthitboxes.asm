@@ -41,17 +41,13 @@ mulli r29, r29, 316
 addi r29, r29, 4048
 OrigExit_802790F8:
 add rItHitPtr, rItemData, rItHitPtr
-gecko 2150061460, nop
-gecko 2150061468
-regs (3), rItHitPtr, rHitboxId
+gecko 2150061460
+regs (4), rHitboxId
 cmplwi rHitboxId, 4
-mulli rItHitPtr, rHitboxId, 316
-addi rItHitPtr, rItHitPtr, 1492
-blt+ OrigExit_8027559c
-subi r3, r4, 4
-mulli r3, r3, 316
-addi r3, r3, 4048
-OrigExit_8027559c:
+mulli rHitboxId, rHitboxId, 316
+blt+ OrigExit_80275594
+addi rHitboxId, rHitboxId, 1292
+OrigExit_80275594:
 
 gecko 2150078004
 regs (4), rHitboxId, rItHitPtr
@@ -578,9 +574,16 @@ OrigExit_8007b078:
 gecko 0x8026A020
 cmplwi r28, 4
 bne+ OrigExit_8026A020
-addi r29, r31, 2556
+addi r29, r29, 1292
 OrigExit_8026A020:
 lwz r0, 1492(r29)
 gecko 0x8026A074, cmplwi r28, 8
+gecko 0x8026FA5C
+cmplwi r28, 4
+bne+ OrigExit_8026FA5C
+addi r30, r30, 1292
+OrigExit_8026FA5C:
+lwz r0, 1492(r30)
+gecko 0x8026FAA0, cmplwi r28, 8
 gecko.end
 gecko.end
