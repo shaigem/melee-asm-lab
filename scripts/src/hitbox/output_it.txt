@@ -1,12 +1,4 @@
 
-asm\melee\it\code_80266F3C.s:/* 802755C4 002721A4  80 03 05 D4 */	lwz r0, 0x5d4(r3)
-asm\melee\it\code_80266F3C.s:/* 802755C8 002721A8  38 83 05 D4 */	addi r4, r3, 0x5d4
-
-asm\melee\it\code_80266F3C.s:/* 802758DC 002724BC  80 04 05 D4 */	lwz r0, 0x5d4(r4)
-asm\melee\it\code_80266F3C.s:/* 80275940 00272520  80 04 05 D4 */	lwz r0, 0x5d4(r4)
-asm\melee\it\code_80266F3C.s:/* 80275944 00272524  38 A4 05 D4 */	addi r5, r4, 0x5d4
-asm\melee\it\code_80266F3C.s:/* 8027596C 0027254C  38 A3 05 D4 */	addi r5, r3, 0x5d4 # on item thrown?
-
 # seems all fighter related articles... below
 # master hand laser related
 asm\melee\it\code_80266F3C.s:/* 80275794 00272374  80 07 05 D4 */	lwz r0, 0x5d4(r7)
@@ -87,3 +79,9 @@ asm\melee\it\code_80266F3C.s:/* 8026FCA8 0026C888  80 1A 05 D4 */	lwz r0, 0x5d4(
 asm\melee\it\code_80266F3C.s:/* 8026FCAC 0026C88C  38 7A 05 D4 */	addi r3, r26, 0x5d4
 asm\melee\it\code_80266F3C.s:/* 8027269C 0026F27C  38 7E 05 D4 */	addi r3, r30, 0x5d4 # flipper hitbox activating
 asm\melee\it\code_80266F3C.s:/* 802726B8 0026F298  3B BE 05 D4 */	addi r29, r30, 0x5d4 # flipper hitbox activating
+asm\melee\it\code_80266F3C.s:/* 802758DC 002724BC  80 04 05 D4 */	lwz r0, 0x5d4(r4)
+asm\melee\it\code_80266F3C.s:/* 80275940 00272520  80 04 05 D4 */	lwz r0, 0x5d4(r4)
+asm\melee\it\code_80266F3C.s:/* 80275944 00272524  38 A4 05 D4 */	addi r5, r4, 0x5d4
+asm\melee\it\code_80266F3C.s:/* 8027596C 0027254C  38 A3 05 D4 */	addi r5, r3, 0x5d4 # on item thrown?
+asm\melee\it\code_80266F3C.s:/* 802755C4 002721A4  80 03 05 D4 */	lwz r0, 0x5d4(r3)
+asm\melee\it\code_80266F3C.s:/* 802755C8 002721A8  38 83 05 D4 */	addi r4, r3, 0x5d4

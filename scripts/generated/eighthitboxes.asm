@@ -546,6 +546,55 @@ beq Exit_802758cc
 li r3, 1
 Exit_802758cc:
 
+gecko 2150062388
+addi r3, r3, 1608
+li r0, 4
+mtctr r0
+Loop_80275934:
+lwz r0, 1808(r3)
+addi r3, r3, 316
+cmpwi r0, 0
+bdnzt+ eq, Loop_80275934
+li r0, 0
+beq Exit_80275934
+li r0, 1
+Exit_80275934:
+
+gecko 2150062528, beq 0x00000018
+gecko 2150062544, bne 0x00000008
+gecko 2150062552
+addi r3, r3, 1608
+li r7, 5
+Loop_802759d8:
+subic. r7, r7, 1
+beqlr
+lwz r0, 0x00000710(r3)
+addi r5, r3, 1808
+addi r3, r3, 316
+cmpwi r0, 0
+beq Loop_802759d8
+lfs f0, 0x0000000C(r5)
+fcmpo cr0, f1, f0
+cror 2, 0, 2
+bne Loop_802759d8
+fmr f1, f0
+b Loop_802759d8
+gecko 2150061612, beq 0x00000010
+gecko 2150061628
+addi r3, r3, 1608
+li r7, 5
+Loop_8027563c:
+subic. r7, r7, 1
+beqlr
+lwz r0, 0x00000710(r3)
+addi r4, r3, 1808
+addi r3, r3, 316
+cmpwi r0, 0
+beq Loop_8027563c
+lfs f0, 0x0000001C(r4)
+fmuls f0, f0, f1
+stfs f0, 0x0000001C(r4)
+b Loop_8027563c
 gecko 2150061448, beq 0x00000008
 gecko 2150061456
 addi r3, r3, 1608

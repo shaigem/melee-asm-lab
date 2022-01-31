@@ -442,6 +442,63 @@ func patchAttackLogic(gameData: GameData): string =
         Exit_802758cc:
             ""
 
+        # Unknown Patch When Item is Thrown
+        gecko 0x80275934
+        addi r3, r3, {offsetToNewHit(gameData, isItem = true) + ItHitSize}
+        li r0, {NewHitboxCount - OldHitboxCount}
+        mtctr r0
+        Loop_80275934:
+            lwz r0, {idItHit.int + ItHitSize}(r3)
+            addi r3, r3, {ItHitSize}
+            cmpwi r0, 0
+            "bdnzt+" eq, Loop_80275934
+        # loop exit
+        li r0, 0
+        beq Exit_80275934
+        li r0, 1
+        Exit_80275934:
+            ""
+        # Unknown Patch When Item is Thrown/Released (Damage?)
+        gecko 0x802759c0, beq 0x18
+        gecko 0x802759d0, bne 0x8
+        gecko 0x802759d8
+        addi r3, r3, {offsetToNewHit(gameData, isItem = true) + ItHitSize}
+        li r7, {(NewHitboxCount - OldHitboxCount) + 1}
+
+        Loop_802759d8:
+            "subic." r7, r7, 1
+            beqlr
+            lwz r0, 0x710(r3)
+            addi r5, r3, {idItHit.int + ItHitSize}
+            addi r3, r3, {ItHitSize}
+            cmpwi r0, 0
+            beq Loop_802759d8
+            lfs f0, 0xC(r5)
+            fcmpo cr0, f1, f0
+            cror 2, 0, 2
+            bne Loop_802759d8
+            fmr f1, f0
+            b Loop_802759d8
+        
+        # Item Patch Set Scale? Used In Mewtwo's Disable And Warp Star
+        gecko 0x8027562c, beq 0x10
+        gecko 0x8027563c
+        addi r3, r3, {offsetToNewHit(gameData, isItem = true) + ItHitSize}
+        li r7, {(NewHitboxCount - OldHitboxCount) + 1}
+
+        Loop_8027563c:
+            "subic." r7, r7, 1
+            beqlr
+            lwz r0, 0x710(r3)
+            addi r4, r3, {idItHit.int + ItHitSize}
+            addi r3, r3, {ItHitSize}
+            cmpwi r0, 0
+            beq Loop_8027563c
+            lfs f0, 0x1C(r4)
+            fmuls f0, f0, f1
+            stfs f0, 0x1C(r4)
+            b Loop_8027563c
+           
         # ItemHitbox Set Scale For Active Hitboxes Patch
         gecko 0x80275588, beq 0x8
         gecko 0x80275590
