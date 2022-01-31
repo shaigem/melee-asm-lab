@@ -538,6 +538,22 @@ beq Exit_802758cc
 li r3, 1
 Exit_802758cc:
 
+gecko 2150061448, beq 0x00000008
+gecko 2150061456
+addi r3, r3, 1608
+li r0, 4
+mtctr r0
+Loop_80275590:
+lwz r0, 1808(r3)
+addi r4, r3, 1808
+addi r3, r3, 316
+cmpwi r0, 0
+beq CheckToLoop
+stfs f1, 0x0000001C(r4)
+CheckToLoop:
+bdnz+ Loop_80275590
+Exit_80275590:
+blr
 gecko 2148250176
 mr r29, r4
 stw r4, 0x00000010(sp)

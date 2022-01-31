@@ -433,6 +433,24 @@ func patchAttackLogic(gameData: GameData): string =
         Exit_802758cc:
             ""
 
+        # ItemHitbox Set Scale For Active Hitboxes Patch
+        gecko 0x80275588, beq 0x8
+        gecko 0x80275590
+        addi r3, r3, {offsetToNewHit(gameData, isItem = true) + ItHitSize}
+        li r0, {NewHitboxCount - OldHitboxCount}
+        mtctr r0
+        Loop_80275590:
+            lwz r0, {idItHit.int + ItHitSize}(r3)
+            addi r4, r3, {idItHit.int + ItHitSize}
+            addi r3, r3, {ItHitSize}
+            cmpwi r0, 0
+            beq CheckToLoop
+            stfs f1, 0x1C(r4) # store new size
+            CheckToLoop:
+                bdnz+ Loop_80275590
+        Exit_80275590:
+            blr
+
         # CPU_CheckForNearbyItemHitbox(r3=CPUData,r4=ItemData) - Items
         gecko 0x800bb240
         # save item data to stack for later use
