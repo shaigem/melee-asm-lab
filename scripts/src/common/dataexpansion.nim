@@ -10,53 +10,58 @@ type
         name*: string
         fighterDataSize*: int
         itemDataSize*: int
-    HitFlag {.size: sizeof(uint32).} = enum
-        hfSetWeight,
-        hfAngleFlipOpposite,
-        hfAngleFlipCurrent,
-        hfStretch,
-        hfFlinchless,
+    HitFlag* {.size: sizeof(uint32).} = enum
+        hfPading1,
+        hfNoStale,
         hfNoMeteorCancel,
-        hfNoStale
+        hfFlinchless,
+        hfStretch,
+        hfAngleFlipCurrent,
+        hfAngleFlipOpposite,
+        hfSetWeight
     HitFlags = set[HitFlag]
 
-    FighterFlag {.size: sizeof(uint32).} = enum
+    FighterFlag* {.size: sizeof(uint32).} = enum
         ffHitByFlinchless,
         ffSetWeight,
         ffDisableMeteorCancel,
         ffForceHitlagOnThrown
     FighterFlags = set[FighterFlag]
 
-    SpecialHit = object
-        hitlagMultiplier: float32
-        sdiMultiplier: float32
-        shieldStunMultiplier: float32
-        hitstunModifier: float32
-        hitFlags: HitFlags
+    SpecialHit* = object
+        hitlagMultiplier*: float32
+        sdiMultiplier*: float32
+        shieldStunMultiplier*: float32
+        hitstunModifier*: float32
+        hitFlags*: HitFlags
 
     ExtData* = object
         specialHits*: array[NewHitboxCount, SpecialHit]
-        hitlagMultiplier*: float32
 
     ExtItemData* = object
         sharedData*: ExtData
         newHits*: array[AddedHitCount * ItHitSize, byte]
+        hitlagMultiplier*: float32
 
     ExtFighterData* = object
         sharedData*: ExtData
+        specialThrowHit*: SpecialHit
         newHits*: array[AddedHitCount * FtHitSize, byte]
         sdiMultiplier*: float32
-        shieldstunMultiplier*: float32
         hitstunModifier*: float32
+        shieldstunMultiplier*: float32
         fighterFlags*: FighterFlags
 
-template extFtDataOff*[T](gameInfo: GameHeaderInfo; t: typedesc[T] = ExtFighterData; member: untyped): int = gameInfo.fighterDataSize + offsetOf(t, member)
-template extItDataOff*[T](gameInfo: GameHeaderInfo; t: typedesc[T] = ExtItemData; member: untyped): int = gameInfo.itemDataSize + offsetOf(t, member)
+template extFtDataOff*(gameInfo: GameHeaderInfo; member: untyped): int = gameInfo.fighterDataSize + offsetOf(ExtFighterData, member)
+template extItDataOff*(gameInfo: GameHeaderInfo; member: untyped): int = gameInfo.itemDataSize + offsetOf(ExtItemData, member)
+template extHitOff*(member: untyped): int = offsetOf(SpecialHit, member)
 
 proc initGameHeaderInfo(name: string; fighterDataSize, itemDataSize: int): GameHeaderInfo =
     result.name = name
     result.fighterDataSize = fighterDataSize
     result.itemDataSize = itemDataSize
+
+proc flag*(f: HitFlag|FighterFlag): int = 1 shl f.ord
 
 const
     VanillaHeaderInfo* = initGameHeaderInfo("Vanilla", fighterDataSize = 0x23EC, itemDataSize = 0xFCC)
@@ -80,6 +85,7 @@ proc createFighterDataAllocationPatch(gameInfo: GameHeaderInfo, t: typedesc): st
 
             # patch size
             gecko 0x800679BC, li r4, {allocSize}
+            gecko.end
 
 proc createItemDataAllocationPatch(gameInfo: GameHeaderInfo, t: typedesc): string =
     let allocSize = gameInfo.itemDataSize + sizeof(t)

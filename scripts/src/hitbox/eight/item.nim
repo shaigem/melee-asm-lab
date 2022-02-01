@@ -8,7 +8,7 @@ proc patchItems*(gameInfo: GameHeaderInfo): string =
         regs (0), rItemData, (29), rItHitPtr
         cmplwi r4, {OldHitboxCount}
         blt+ OrigExit_802790F8 # id < 4
-        %o(gameInfo, regHitboxId = r4, regResultHitPtr = r29, hitSize = ItHitSize, extDataOffset = gameInfo.extItDataOff(ExtData, specialHits))
+        %o(gameInfo, regHitboxId = r4, regResultHitPtr = r29, hitSize = ItHitSize, extDataOffset = gameInfo.extItDataOff(newHits))
         OrigExit_802790F8:
             add rItHitPtr, rItemData, rItHitPtr
 
@@ -240,7 +240,7 @@ proc patchItems*(gameInfo: GameHeaderInfo): string =
         cmplwi rHitboxId, {OldHitboxCount}
         addi rItHitPtr, r4, {idItHit.int} # use old r4 orig line
         blt+ OrigExit_802712b4
-        %o(gameInfo, regHitboxId = r5, regResultHitPtr = r30, hitSize = ItHitSize, extDataOffset = gameInfo.extItDataOff(ExtData, specialHits))
+        %o(gameInfo, regHitboxId = r5, regResultHitPtr = r30, hitSize = ItHitSize, extDataOffset = gameInfo.extItDataOff(newHits))
         OrigExit_802712b4:
             ""
         # ProjectileLogicOnEntity Patches - Stores Victim

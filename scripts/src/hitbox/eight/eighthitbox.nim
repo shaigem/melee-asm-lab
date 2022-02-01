@@ -5,7 +5,7 @@ import strutils, sugar
 type LoopPatch = proc(gameData: GameHeaderInfo, regData, regHitboxId, regNextHitPtr: Register, isItem: bool = false): string
 
 proc offsetToNewHit(gameData: GameHeaderInfo, isItem: bool = false): int =
-    let extHitOffset = if isItem: (gameData.extItDataOff(ExtData, specialHits)) else: (gameData.extFtDataOff(ExtData, specialHits))
+    let extHitOffset = if isItem: (gameData.extItDataOff(newHits)) else: (gameData.extFtDataOff(newHits))
     let hitSize = if isItem: ItHitSize else: FtHitSize
     let hitOffset = if isItem: idItHit.int else: fdFtHit.int
     result = extHitOffset - ((OldHitboxCount * hitSize) + hitOffset)
@@ -39,12 +39,12 @@ func genericLoopPatch(gameData: GameHeaderInfo, patchAddr, hitboxCountAddr: int6
         # patch the check maximum hitbox ids
         gecko {"0x" & hitboxCountAddr}, cmplwi {regHitboxId}, {NewHitboxCount}
 
-
+# TODO this func is deprecated
 func genericLoop(gameData: GameHeaderInfo; loopAddr, countAddr: int64; regPtrFtHit, regHitboxId, regFtData, regNextFtHitPtr: Register; 
     checkState: bool = false; isItem: bool = false; onCalcNewHitOffset, onOrigReturn, onUseNewOffsets: string = ""): string =
     let checkStateInstr = if checkState: ppc: lwz r0, 0({regPtrFtHit}) else: ""
     let hitPtrOffset = if isItem: idItHit.int else: fdFtHit.int
-    let newHitPtrOffset = if isItem: gameData.extItDataOff(ExtData, specialHits) else: gameData.extFtDataOff(ExtData, specialHits)
+    let newHitPtrOffset = if isItem: gameData.extItDataOff(newHits) else: gameData.extFtDataOff(newHits)
     let calcNewOffsetInstr = if regFtData == rNone: ppc: li {regNextFtHitPtr}, {newHitPtrOffset} else: ppc: addi {regNextFtHitPtr}, {regFtData}, {newHitPtrOffset}
     let onOrigReturn = if onOrigReturn.isEmptyOrWhitespace(): ppc: addi {regPtrFtHit}, {regNextFtHitPtr}, {hitPtrOffset} else: onOrigReturn
     let onUseNewOffsets = 
@@ -76,9 +76,10 @@ func genericLoop(gameData: GameHeaderInfo; loopAddr, countAddr: int64; regPtrFtH
         # patch the check maximum hitbox ids
         gecko {countAddr}, cmplwi {regHitboxId}, {NewHitboxCount}
 
+# TODO function is deprecated
 func reversedLoop(gameData: GameHeaderInfo; loopAddr, countAddr: int64; regPtrFtHit, regHitboxId, regFtData, regNextFtHitPtr: Register; isItem: bool = false): string =
     let hitboxOffsetInstr = if isItem: ppc: lwz r0, 0x5D4({regNextFtHitPtr}) else: ppc: lwz r0, 0x914({regNextFtHitPtr})
-    let newHitPtrOffset = if isItem: gameData.extItDataOff(ExtData, specialHits) else: gameData.extFtDataOff(ExtData, specialHits)
+    let newHitPtrOffset = if isItem: gameData.extItDataOff(newHits) else: gameData.extFtDataOff(newHits)
     result = ppc:
         gecko {loopAddr}
         cmplwi {regHitboxId}, {OldHitboxCount}
@@ -99,6 +100,7 @@ func reversedLoop(gameData: GameHeaderInfo; loopAddr, countAddr: int64; regPtrFt
         # patch the check maximum hitbox ids
         gecko {countAddr}, cmplwi {regHitboxId}, {NewHitboxCount}
 
+# TODO remove this function after converting
 func o*(gameData: GameHeaderInfo; regHitboxId, regResultHitPtr: Register; hitSize, extDataOffset: int): string =
     result = ppc:
         subi {regResultHitPtr}, {regHitboxId}, {OldHitboxCount}

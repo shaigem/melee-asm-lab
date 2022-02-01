@@ -9,7 +9,7 @@ proc patchFighters*(gameInfo: GameHeaderInfo): string =
         cmplwi r0, {OldHitboxCount}
         blt+ OrigExit_80071284 # id < 4
         mr rHitboxId, r0
-        %o(gameInfo, regHitboxId = r3, regResultHitPtr = r30, hitSize = FtHitSize, extDataOffset = gameInfo.extFtDataOff(ExtData, specialHits))
+        %o(gameInfo, regHitboxId = r3, regResultHitPtr = r30, hitSize = FtHitSize, extDataOffset = gameInfo.extFtDataOff(newHits))
         OrigExit_80071284:
             add rFtHitPtr, rFighterData, rFtHitPtr
 
@@ -18,7 +18,7 @@ proc patchFighters*(gameInfo: GameHeaderInfo): string =
         # r3 - 0x270/624 = fighter data
         # r4 - fthit, never changes
         li r7, {NewHitboxCount - OldHitboxCount}
-        addi r6, r3, {gameInfo.extFtDataOff(ExtData, specialHits) - 624} # previous instructions added 624
+        addi r6, r3, {gameInfo.extFtDataOff(newHits) - 624} # previous instructions added 624
         b LoopBody_80076984
 
         Loop_80076984:
@@ -55,7 +55,7 @@ proc patchFighters*(gameInfo: GameHeaderInfo): string =
         mulli r4, rHitboxId, {FtHitSize} # id * ft/it hitbox size
         
         regs (3), rData, rNextHitOff
-        addi rNextHitOff, rNextHitOff, {gameInfo.extFtDataOff(ExtData, specialHits)}
+        addi rNextHitOff, rNextHitOff, {gameInfo.extFtDataOff(newHits)}
         add rNextHitOff, rNextHitOff, rData
         # set hitbox state to 0
         li r0, 0
@@ -74,7 +74,7 @@ proc patchFighters*(gameInfo: GameHeaderInfo): string =
         mr r3, r0
         subi r3, r3, {OldHitboxCount} # new hitbox id = (id - 4)
         mulli r3, r3, {FtHitSize} # id * ft hitbox size
-        addi r3, r3, {gameInfo.extFtDataOff(ExtData, specialHits)}
+        addi r3, r3, {gameInfo.extFtDataOff(newHits)}
         OrigExit_80071660:
             add r3, r6, r3
 
@@ -87,7 +87,7 @@ proc patchFighters*(gameInfo: GameHeaderInfo): string =
         mr rFtHitSizePtr, r0
         subi rFtHitSizePtr, rFtHitSizePtr, {OldHitboxCount} # new hitbox id = (id - 4)
         mulli rFtHitSizePtr, rFtHitSizePtr, {FtHitSize} # id * ft hitbox size
-        addi r0, rFtHitSizePtr, {gameInfo.extFtDataOff(ExtData, specialHits) + 0x1C} # point to size of hitbox
+        addi r0, rFtHitSizePtr, {gameInfo.extFtDataOff(newHits) + 0x1C} # point to size of hitbox
         b Exit_800716d4
         
         OrigExit_800716d4:
@@ -107,7 +107,7 @@ proc patchFighters*(gameInfo: GameHeaderInfo): string =
         mr rFtHitPtr, r0
         subi rFtHitPtr, rFtHitPtr, {OldHitboxCount} # new hitbox id = (id - 4)
         mulli rFtHitPtr, rFtHitPtr, {FtHitSize} # id * ft hitbox size
-        addi r5, rFtHitPtr, {gameInfo.extFtDataOff(ExtData, specialHits)}    
+        addi r5, rFtHitPtr, {gameInfo.extFtDataOff(newHits)}    
         OrigExit_80071724:
             rlwinm r0, r3, 31, 31, 31
     
@@ -179,7 +179,7 @@ proc patchFighters*(gameInfo: GameHeaderInfo): string =
         
         subi rNextHitOff, rHitboxId, {OldHitboxCount} # new hitbox id = (id - 4)
         mulli rNextHitOff, rNextHitOff, {FtHitSize} # id * ft/it hitbox size
-        addi rNextHitOff, rNextHitOff, {gameInfo.extFtDataOff(ExtData, specialHits)}
+        addi rNextHitOff, rNextHitOff, {gameInfo.extFtDataOff(newHits)}
 
         OrigExit_8007b078:
             ""
