@@ -152,30 +152,20 @@ mr r4, r30
 bla r12, 2147517692
 li r0, 1
 Exit_8026fe2c:
-gecko 2150034800
+gecko 0x8026ED70
 cmplwi r27, 4
-addi r3, r28, 1492
-bgt UseNewOffsets_8026ED70
 bne+ OrigExit_8026ED70
-
-addi r28, r31, 4048
-UseNewOffsets_8026ED70:
-mr r3, r28
+addi r28, r28, 1292
 OrigExit_8026ED70:
-
-gecko 2150034824, cmplwi r27, 8
-gecko 2150044572
+addi r3, r28, 1492
+gecko 0x8026ED88, cmplwi r27, 8
+gecko 0x8027139C
 cmplwi r28, 4
-addi r29, r31, 1492
-bgt UseNewOffsets_8027139C
 bne+ OrigExit_8027139C
-
-li r31, 4048
-UseNewOffsets_8027139C:
-mr r29, r31
+addi r31, r31, 1292
 OrigExit_8027139C:
-
-gecko 2150044748, cmplwi r28, 8
+addi r29, r31, 1492
+gecko 0x8027144C, cmplwi r28, 8
 gecko 2148250176
 mr r29, r4
 stw r4, 0x00000010(sp)

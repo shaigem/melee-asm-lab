@@ -188,9 +188,12 @@ proc patchItems*(gameInfo: GameHeaderInfo): string =
 
     let miscPatches = proc(): string = result = ppc:
         # ItemHitbox_Draw - Collision Bubbles for Item
-        %genericLoop(gameInfo, loopAddr = 0x8026ed70, countAddr = 0x8026ed88, r3, regHitboxId = r27, regFtData = r31, r28, isItem = true)
+        %genericLoopPatch(gameInfo, patchAddr = 0x8026ed70, hitboxCountAddr = 0x8026ed88, regData = rNone, regHitboxId = r27, regNextHitPtr = r28, isItem = true, 
+        onOrigReturn = (gameInfo, regData, regHitboxId, regNextHitPtr, isItem) => (ppc do: addi r3, {regNextHitPtr}, {idItHit.int}))
+
         # Item_UpdateHitboxPositions - Item Hitboxes
-        %genericLoop(gameInfo, loopAddr = 0x8027139c, countAddr = 0x8027144c, r29, regHitboxId = r28, regFtData = rNone, r31, isItem = true)
+        %genericLoopPatch(gameInfo, patchAddr = 0x8027139c, hitboxCountAddr = 0x8027144c, regData = rNone, regHitboxId = r28, regNextHitPtr = r31, isItem = true, 
+        onOrigReturn = (gameInfo, regData, regHitboxId, regNextHitPtr, isItem) => (ppc do: addi r29, {regNextHitPtr}, {idItHit.int}))
 
         # CPU_CheckForNearbyItemHitbox(r3=CPUData,r4=ItemData) - Items
         gecko 0x800bb240
@@ -211,6 +214,7 @@ proc patchItems*(gameInfo: GameHeaderInfo): string =
         %genericLoopPatch(gameInfo, patchAddr = 0x8026a020, hitboxCountAddr = 0x8026a074, regData = r31, regHitboxId = r28, regNextHitPtr = r29, isItem = true)
 
         # Hitbox_EntityVSProjectileMain = Projectile Hits an Item Clank
+        # uses hitboxId < 4 to exit instead of != 4 because it can skip 4 where it calculates the new offset for our hits 4-7
         %genericLoopPatch(gameInfo, patchAddr = 0x80270938, hitboxCountAddr = 0x80270a1c, regData = rNone, regHitboxId = r18, regNextHitPtr = r23, isItem = true,
         exitBranchType = "blt+", onOrigReturn = (gameInfo, regData, regHitboxId, regNextHitPtr, isItem) => (ppc do: addi r4, {regNextHitPtr}, {idItHit.int}))
 
