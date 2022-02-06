@@ -5,21 +5,22 @@ eventId = 0x3D
 eventLength = 0x4
 ftHitStructLength = 312
 FighterData.ftHitOffset = 0x914
+hitboxCount = 4
 
 # Enable bit 0x20 - Hit Facing flag of ItHit to be usable for Fighter Hitboxes
 gecko 0x80078ea0
     lbz r0, 0x42(r23)
     rlwinm. r0, r0, 27, 31, 31 # 0x20
-    beq OriginalExit44 # if hit facing != true, exit
+    beq OriginalExit_80078ea0 # if hit facing != true, exit
     # or else, check directions
     lfs f1, 0x2C(r28) # defender facing direction
     lfs f0, 0x2C(r24) # source facing direction
     fcmpu cr0, f1, f0
-    beq CanHit
-    b OriginalExit44
-    CanHit:
+    beq CanHit_80078ea0
+    b OriginalExit_80078ea0
+    CanHit_80078ea0:
         ba r12, 0x80079228
-    OriginalExit44:
+    OriginalExit_80078ea0:
         lbz r0, 0x134(r23)
 
 # Enable bit 0x40 - Blockability (Can Shield) flag of ItHit to be usable for Fighter Hitboxes
@@ -27,10 +28,10 @@ gecko 0x80078fe8
     # can hit fighters through shield if 0x40 is set to 0
     lbz r0, 0x42(r23)
     rlwinm. r0, r0, 26, 31, 31 # 0x40
-    bne Exit9 # can shield == true
+    bne Exit_80078fe8 # can shield == true
     SkipShield: # else, skip shield check
         ba r12, 0x800790B4
-    Exit9:
+    Exit_80078fe8:
         rlwinm. r0, r3, 28, 31, 31 # original code line
 
 # Reset Hit Players for Fighter Hitboxes
@@ -44,13 +45,13 @@ gecko 0x8006c9cc
         mulli r0, rLoopCount, ftHitStructLength
         lwz r3, 0x2C(r3) # fighter data
         add rHitStruct, r3, r0
-        Loop:
+        Loop_8006c9cc:
             addi r3, rHitStruct, FighterData.ftHitOffset
             bla r12, 0x80008a5c # goto reset hit players
             addi rLoopCount, rLoopCount, 1
-            cmplwi rLoopCount, 4
+            cmplwi rLoopCount, hitboxCount
             addi rHitStruct, rHitStruct, ftHitStructLength
-        blt+ Loop
+        blt+ Loop_8006c9cc
         epilog
     
     # restore r3
@@ -62,9 +63,9 @@ gecko 0x80077230
     lbz r4, 0x41(r27)
     rlwinm. r4, r4, 30, 31, 31 # 0x4
     li r4, 0 # orig code line
-    beq Exit1 # no timed rehit on fighters
+    beq Exit_80077230 # no timed rehit on fighters
     li r4, 5 
-    Exit1:
+    Exit_80077230:
 
 # Enable Rehit Rate on Fighter Hitboxes Vs Shields
 gecko 0x80076d04
@@ -72,9 +73,9 @@ gecko 0x80076d04
     lbz r4, 0x41(r30)
     rlwinm. r4, r4, 31, 31, 31 # 0x2
     li r4, 1 # orig code line
-    beq Exit2 # no timed rehit on shields
+    beq Exit_80076d04 # no timed rehit on shields
     li r4, 2
-    Exit2:
+    Exit_80076d04:
 
 # Enable Rehit Rate on Fighter Hitboxes Vs Non-Fighters
 gecko 0x8027058C
@@ -82,9 +83,9 @@ gecko 0x8027058C
     lbz r5, 0x41(r26)
     rlwinm. r5, r5, 29, 31, 31 # 0x8
     li r5, 0 # orig code line
-    beq Exit3 # no timed rehit on non-fighters
+    beq Exit_8027058C # no timed rehit on non-fighters
     li r5, 8
-    Exit3:
+    Exit_8027058C:
 
 # Patch for Subaction_FastForward
 gecko 0x80073430
@@ -100,18 +101,17 @@ gecko 0x80073430
 # Patch for FastForwardSubactionPointer2
 gecko 0x80073578
     cmpwi r28, eventId
-    bne OriginalExit1
+    bne OriginalExit_80073578
     addi r4, r4, eventLength
     stw r4, 0x8(r29)
     ba r12, 0x80073588
-
-OriginalExit1:
-    lbz r0, -0xA(r3)
+    OriginalExit_80073578:
+        lbz r0, -0xA(r3)
 
 # Subaction Event Parsing (0xF5)
 gecko 0x80073314
     cmpwi r28, eventId
-    bne+ OriginalExit2
+    bne+ OriginalExit_80073314
     # r27 = item/fighter gobj
     # r29 = script struct ptr
     # r30 = item/fighter data
@@ -180,7 +180,7 @@ gecko 0x80073314
         stw rCmdEvtPtr, 0x8(r29)
 
     ba r12, 0x8007332c
-    OriginalExit2:
+    OriginalExit_80073314:
         add r3, r31, r0 # original code line
 
 gecko.end
