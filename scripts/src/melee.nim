@@ -38,3 +38,4 @@ const
     FighterSetBoneRotX* = 0x8007592C
     Sin* = 0x803263d4
     Cos* = 0x80326240
+    PSVecMag* = 0x80342dfc
