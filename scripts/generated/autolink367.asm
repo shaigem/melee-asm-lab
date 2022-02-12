@@ -16,6 +16,7 @@ addi r3, rFighterData, 10692
 addi r4, rFighterData, 0x000000B0
 addi r5, sp, sp.xDiffX
 bla r12, 2147538168
+lfs f3, 0xFFFFC2A0(rtoc)
 lfs f2, sp.xDiffX(sp)
 lfs f1, sp.xDiffY(sp)
 bl AddAtkMomentum_8006BE00
@@ -25,7 +26,6 @@ lwz r3, 0x00001868(rFighterData)
 cmplwi r3, 0
 beqlr-
 regs (3), rAttackerData
-lfs f3, 0xFFFFC2A0(rtoc)
 lwz rAttackerData, 0x0000002C(r3)
 lfs f0, 0x00000084(rAttackerData)
 fmadds f1, f1, f3, f0
@@ -63,6 +63,7 @@ rlwimi r0, r3, 4, 16
 stb r0, 10688(rFighterData)
 lfs f1, 0x00000090(rFighterData)
 lfs f2, 0x0000008C(rFighterData)
+lfs f3, 0xFFFF9584(rtoc)
 bl AddAtkMomentum_8006BE00
 bl CapLaunchSpeeds_8006BE00
 StoreNewSpeeds_8006BE00:
@@ -72,7 +73,14 @@ Exit_8006BE00:
 epilog
 OriginalExit_8006BE00:
 lwz r12, 0x000021D0(rFighterData)
-gecko 2147985516
+gecko 2148065488
+lwz r3, 0x00001848(r29)
+cmpwi r3, 367
+bne OriginalExit_8008e0d0
+ba r12, 2148065516
+OriginalExit_8008e0d0:
+lwz r3, 0xFFFFAEB4(r13)
+gecko 2147985716
 regs (3), rHitStruct, (15), rAttackerData, (25), rDefenderData
 cmplwi r0, 367
 li r3, 0
@@ -84,9 +92,13 @@ lfs f0, 0x00000050(rHitStruct)
 stfs f0, 10696(rDefenderData)
 lfs f0, 0x00000054(rHitStruct)
 stfs f0, 10700(rDefenderData)
+lwz r3, 0x000000E0(rDefenderData)
+cmpwi r3, 1
+beq OriginalExit_8007a868
+li r0, 80
 li r3, 1
 OriginalExit_8007a868:
-cmplwi r0, 362
+stw r0, 0x00000004(r31)
 lbz r0, 10688(rDefenderData)
 rlwimi r0, r3, 4, 16
 stb r0, 10688(rDefenderData)

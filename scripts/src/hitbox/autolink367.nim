@@ -541,6 +541,7 @@ import ../common/dataexpansion
 
 const
     HeaderInfo = MexHeaderInfo
+    AutoLinkAngle = 367
     VortexTimeLimit = 5 # in frames
 
     AutoLink367* =
@@ -577,6 +578,7 @@ const
                 addi r4, rFighterData, 0xB0 # defender's position
                 addi r5, sp, sp.xDiffX
                 bla r12, {Vector3SubtractR5}
+                lfs f3, -0x3D60(rtoc) # 0.20
                 lfs f2, sp.xDiffX(sp)
                 lfs f1, sp.xDiffY(sp)
                 bl AddAtkMomentum_8006BE00
@@ -586,6 +588,7 @@ const
                     # inputs
                     # f1 = y to adjust
                     # f2 = x to adjust
+                    # f3 = % of attacker velocity (default: 0.20 = 20%)
                     # outputs
                     # f1 = adjusted y
                     # f2 = adjusted x
@@ -595,7 +598,6 @@ const
                     "beqlr-"
                     #beq OriginalExit_8006BE00 # no attacker, skip this part (TODO check if items?)
                     regs (3), rAttackerData
-                    lfs f3, -0x3D60(rtoc) # 0.20
                     lwz rAttackerData, 0x2C(r3) # data of attacker
                     lfs f0, 0x84(rAttackerData) # attacker vel y
                     fmadds f1, f1, f3, f0 # (y * 0.20) + attacker velocity y
@@ -646,8 +648,7 @@ const
                     stb r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rFighterData)
                     lfs f1, 0x90(rFighterData)
                     lfs f2, 0x8C(rFighterData)
-                    #lfs f1, -0x778C(rtoc) # 0.0
-                    #fmr f2, f1 # 0.0
+                    lfs f3, -0x6A7C(rtoc) # 1
                     bl AddAtkMomentum_8006BE00
                     bl CapLaunchSpeeds_8006BE00
 
@@ -661,8 +662,16 @@ const
                 OriginalExit_8006BE00:
                     lwz r12, 0x21D0(rFighterData)
 
+                # patch for NOT entering DamageFlyRoll if kb_angle is 367
+                gecko 0x8008e0d0
+                lwz r3, 0x1848(r29) # kb_angle
+                cmpwi r3, {AutoLinkAngle}
+                bne OriginalExit_8008e0d0
+                ba r12, 0x8008e0ec
+                OriginalExit_8008e0d0:
+                    lwz r3, -0x514C(r13)
 
-                gecko 0x8007a86c
+                gecko 0x8007a934
                 # r0 = hitbox angle
                 # r3 = hit struct
                 # r15 = attacker data
@@ -673,12 +682,9 @@ const
                 regs (3), rHitStruct, (15), rAttackerData, (25), rDefenderData
 
                 # check if angle of hitbox is 367
-                cmplwi r0, 367
+                cmplwi r0, {AutoLinkAngle}
                 li r3, 0
                 bne+ OriginalExit_8007a868 # if not autolink angle, exit
-                
-                # TODO set angle to 80 if grounded?
-                
                 lwz rHitStruct, 0xC(r17) # hit struct
                 lfs f0, 0x4C(rHitStruct) # hitbox pos X
                 stfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterX)}(rDefenderData)
@@ -686,9 +692,16 @@ const
                 stfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterY)}(rDefenderData)
                 lfs f0, 0x54(rHitStruct) # hitbox pos z
                 stfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterZ)}(rDefenderData)
+
+                # set kb_angle to 80 if defender is grounded at the time of attack
+                lwz r3, 0xE0(rDefenderData) # air state
+                cmpwi r3, 1 # in the air
+                beq OriginalExit_8007a868 # exit if in air
+                # otherwise, use angle of 80
+                li r0, 80
                 li r3, 1
                 OriginalExit_8007a868:
-                    cmplwi r0, 362 # orig code line
+                    stw r0, 0x4(r31) # orig code line, sets kb_angle
                     lbz r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rDefenderData)
                     rlwimi r0, r3, 4, {flag(ffAttackVecPull)}
                     stb r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rDefenderData)
