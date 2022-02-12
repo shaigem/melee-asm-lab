@@ -39,3 +39,5 @@ const
     Sin* = 0x803263d4
     Cos* = 0x80326240
     PSVecMag* = 0x80342dfc
+    PSVecSubtract* = 0x80342d78
+    Vector3SubtractR5* = 0x8000d4f8 # returns in r5
