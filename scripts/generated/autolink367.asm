@@ -8,9 +8,10 @@ regs (r31), rFighterData
 lbz r0, 10688(rFighterData)
 rlwinm. r0, r0, 0, 16
 beq OriginalExit_8006BE00
-prolog xDiffX, (0x00000004), xDiffY, (0x00000004), xDiffZ, (0x00000004)
+prolog
 lwz r0, 0x000018AC(rFighterData)
 cmpwi r0, -1
+beq StopPullIn_8006BE00
 cmpwi r0, 5
 bge StopPullIn_8006BE00
 bl Data

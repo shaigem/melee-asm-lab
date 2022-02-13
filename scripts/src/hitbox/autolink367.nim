@@ -24,12 +24,12 @@ const
                 "rlwinm." r0, r0, 0, {flag(ffAttackVecPull)}
                 beq OriginalExit_8006BE00 # if not, exit
 
-                prolog xDiffX, (0x4), xDiffY, (0x4), xDiffZ, (0x4)
+                prolog
 
                 # check vortex timer
                 lwz r0, 0x18AC(rFighterData) # time_since_hit in frames
                 cmpwi r0, -1 # safety check for -1
-
+                beq StopPullIn_8006BE00
                 cmpwi r0, {VortexTimeLimit}
                 bge StopPullIn_8006BE00
 
