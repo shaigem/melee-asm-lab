@@ -11,14 +11,10 @@ const
             description: "Pulls victims towards the center of collided hitbox and adjusts launch speed"
             authors: ["sushie"]
             code:
-                # Launch speed = attacker momentum + (hitbox position - opponent position) * 0.2, credits to DrakRoar#7297
-                # Victims are pulled towards center of hitbox
-                # Overriden Hitbox Settings:
-                # BKB = base knockback
-                # WDSK = kb cap
-                # KB Growth = attacker momentum multiplier
-
+                
+                # Main Patch for Pulling Opponents
                 gecko 0x8006be00
+                # pulls towards center of hitbox + adding attacker momentum
                 # r31 = fighter data
 
                 regs (r31), rFighterData
