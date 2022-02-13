@@ -10,23 +10,151 @@ rlwinm. r0, r0, 0, 16
 beq OriginalExit_8006BE00
 prolog xDiffX, (0x00000004), xDiffY, (0x00000004), xDiffZ, (0x00000004)
 lwz r0, 0x000018AC(rFighterData)
+cmpwi r0, -1
 cmpwi r0, 5
 bge StopPullIn_8006BE00
-addi r3, rFighterData, 10692
-addi r4, rFighterData, 0x000000B0
-addi r5, sp, sp.xDiffX
-bla r12, 2147538168
-lfs f3, 0xFFFFC2A0(rtoc)
-lfs f2, sp.xDiffX(sp)
-lfs f1, sp.xDiffY(sp)
+bl Data
+mflr r5
+lfs f1, 0x00000008(r5)
+lfs f2, 0x0000000C(r5)
+lfs f3, 0x00000004(r5)
+lfs f5, 0(r5)
+addi r3, rFighterData, 0x000000B0
+addi r4, rFighterData, 10692
+addi r5, rFighterData, 0x0000008C
+bl SmoothDamp
+lfs f3, 0xFFFF9584(rtoc)
+lfs f1, 0x00000090(rFighterData)
+lfs f2, 0x0000008C(rFighterData)
 bl AddAtkMomentum_8006BE00
 b StoreNewSpeeds_8006BE00
+SmoothDamp:
+mflr r0
+stw r0, 4(r1)
+stwu r1, 0xFFFFFF78(r1)
+stfd f31, 0x00000080(r1)
+stfd f30, 0x00000078(r1)
+stfd f29, 0x00000070(r1)
+stfd f28, 0x00000068(r1)
+stfd f27, 0x00000060(r1)
+fmuls f27, f2, f1
+stw r31, 0x0000005C(r1)
+mr r31, r5
+stw r30, 0x00000058(r1)
+addi r30, r4, 0
+stw r29, 0x00000054(r1)
+addi r29, r3, 0
+lfs f0, 0xFFFF809C(rtoc)
+lfs f8, 0xFFFF8870(rtoc)
+fdivs f31, f0, f1
+lfs f2, 4(r3)
+lfs f1, 4(r4)
+fmuls f9, f31, f8
+lfs f4, 0(r3)
+fsubs f28, f2, f1
+lwz r3, 0(r4)
+lwz r0, 4(r4)
+fmuls f7, f3, f9
+lfs f3, 0(r4)
+fmuls f6, f5, f9
+fadds f5, f8, f9
+stw r3, 0x00000038(r1)
+fmuls f7, f7, f9
+stw r0, 0x0000003C(r1)
+fmadds f5, f6, f9, f5
+lwz r0, 8(r4)
+fsubs f29, f4, f3
+fmadds f2, f9, f7, f5
+stw r0, 0x00000040(r1)
+fmuls f1, f28, f28
+fmuls f0, f27, f27
+fdivs f30, f8, f2
+fmadds f1, f29, f29, f1
+fcmpo cr0, f1, f0
+ble SmoothDamp_e4
+stfs f29, 0x00000020(sp)
+stfs f28, 0x00000024(sp)
+li r0, 0
+stw r0, 0x00000028(sp)
+addi r3, sp, 0x00000020
+bla r12, 2150903292
+fdivs f0, f29, f1
+fmuls f29, f27, f0
+fdivs f0, f28, f1
+fmuls f28, f27, f0
+SmoothDamp_e4:
+lfs f0, 0(r29)
+fsubs f0, f0, f29
+stfs f0, 0(r30)
+lfs f0, 4(r29)
+fsubs f0, f0, f28
+stfs f0, 4(r30)
+lfs f2, 0(r31)
+lfs f0, 4(r31)
+fmadds f1, f31, f29, f2
+lfs f6, 0xFFFF8870(rtoc)
+fmadds f0, f31, f28, f0
+fmuls f3, f6, f1
+fmuls f4, f6, f0
+fnmsubs f0, f31, f3, f2
+fadds f1, f28, f4
+fadds f3, f29, f3
+fmuls f0, f30, f0
+stfs f0, 0(r31)
+lfs f0, 4(r31)
+fnmsubs f0, f31, f4, f0
+fmuls f0, f30, f0
+stfs f0, 4(r31)
+lfs f0, 4(r30)
+lfs f2, 0(r30)
+fmadds f0, f30, f1, f0
+lfs f7, 0x0000003C(r1)
+lfs f1, 4(r29)
+fmadds f3, f30, f3, f2
+lfs f5, 0x00000038(r1)
+lfs f4, 0(r29)
+fsubs f2, f7, f1
+fsubs f1, f0, f7
+lfs f0, 0xFFFF8900(rtoc)
+fsubs f4, f5, f4
+fsubs f3, f3, f5
+fmuls f1, f2, f1
+fmadds f1, f4, f3, f1
+fcmpo cr0, f1, f0
+ble SmoothDamp_Epilog
+fsubs f1, f5, f5
+fsubs f0, f7, f7
+fdivs f1, f1, f6
+fdivs f0, f0, f6
+stfs f1, 0(r31)
+stfs f0, 4(r31)
+SmoothDamp_Epilog:
+lwz r0, 0x0000008C(r1)
+lfd f31, 0x00000080(r1)
+lfd f30, 0x00000078(r1)
+lfd f29, 0x00000070(r1)
+lfd f28, 0x00000068(r1)
+lfd f27, 0x00000060(r1)
+lwz r31, 0x0000005C(r1)
+lwz r30, 0x00000058(r1)
+lwz r29, 0x00000054(r1)
+addi r1, r1, 0x00000088
+mtlr r0
+blr
+Data:
+blrl
+.float 0.48
+.float 0.235
+.float 0.2
+.float 100
 AddAtkMomentum_8006BE00:
 lwz r3, 0x00001868(rFighterData)
 cmplwi r3, 0
 beqlr-
 regs (3), rAttackerData
 lwz rAttackerData, 0x0000002C(r3)
+cmplwi rAttackerData, 0
+beqlr-
 lfs f0, 0x00000084(rAttackerData)
 fmadds f1, f1, f3, f0
 lfs f0, 0x00000080(rAttackerData)

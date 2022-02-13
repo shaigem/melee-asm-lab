@@ -41,3 +41,4 @@ const
     PSVecMag* = 0x80342dfc
     PSVecSubtract* = 0x80342d78
     Vector3SubtractR5* = 0x8000d4f8 # returns in r5
+    Vector3Normalize* = 0x8000d2ec
