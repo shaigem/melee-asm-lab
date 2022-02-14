@@ -516,4 +516,4 @@ const
 
 
 when isMainModule:
-    generate "./generated/handstages.asm", ControllableAnyPort, NoLerpMovement, HarauCleanMovement, NoAttackStartup, GunPointTowards, PaatsubusuFix, CHUseOwnLasers
+    generate "./generated/mhch/handstages.asm", ControllableAnyPort, NoLerpMovement, HarauCleanMovement, NoAttackStartup, GunPointTowards, PaatsubusuFix, CHUseOwnLasers

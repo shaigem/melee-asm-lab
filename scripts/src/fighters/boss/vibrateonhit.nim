@@ -28,4 +28,4 @@ const
                 gecko.end
 
 when isMainModule:
-    generate "./generated/vibrateonhit.asm", VibrateOnHit
+    generate "./generated/mhch/vibrateonhit.asm", VibrateOnHit

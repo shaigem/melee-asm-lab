@@ -1,5 +1,6 @@
-import ../melee
-import ../common/dataexpansion
+import ../../common/dataexpansion
+import ../../melee
+
 
 const
     HeaderInfo = MexHeaderInfo

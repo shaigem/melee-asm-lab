@@ -1,6 +1,7 @@
 import ../melee
 
 const
+    DataExpansionDir = "de/"
     OldHitboxCount* = 4
     NewHitboxCount* = 8
     AddedHitCount = NewHitboxCount - OldHitboxCount
@@ -115,12 +116,18 @@ proc createItemDataAllocationPatch(gameInfo: GameHeaderInfo, t: typedesc): strin
 
 proc createPatchFor(gameInfo: GameHeaderInfo): GeckoCodeScript =
     result = 
-        createCode "sushie's Ft/ItData Expansion":
+        createCode "sushie's Ft/ItData Expansion v2.0.0":
             description: "Must be on for codes like Hitbox Extension & 8Box to work"
             authors: ["sushie"]
             code:
                 %createFighterDataAllocationPatch(gameInfo, ExtFighterData)
                 %createItemDataAllocationPatch(gameInfo, ExtItemData)
 
-when isMainModule:    
-    generate "./generated/dataexpansion.asm", createPatchFor(MexHeaderInfo)
+
+when isMainModule:
+    generate "./generated/" & DataExpansionDir & "dataexpansion.asm", createPatchFor(MexHeaderInfo)
+    # generate all mods that rely on the same extended data structures
+    import ../hitbox/[autolink/autolink367, eight/eighthitbox]
+    generate "./generated/" & DataExpansionDir & "autolink367.asm", AutoLink367
+    generate "./generated/" & DataExpansionDir & "eighthitboxes.asm", EightHitboxes
+    # TODO hitbox ext

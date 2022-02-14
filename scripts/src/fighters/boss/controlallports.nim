@@ -22,4 +22,4 @@ const
                 gecko 0x80156AFC, lwz r0, 0x65C(r6)
 
 when isMainModule:
-    generate "./generated/controlallports.asm", ControllableAnyPort
+    generate "./generated/mhch/controlallports.asm", ControllableAnyPort

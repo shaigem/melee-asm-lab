@@ -1,0 +1,58 @@
+{
+    "outputFiles": [
+      {
+        "file": "output/codes_dataexpand.txt"
+      },
+      {
+        "file": "output/codes_dataexpand.bin"
+      }
+    ],
+
+    "codes": [
+      {
+        "name": "sushie's Ft/ItData Expansion v1.1.0",
+        "authors": [
+          "sushie"
+        ],
+        "description": [
+          "Must be installed or enabled first"
+        ],
+        "build": [
+          {
+            "type": "inject",
+            "sourceFile": "scripts/generated/de/dataexpansion.asm"
+          }
+        ]
+      },
+      {
+        "name": "Enable 8 Hitbox Support v1.0.0",
+        "authors": [
+          "sushie"
+        ],
+        "description": [
+          "Expands Melee's current hitbox system to support up to 8 hitboxes"
+        ],
+        "build": [
+          {
+            "type": "inject",
+            "sourceFile": "scripts/generated/de/eighthitboxes.asm"
+          }
+        ]
+      },
+      {
+        "name": "Special Hitbox Angle: 367 v2.0.0",
+        "authors": [
+          "sushie"
+        ],
+        "description": [
+          "Pulls victims towards the center of collided hitbox and adjusts launch speed"
+        ],
+        "build": [
+          {
+            "type": "inject",
+            "sourceFile": "scripts/generated/de/autolink367.asm"
+          }
+        ]
+      }
+    ]
+  }

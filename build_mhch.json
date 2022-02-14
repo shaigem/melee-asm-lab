@@ -1,0 +1,52 @@
+{
+    "outputFiles": [
+      {
+        "file": "output/codes_mhch.txt"
+      }
+    ],
+    "codes": [
+      {
+        "name": "MH/CH Improvements",
+        "authors": [
+          "sushie"
+        ],
+        "build": [
+          {
+            "type": "inject",
+            "sourceFile": "scripts/generated/mhch/handstages.asm"
+          }
+        ]
+      },
+      {
+        "name": "MH/CH Control with Any Port",
+        "authors": [
+          "sushie",
+          "Achilles1515"
+        ],
+        "description": [
+          "Control MH/CH with any port instead of being restricted to ports 3 & 4"
+        ],
+        "build": [
+          {
+            "type": "inject",
+            "sourceFile": "scripts/generated/mhch/controlallports.asm"
+          }
+        ]
+      },
+      {
+        "name": "MH/CH Vibrate on Hit",
+        "authors": [
+          "sushie"
+        ],
+        "description": [
+          "Hands will vibrate on hit"
+        ],
+        "build": [
+          {
+            "type": "inject",
+            "sourceFile": "scripts/generated/mhch/vibrateonhit.asm"
+          }
+        ]
+      }
+    ]
+  }

@@ -1,5 +1,6 @@
 void func_8000D2EC(Vec current, Vec target, Vec *currentVelocity, float smoothTime, float maxSpeed)
 {
+}
     float omega = 2.0F / smoothTime;
     float deltaTime = 1.0;
     float x = omega * deltaTime;
@@ -54,7 +55,6 @@ void func_8000D2EC(Vec current, Vec target, Vec *currentVelocity, float smoothTi
         currentVelocity->x = (output_x - originalTo.x) / deltaTime;
         currentVelocity->y = (output_y - originalTo.y) / deltaTime;
     } 
-}
   
   
    0:    mflr    r0 
