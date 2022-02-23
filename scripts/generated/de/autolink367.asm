@@ -1,6 +1,6 @@
 .include "punkpc.s"
 punkpc ppc
-# Special Hitbox Angle: 367
+# Special Hitbox Angle: 367 v2.0.1
 # authors: @["sushie"]
 # description: Pulls victims towards the center of collided hitbox and adjusts launch speed
 gecko 2147925504
@@ -209,6 +209,13 @@ bne OriginalExit_8008e0d0
 ba r12, 2148065516
 OriginalExit_8008e0d0:
 lwz r3, 0xFFFFAEB4(r13)
+gecko 2148063796
+li r3, 0
+lbz r0, 10688(r31)
+rlwimi r0, r3, 4, 16
+stb r0, 10688(r31)
+OriginalExit_8008da34:
+stfs f1, 0x00001850(r31)
 gecko 2147985716
 regs (3), rHitStruct, (15), rAttackerData, (25), rDefenderData
 cmplwi r0, 367

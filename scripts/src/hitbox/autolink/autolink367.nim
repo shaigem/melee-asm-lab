@@ -8,7 +8,7 @@ const
     VortexTimeLimit = 5 # in frames
 
     AutoLink367* =
-        createCode "Special Hitbox Angle: 367":
+        createCode "Special Hitbox Angle: 367 v2.0.1":
             description: "Pulls victims towards the center of collided hitbox and adjusts launch speed"
             authors: ["sushie"]
             code:
@@ -273,6 +273,16 @@ const
                 ba r12, 0x8008e0ec
                 OriginalExit_8008e0d0:
                     lwz r3, -0x514C(r13)
+
+                # patch disable autolink vortex if calculated knockback is 0
+                gecko 0x8008da34
+                # r31 = fighter data
+                li r3, 0
+                lbz r0, {extFtDataOff(HeaderInfo, fighterFlags)}(r31)
+                rlwimi r0, r3, 4, {flag(ffAttackVecPull)}
+                stb r0, {extFtDataOff(HeaderInfo, fighterFlags)}(r31)
+                OriginalExit_8008da34:
+                    stfs f1, 0x1850(r31)
 
                 # CalculateKnockback Function Patch - Sets the Necessary Hit Variables
                 gecko 0x8007a934
