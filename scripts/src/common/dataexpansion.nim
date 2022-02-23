@@ -9,7 +9,7 @@ const
     # major version = m-ex header changes or incompatible changes
     # minor version = new property changes
     # patch version = bug fixes
-    Version* = "1.1.0"
+    Version* = "1.1.1"
     
 type
     GameHeaderInfo* = object
@@ -94,6 +94,20 @@ proc createFighterDataAllocationPatch(gameInfo: GameHeaderInfo, t: typedesc): st
             # exit
             mr r3, r30
             lis r4, 0x8046
+
+            # patch init values result screen
+            # from: https://github.com/UnclePunch/Training-Mode/blob/master/ASM/m-ex/Custom%20Playerdata%20Variables/Initialize%20Extended%20Playerblock%20Values%20(Result%20Screen).asm
+            gecko 0x800BE830
+            #Backup Data Pointer After Creation
+            addi r30, r3, 0
+            #Get Player Data Length
+            load r4,0x80458fd0
+            lwz r4, 0x20(r4)
+            #Zero Entire Data Block
+            bla r12, 0x8000c160
+            exit:
+                mr r3,r30
+                lis r4, 0x8046
 
             # patch size
             gecko 0x800679BC, li r4, {allocSize}
