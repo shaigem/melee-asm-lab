@@ -130,7 +130,7 @@ proc createItemDataAllocationPatch(gameInfo: GameHeaderInfo, t: typedesc): strin
 
 proc createPatchFor(gameInfo: GameHeaderInfo): GeckoCodeScript =
     result = 
-        createCode "sushie's Ft/ItData Expansion v2.0.0":
+        createCode "sushie's Ft/ItData Expansion v1.1.1":
             description: "Must be on for codes like Hitbox Extension & 8Box to work"
             authors: ["sushie"]
             code:

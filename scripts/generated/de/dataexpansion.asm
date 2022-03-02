@@ -1,6 +1,6 @@
 .include "punkpc.s"
 punkpc ppc
-# sushie's Ft/ItData Expansion v2.0.0
+# sushie's Ft/ItData Expansion v1.1.1
 # authors: @["sushie"]
 # description: Must be on for codes like Hitbox Extension & 8Box to work
 gecko 2147913452
