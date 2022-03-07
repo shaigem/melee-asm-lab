@@ -25,6 +25,30 @@
         ]
       },
       {
+        "name": "sushie's Custom Subaction Command Module",
+        "authors": [
+          "sushie"
+        ],
+        "build": [
+          {
+            "type": "inject",
+            "sourceFile": "scripts/generated/de/customcmd.asm"
+          }
+        ]
+      },
+      {
+        "name": "[custom_cmd] Special Properties FtHit",
+        "authors": [
+          "sushie"
+        ],
+        "build": [
+          {
+            "type": "inject",
+            "sourceFile": "scripts/generated/de/customcmd_specialflagsfthit.asm"
+          }
+        ]
+      },
+      {
         "name": "Enable 8 Hitbox Support v1.0.0",
         "authors": [
           "sushie"

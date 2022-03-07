@@ -144,4 +144,6 @@ when isMainModule:
     import ../hitbox/[autolink/autolink367, eight/eighthitbox]
     generate "./generated/" & DataExpansionDir & "autolink367.asm", AutoLink367
     generate "./generated/" & DataExpansionDir & "eighthitboxes.asm", EightHitboxes
-    # TODO hitbox ext
+    import customcmd
+    generate "./generated/" & DataExpansionDir & "customcmd.asm", CustomCmdMod
+    generate "./generated/" & DataExpansionDir & "customcmd_specialflagsfthit.asm", SpecialPropFtHitCmd
