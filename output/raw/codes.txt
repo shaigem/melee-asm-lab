@@ -1,0 +1,86 @@
+$sushie's Custom Fighter Subaction Commands Module
+C2073318 00000001
+81830000 00000000
+C2073430 00000001
+381CFFF6 00000000
+C2073574 00000001
+809D0008 00000000
+
+gecko 2147955480
+OriginalExit_80073318:
+lwz r12, 0(r3)
+gecko 2147955760
+subi r0, r28, 10
+OriginalExit_80073430:
+
+gecko 2147956084
+lwz r4, 0x00000008(r29)
+gecko.end
+
+$Enable Special Flags for Fighter Hitboxes
+Enables special flags such as rehit, blockability & more from Item hitboxes
+C2078EA0 00000007
+88170042 5400DFFF
+41820028 C03C002C
+C018002C FC010000
+41820008 48000014
+3D808007 618C9228
+7D8903A6 4E800420
+88170134 00000000
+
+gecko 2147978912
+lbz r0, 0x00000042(r23)
+rlwinm. r0, r0, 27, 31, 31
+beq OriginalExit_80078ea0
+lfs f1, 0x0000002C(r28)
+lfs f0, 0x0000002C(r24)
+fcmpu cr0, f1, f0
+beq CanHit_80078ea0
+b OriginalExit_80078ea0
+CanHit_80078ea0:
+ba r12, 2147979816
+OriginalExit_80078ea0:
+lbz r0, 0x00000134(r23)
+gecko.end
+
+$Enable Special Flags for Fighter Hitboxes: Subaction Event Parsing
+2C1C003D 40A2001C
+38630004 907D0008
+3D808007 618C332C
+7D8903A6 4E800420
+
+cmpwi r28, 61
+bne+ OrigExit_ccp_esffh
+addi r3, r3, 4
+stw r3, 0x00000008(r29)
+ba r12, 2147955500
+OrigExit_ccp_esffh:
+
+$Enable Special Flags for Fighter Hitboxes: FastForward
+2C1C003D 40A20020
+809D0008 38840004
+909D0008 3D808007
+618C3450 7D8903A6
+4E800420 00000000
+
+cmpwi r28, 61
+bne+ OrigExit_ccff_esffh
+lwz r4, 0x00000008(r29)
+addi r4, r4, 4
+stw r4, 0x00000008(r29)
+ba r12, 2147955792
+OrigExit_ccff_esffh:
+
+$Enable Special Flags for Fighter Hitboxes: FastForward2
+2C1C003D 40A2001C
+38840004 909D0008
+3D808007 618C3588
+7D8903A6 4E800420
+
+cmpwi r28, 61
+bne+ OrigExit_ccff2_esffh
+addi r4, r4, 4
+stw r4, 0x00000008(r29)
+ba r12, 2147956104
+OrigExit_ccff2_esffh:
+

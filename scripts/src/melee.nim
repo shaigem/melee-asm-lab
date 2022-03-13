@@ -2,6 +2,7 @@ import geckon, sugar
 export geckon, sugar
 
 import sequtils
+import strutils
 import jsony
 
 type 
@@ -85,24 +86,21 @@ const
 proc callbackFunc*(callback: Callback, handler: CallbackHookHandler): string =
     handler(callback)
 
-proc initMeleeModRegular*(name: string; codes: varargs[MeleeCode]; dependsOn: openArray[MeleeMod] = []): MeleeMod =
-    result.kind = mmkRegular
-    result.name = name
-    result.dependsOn = collect(newSeq):
+proc initMeleeModRegular*(name: string; codes: seq[MeleeCode]; dependsOn: openArray[MeleeMod] = []): MeleeMod =
+    let dependsOn = collect(newSeq):
         for i in dependsOn:
             i.name
-    result.codes = codes.toSeq()
+    result = MeleeMod(kind: mmkRegular, name: name, dependsOn: dependsOn, codes: codes)
 
-proc initMeleeModModule*(name: string; code: MeleeCode): MeleeMod =
-    result.kind = mmkModule
-    result.name = name
-    result.code = code
+proc initMeleeModModule*(name: string; code: MeleeCode): MeleeMod = MeleeMod(kind: mmkModule, name: name, code: code)
 
 proc initMeleeInsertCode*(insertToMod: MeleeMod; insertLineIndex: int; script: GeckoCodeScript): MeleeCode = 
     MeleeCode(kind: mckInsert, insertModName: insertToMod.name, insertLineIndex: insertLineIndex, script: script, geckoCode: script.toGeckoCode())
 
 proc initMeleeMainCode*(script: GeckoCodeScript): MeleeCode =
     MeleeCode(kind: mckMain, script: script, geckoCode: script.toGeckoCode())
+
+    
 
 when isMainModule:
 
@@ -117,3 +115,26 @@ when isMainModule:
 
     let codeMods = @[customEventSpecialFlags]
     writeFile("./output/codes.json", codeMods.toJson)
+
+
+    var f = open("./output/raw/codes.txt", fmReadWrite)
+
+    for m in moduleMods:
+        let s = m.code.script
+        f.write("$" & s.name & "\n")
+        if not s.description.isEmptyOrWhitespace():
+            f.write(s.description & "\n")
+        f.write(m.code.geckoCode & "\n")
+        f.write(s.code & "\n\n")
+
+    for m in codeMods:
+        for c in m.codes:
+            let s = c.script
+            f.write("$" & s.name & "\n")
+            if not s.description.isEmptyOrWhitespace():
+                f.write(s.description & "\n")
+            f.write(c.geckoCode & "\n")
+            f.write(s.code & "\n\n")
+
+    f.close()
+
