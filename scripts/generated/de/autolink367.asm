@@ -9,6 +9,11 @@ lbz r0, 10688(rFighterData)
 rlwinm. r0, r0, 0, 16
 beq OriginalExit_8006BE00
 prolog
+lbz r3, 0x0000221C(rFighterData)
+rlwinm. r0, r3, 31, 31, 31
+li r3, 0
+beq StopPullIn_8006BE00
+li r3, 1
 lwz r0, 0x000018AC(rFighterData)
 cmpwi r0, -1
 beq StopPullIn_8006BE00
@@ -186,15 +191,18 @@ StoreYLaunchSpeed_8006BE00:
 
 blr
 StopPullIn_8006BE00:
+lfs f1, 0x00000090(rFighterData)
+lfs f2, 0x0000008C(rFighterData)
+lfs f3, 0xFFFF9584(rtoc)
+cmpwi r3, 0
+beq StopPullInCap_8006BE00
+bl AddAtkMomentum_8006BE00
+StopPullInCap_8006BE00:
+bl CapLaunchSpeeds_8006BE00
 li r3, 0
 lbz r0, 10688(rFighterData)
 rlwimi r0, r3, 4, 16
 stb r0, 10688(rFighterData)
-lfs f1, 0x00000090(rFighterData)
-lfs f2, 0x0000008C(rFighterData)
-lfs f3, 0xFFFF9584(rtoc)
-bl AddAtkMomentum_8006BE00
-bl CapLaunchSpeeds_8006BE00
 StoreNewSpeeds_8006BE00:
 stfs f1, 0x00000090(rFighterData)
 stfs f2, 0x0000008C(rFighterData)
@@ -202,20 +210,28 @@ Exit_8006BE00:
 epilog
 OriginalExit_8006BE00:
 lwz r12, 0x000021D0(rFighterData)
+gecko 2148065576
+lbz r3, 10688(r29)
+rlwinm. r3, r3, 0, 16
+beq OrigExit_8008e128
+lfs f1, 0xFFFF8870(rtoc)
+OrigExit_8008e128:
+lwz r3, 0xFFFFAEB4(r13)
 gecko 2148064648
-lwz r3, 0x00001848(r29)
+regs (29), rData
+lwz r3, 0x00001848(rData)
 cmpwi r3, 367
 bne OrigExit_8007DD88
-lwz r3, 0x000000E0(r29)
+lwz r3, 0x000000E0(rData)
 cmpwi r3, 1
 beq EnablePullEffect_8008dd88
 li r3, 80
-stw r3, 0x00001848(r29)
+stw r3, 0x00001848(rData)
 li r3, 1
 EnablePullEffect_8008dd88:
-lbz r0, 10688(r29)
+lbz r0, 10688(rData)
 rlwimi r0, r3, 4, 16
-stb r0, 10688(r29)
+stb r0, 10688(rData)
 OrigExit_8007DD88:
 lfd f0, 0x00000058(sp)
 gecko 2147985716

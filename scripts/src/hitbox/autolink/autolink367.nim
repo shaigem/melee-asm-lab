@@ -27,7 +27,13 @@ const
 
                 prolog
 
+                lbz r3, 0x221C(rFighterData)
+                "rlwinm." r0, r3, 31, 31, 31
+                li r3, 0
+                beq StopPullIn_8006BE00
+
                 # check vortex timer
+                li r3, 1
                 lwz r0, 0x18AC(rFighterData) # time_since_hit in frames
                 cmpwi r0, -1 # safety check for -1
                 beq StopPullIn_8006BE00
@@ -243,17 +249,23 @@ const
                         #stfs f1, 0x90(rFighterData)
                         ""
                     blr
-
+                
                 StopPullIn_8006BE00:
-                    li r3, 0
-                    lbz r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rFighterData)
-                    rlwimi r0, r3, 4, {flag(ffAttackVecPull)}
-                    stb r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rFighterData)
+                    # inputs
+                    # r3 = add attacker momentum bool (1 or 0)
                     lfs f1, 0x90(rFighterData)
                     lfs f2, 0x8C(rFighterData)
                     lfs f3, -0x6A7C(rtoc) # 1
+                    cmpwi r3, 0 # 0 = don't add attacker momentum
+                    beq StopPullInCap_8006BE00
+                    # otherwise, add attacker momentum 100%
                     bl AddAtkMomentum_8006BE00
-                    bl CapLaunchSpeeds_8006BE00
+                    StopPullInCap_8006BE00:
+                        bl CapLaunchSpeeds_8006BE00
+                        li r3, 0
+                        lbz r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rFighterData)
+                        rlwimi r0, r3, 4, {flag(ffAttackVecPull)}
+                        stb r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rFighterData)
 
                 StoreNewSpeeds_8006BE00:
                     stfs f1, 0x90(rFighterData)
@@ -265,37 +277,38 @@ const
                 OriginalExit_8006BE00:
                     lwz r12, 0x21D0(rFighterData)
 
-                # # patch for NOT entering DamageFlyRoll if kb_angle is 367
-                # gecko 0x8008e0d0
-                # lwz r3, 0x1848(r29) # kb_angle
-                # cmpwi r3, {AutoLinkAngle}
-                # bne OriginalExit_8008e0d0
-                # ba r12, 0x8008e0ec
-                # OriginalExit_8008e0d0:
-                #     lwz r3, -0x514C(r13)
+                # patch for NOT entering DamageFlyRoll if attack vec pull effect is active
+                gecko 0x8008e128
+                lbz r3, {extFtDataOff(HeaderInfo, fighterFlags)}(r29)
+                "rlwinm." r3, r3, 0, {flag(ffAttackVecPull)}
+                beq OrigExit_8008e128
+                lfs f1, -0x7790(rtoc) # use value of 1.0 to skip the use of DamageFlyRoll
+                OrigExit_8008e128:
+                    lwz r3, -0x514C(r13) # orig code line
 
                 # enable attack vec pull effect if kb_angle is an autolink angle
                 # happens when sent into hitstun
                 gecko 0x8008dd88
                 # r29 = fighter data
                 # free registers: r3, r0
-                lwz r3, 0x1848(r29) # kb_angle
+                regs (29), rData
+                lwz r3, 0x1848(rData) # kb_angle
                 cmpwi r3, {AutoLinkAngle}
                 bne OrigExit_8007DD88
 
                 # set kb_angle to 80 if defender is grounded at the time of attack
-                lwz r3, 0xE0(r29) # air state
+                lwz r3, 0xE0(rData) # air state
                 cmpwi r3, 1 # in the air
                 beq EnablePullEffect_8008dd88
                 # otherwise, use angle of 80
                 li r3, 80
-                stw r3, 0x1848(r29) # store into kb_angle
+                stw r3, 0x1848(rData) # store into kb_angle
                 # enable attack vec pull effect
                 li r3, 1
                 EnablePullEffect_8008dd88:
-                    lbz r0, {extFtDataOff(HeaderInfo, fighterFlags)}(r29)
+                    lbz r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rData)
                     rlwimi r0, r3, 4, {flag(ffAttackVecPull)}
-                    stb r0, {extFtDataOff(HeaderInfo, fighterFlags)}(r29)
+                    stb r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rData)
                 OrigExit_8007DD88:
                     lfd f0, 0x58(sp) # orig code line
 
