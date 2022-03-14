@@ -11,14 +11,83 @@ OriginalExit_80073318:
 lwz r12, 0(r3)
 gecko 2147955760
 subi r0, r28, 10
-OriginalExit_80073430:
-
 gecko 2147956084
 lwz r4, 0x00000008(r29)
 gecko.end
 
+$sushie's Ft/ItData Expansion v1.1.1
+*Must be on for codes like Hitbox Extension & 8Box to work
+C2068EEC 00000006
+3BC30000 3C808045
+60848FD0 80840020
+3D808000 618CC160
+7D8803A6 4E800021
+7FC3F378 3C808046
+60000000 00000000
+C20BE830 00000006
+3BC30000 3C808045
+60848FD0 80840020
+3D808000 618CC160
+7D8803A6 4E800021
+7FC3F378 3C808046
+60000000 00000000
+040679BC 388029D0
+04266FD8 38801564
+C2268754 00000005
+3BA30000 38801564
+3D808000 618CC160
+7D8803A6 4E800021
+7FA3EB78 7C661B79
+60000000 00000000
+C21510D4 00000002
+2C040157 41820004
+83E3002C 00000000
+
+gecko 2147913452
+addi r30, r3, 0
+load r4, 2152042448
+lwz r4, 0x00000020(r4)
+bla r12, 2147533152
+mr r3, r30
+lis r4, 0x00008046
+gecko 2148263984
+addi r30, r3, 0
+load r4, 2152042448
+lwz r4, 0x00000020(r4)
+bla r12, 2147533152
+mr r3, r30
+lis r4, 0x00008046
+gecko 2147908028, li r4, 10704
+gecko.end
+gecko 2150002648, li r4, 5476
+gecko 2150008660
+addi r29, r3, 0
+li r4, 5476
+bla r12, 2147533152
+mr r3, r29
+mr. r6, r3
+gecko.end
+gecko 2148864212
+cmpwi r4, 343
+beq- OrigExit_801510d4
+OrigExit_801510d4:
+lwz r31, 0x0000002C(r3)
+gecko.end
+
+$sushie's Hitbox Capsule Support
+C21510EC 00000002
+2C040157 41820004
+38A00000 00000000
+
+gecko 2148864236
+cmpwi r4, 343
+beq- OrigExit_801510EC
+OrigExit_801510EC:
+li r5, 0
+gecko.end
+
 $Enable Special Flags for Fighter Hitboxes
-Enables special flags such as rehit, blockability & more from Item hitboxes
+*Enables special flags such as rehit, blockability & more from Item hitboxes
 C2078EA0 00000007
 88170042 5400DFFF
 41820028 C03C002C

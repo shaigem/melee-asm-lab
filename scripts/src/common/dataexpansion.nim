@@ -105,9 +105,8 @@ proc createFighterDataAllocationPatch(gameInfo: GameHeaderInfo, t: typedesc): st
             lwz r4, 0x20(r4)
             #Zero Entire Data Block
             bla r12, 0x8000c160
-            exit:
-                mr r3,r30
-                lis r4, 0x8046
+            mr r3,r30
+            lis r4, 0x8046
 
             # patch size
             gecko 0x800679BC, li r4, {allocSize}
@@ -128,6 +127,15 @@ proc createItemDataAllocationPatch(gameInfo: GameHeaderInfo, t: typedesc): strin
             "mr." r6, r3
             gecko.end
 
+proc patchCreateGetExtHitFunction(): string =
+    result = ppc:
+        gecko 0x801510d4
+        cmpwi r4, 343
+        beq- OrigExit_801510d4
+        OrigExit_801510d4:
+            lwz r31, 0x2C(r3)
+        gecko.end
+
 proc createPatchFor(gameInfo: GameHeaderInfo): GeckoCodeScript =
     result = 
         createCode "sushie's Ft/ItData Expansion v1.1.1":
@@ -136,14 +144,7 @@ proc createPatchFor(gameInfo: GameHeaderInfo): GeckoCodeScript =
             code:
                 %createFighterDataAllocationPatch(gameInfo, ExtFighterData)
                 %createItemDataAllocationPatch(gameInfo, ExtItemData)
+                %patchCreateGetExtHitFunction()
 
 
-when isMainModule:
-    generate "./generated/" & DataExpansionDir & "dataexpansion.asm", createPatchFor(MexHeaderInfo)
-    # generate all mods that rely on the same extended data structures
-    import ../hitbox/[autolink/autolink367, eight/eighthitbox]
-    generate "./generated/" & DataExpansionDir & "autolink367.asm", AutoLink367
-    generate "./generated/" & DataExpansionDir & "eighthitboxes.asm", EightHitboxes
-    import customcmd
-    generate "./generated/" & DataExpansionDir & "customcmd.asm", CustomCmdMod
-    generate "./generated/" & DataExpansionDir & "customcmd_specialflagsfthit.asm", SpecialPropFtHitCmd
+let dataExpansionModule*: MeleeMod = initMeleeModModule("data_expansion_module", initMeleeMainCode(createPatchFor(MexHeaderInfo)))

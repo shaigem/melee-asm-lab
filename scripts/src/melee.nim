@@ -15,6 +15,9 @@ type
     MeleeCodeKind* = enum
         mckMain, mckInsert
 
+    InsertPriority* = enum
+        ipHigh, ipMedium, ipLow
+
 type
     CallbackKind* = enum
         cbkCustomFtCmdParse
@@ -31,17 +34,18 @@ type
         of mckInsert:
             insertModName: string
             insertLineIndex: int
+            insertPriority: InsertPriority
         of mckMain: discard
         script*: GeckoCodeScript
         geckoCode*: string
 
     MeleeMod* = object
         name*: string
+        dependsOn*: seq[string]
         case kind: MeleeModKind
         of mmkModule:
             code*: MeleeCode
         of mmkRegular:
-            dependsOn*: seq[string]
             codes*: seq[MeleeCode]
 
     GameData* = object
@@ -92,22 +96,25 @@ proc initMeleeModRegular*(name: string; codes: seq[MeleeCode]; dependsOn: openAr
             i.name
     result = MeleeMod(kind: mmkRegular, name: name, dependsOn: dependsOn, codes: codes)
 
-proc initMeleeModModule*(name: string; code: MeleeCode): MeleeMod = MeleeMod(kind: mmkModule, name: name, code: code)
+proc initMeleeModModule*(name: string; code: MeleeCode; dependsOn: openArray[MeleeMod] = []): MeleeMod = 
+    let dependsOn = collect(newSeq):
+        for i in dependsOn:
+            i.name
+    result = MeleeMod(kind: mmkModule, name: name, dependsOn: dependsOn, code: code)
 
-proc initMeleeInsertCode*(insertToMod: MeleeMod; insertLineIndex: int; script: GeckoCodeScript): MeleeCode = 
-    MeleeCode(kind: mckInsert, insertModName: insertToMod.name, insertLineIndex: insertLineIndex, script: script, geckoCode: script.toGeckoCode())
+proc initMeleeInsertCode*(insertToMod: MeleeMod; insertLineIndex: int; script: GeckoCodeScript, insertPriority: InsertPriority = ipLow): MeleeCode = 
+    MeleeCode(kind: mckInsert, insertModName: insertToMod.name, insertLineIndex: insertLineIndex, insertPriority: insertPriority, script: script, geckoCode: script.toGeckoCode())
 
 proc initMeleeMainCode*(script: GeckoCodeScript): MeleeCode =
     MeleeCode(kind: mckMain, script: script, geckoCode: script.toGeckoCode())
 
-    
-
 when isMainModule:
 
     # generate all module codes
-    import common/customcmd
+    import common/[customcmd, dataexpansion]
+    import hitbox/[stretch]
     
-    let moduleMods = @[customFtCmdMod]
+    let moduleMods = @[customFtCmdMod, dataExpansionModule, hitboxStretchModule]
     writeFile("./output/modules.json", moduleMods.toJson)
 
     # generate all other code mods
@@ -123,7 +130,7 @@ when isMainModule:
         let s = m.code.script
         f.write("$" & s.name & "\n")
         if not s.description.isEmptyOrWhitespace():
-            f.write(s.description & "\n")
+            f.write("*" & s.description & "\n")
         f.write(m.code.geckoCode & "\n")
         f.write(s.code & "\n\n")
 
@@ -132,7 +139,7 @@ when isMainModule:
             let s = c.script
             f.write("$" & s.name & "\n")
             if not s.description.isEmptyOrWhitespace():
-                f.write(s.description & "\n")
+                f.write("*" & s.description & "\n")
             f.write(c.geckoCode & "\n")
             f.write(s.code & "\n\n")
 
