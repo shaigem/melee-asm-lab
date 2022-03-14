@@ -202,20 +202,22 @@ Exit_8006BE00:
 epilog
 OriginalExit_8006BE00:
 lwz r12, 0x000021D0(rFighterData)
-gecko 2148065488
+gecko 2148064648
 lwz r3, 0x00001848(r29)
 cmpwi r3, 367
-bne OriginalExit_8008e0d0
-ba r12, 2148065516
-OriginalExit_8008e0d0:
-lwz r3, 0xFFFFAEB4(r13)
-gecko 2148063796
-li r3, 0
-lbz r0, 10688(r31)
+bne OrigExit_8007DD88
+lwz r3, 0x000000E0(r29)
+cmpwi r3, 1
+beq EnablePullEffect_8008dd88
+li r3, 80
+stw r3, 0x00001848(r29)
+li r3, 1
+EnablePullEffect_8008dd88:
+lbz r0, 10688(r29)
 rlwimi r0, r3, 4, 16
-stb r0, 10688(r31)
-OriginalExit_8008da34:
-stfs f1, 0x00001850(r31)
+stb r0, 10688(r29)
+OrigExit_8007DD88:
+lfd f0, 0x00000058(sp)
 gecko 2147985716
 regs (3), rHitStruct, (15), rAttackerData, (25), rDefenderData
 cmplwi r0, 367
@@ -228,11 +230,6 @@ lfs f0, 0x00000050(rHitStruct)
 stfs f0, 10696(rDefenderData)
 lfs f0, 0x00000054(rHitStruct)
 stfs f0, 10700(rDefenderData)
-lwz r3, 0x000000E0(rDefenderData)
-cmpwi r3, 1
-beq OriginalExit_8007a868
-li r0, 80
-li r3, 1
 OriginalExit_8007a868:
 stw r0, 0x00000004(r31)
 lbz r0, 10688(rDefenderData)

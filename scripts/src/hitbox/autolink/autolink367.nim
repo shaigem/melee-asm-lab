@@ -265,24 +265,39 @@ const
                 OriginalExit_8006BE00:
                     lwz r12, 0x21D0(rFighterData)
 
-                # patch for NOT entering DamageFlyRoll if kb_angle is 367
-                gecko 0x8008e0d0
+                # # patch for NOT entering DamageFlyRoll if kb_angle is 367
+                # gecko 0x8008e0d0
+                # lwz r3, 0x1848(r29) # kb_angle
+                # cmpwi r3, {AutoLinkAngle}
+                # bne OriginalExit_8008e0d0
+                # ba r12, 0x8008e0ec
+                # OriginalExit_8008e0d0:
+                #     lwz r3, -0x514C(r13)
+
+                # enable attack vec pull effect if kb_angle is an autolink angle
+                # happens when sent into hitstun
+                gecko 0x8008dd88
+                # r29 = fighter data
+                # free registers: r3, r0
                 lwz r3, 0x1848(r29) # kb_angle
                 cmpwi r3, {AutoLinkAngle}
-                bne OriginalExit_8008e0d0
-                ba r12, 0x8008e0ec
-                OriginalExit_8008e0d0:
-                    lwz r3, -0x514C(r13)
+                bne OrigExit_8007DD88
 
-                # patch disable autolink vortex if calculated knockback is 0
-                gecko 0x8008da34
-                # r31 = fighter data
-                li r3, 0
-                lbz r0, {extFtDataOff(HeaderInfo, fighterFlags)}(r31)
-                rlwimi r0, r3, 4, {flag(ffAttackVecPull)}
-                stb r0, {extFtDataOff(HeaderInfo, fighterFlags)}(r31)
-                OriginalExit_8008da34:
-                    stfs f1, 0x1850(r31)
+                # set kb_angle to 80 if defender is grounded at the time of attack
+                lwz r3, 0xE0(r29) # air state
+                cmpwi r3, 1 # in the air
+                beq EnablePullEffect_8008dd88
+                # otherwise, use angle of 80
+                li r3, 80
+                stw r3, 0x1848(r29) # store into kb_angle
+                # enable attack vec pull effect
+                li r3, 1
+                EnablePullEffect_8008dd88:
+                    lbz r0, {extFtDataOff(HeaderInfo, fighterFlags)}(r29)
+                    rlwimi r0, r3, 4, {flag(ffAttackVecPull)}
+                    stb r0, {extFtDataOff(HeaderInfo, fighterFlags)}(r29)
+                OrigExit_8007DD88:
+                    lfd f0, 0x58(sp) # orig code line
 
                 # CalculateKnockback Function Patch - Sets the Necessary Hit Variables
                 gecko 0x8007a934
@@ -306,16 +321,9 @@ const
                 stfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterY)}(rDefenderData)
                 lfs f0, 0x54(rHitStruct) # hitbox pos z
                 stfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterZ)}(rDefenderData)
-
-                # set kb_angle to 80 if defender is grounded at the time of attack
-                lwz r3, 0xE0(rDefenderData) # air state
-                cmpwi r3, 1 # in the air
-                beq OriginalExit_8007a868 # exit if in air
-                # otherwise, use angle of 80
-                li r0, 80
-                li r3, 1
                 OriginalExit_8007a868:
                     stw r0, 0x4(r31) # orig code line, sets kb_angle
+                    # reset attack vec pull effect
                     lbz r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rDefenderData)
                     rlwimi r0, r3, 4, {flag(ffAttackVecPull)}
                     stb r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rDefenderData)
