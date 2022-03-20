@@ -42,6 +42,14 @@ type
         shieldStunMultiplier*: float32
         hitstunModifier*: float32
         hitFlags*: HitFlags
+        targetPosNode*: float32
+        targetPosOffsetX*: float32
+        targetPosOffsetY*: float32
+        targetPosOffsetZ*: float32
+        targetPosFrame*: float32
+        targetPosPullSpeedMultiplier*: float32
+        targetPosHorizontalCap*: float32
+        targetPosVerticalCap*: float32
 
     # variables should be added at the end of each ExtItem/FighterData struct
     # should not delete or insert between
@@ -63,6 +71,10 @@ type
         lastHitboxCollCenterX*: float32
         lastHitboxCollCenterY*: float32
         lastHitboxCollCenterZ*: float32
+        lastHitStruct*: float32
+        lastExtHitStruct*: float32
+        targetPosFrame*: float32
+
 
 template extFtDataOff*(gameInfo: GameHeaderInfo; member: untyped): int = gameInfo.fighterDataSize + offsetOf(ExtFighterData, member)
 template extItDataOff*(gameInfo: GameHeaderInfo; member: untyped): int = gameInfo.itemDataSize + offsetOf(ExtItemData, member)
@@ -137,11 +149,27 @@ proc createPatchFor(gameInfo: GameHeaderInfo): GeckoCodeScript =
                 %createFighterDataAllocationPatch(gameInfo, ExtFighterData)
                 %createItemDataAllocationPatch(gameInfo, ExtItemData)
 
+import ../common/hitvars
+
+
+proc createPatchHooks(): GeckoCodeScript =
+    result = 
+        createCode "hooks":
+            description: ""
+            authors: ["sushie"]
+            code:
+                %patchSetHitVarsOnHit()
+
 
 when isMainModule:
     generate "./generated/" & DataExpansionDir & "dataexpansion.asm", createPatchFor(MexHeaderInfo)
     # generate all mods that rely on the same extended data structures
     import ../hitbox/[autolink/autolink367, eight/eighthitbox]
-    generate "./generated/" & DataExpansionDir & "autolink367.asm", AutoLink367
+    import customcmd
+    generate "./generated/" & DataExpansionDir & "autolink367.asm", createAutolinkPatch()
     generate "./generated/" & DataExpansionDir & "eighthitboxes.asm", EightHitboxes
+    generate "./generated/" & DataExpansionDir & "customcmd.asm", SetVecTargetPos
+
+    generate "./generated/" & DataExpansionDir & "hooks.asm", createPatchHooks()
+
     # TODO hitbox ext

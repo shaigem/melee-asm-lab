@@ -1,0 +1,3 @@
+$Weight-Dependent Throws [sushie]
+*Use victim's weight instead of 100 when calculating throw knockback
+040DDF00 C09E0198

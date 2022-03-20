@@ -1,0 +1,24 @@
+{
+    "outputFiles": [
+      {
+        "file": "output/codes_general.txt"
+      }
+    ],
+    "codes": [
+      {
+        "name": "Weight-Dependent Throws",
+        "authors": [
+          "sushie"
+        ],
+        "description": [
+          "Use victim's weight instead of 100 when calculating throw knockback"
+        ],
+          "build": [
+          {
+            "type": "inject",
+            "sourceFile": "scripts/generated/wdt.asm"
+          }
+        ]
+      }
+    ]
+  }

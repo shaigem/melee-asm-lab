@@ -40,7 +40,7 @@
         ]
       },
       {
-        "name": "Special Hitbox Angle: 367 v2.0.1",
+        "name": "Special Hitbox Angle: 367 v2.1.0",
         "authors": [
           "sushie"
         ],
@@ -51,6 +51,36 @@
           {
             "type": "inject",
             "sourceFile": "scripts/generated/de/autolink367.asm"
+          }
+        ]
+      },
+      {
+        "name": "Set Vec Target Pos",
+        "authors": [
+          "sushie"
+        ],
+        "description": [
+          ""
+        ],
+        "build": [
+          {
+            "type": "inject",
+            "sourceFile": "scripts/generated/de/customcmd.asm"
+          }
+        ]
+      },
+      {
+        "name": "Hooks",
+        "authors": [
+          "sushie"
+        ],
+        "description": [
+          ""
+        ],
+        "build": [
+          {
+            "type": "inject",
+            "sourceFile": "scripts/generated/de/hooks.asm"
           }
         ]
       }

@@ -1,39 +1,68 @@
 .include "punkpc.s"
 punkpc ppc
-# Special Hitbox Angle: 367 v2.0.1
+# Special Hitbox Angle: 367 v2.1.0
 # authors: @["sushie"]
 # description: Pulls victims towards the center of collided hitbox and adjusts launch speed
 gecko 2147925504
 regs (r31), rFighterData
-lbz r0, 10688(rFighterData)
+lbz r0, 10976(rFighterData)
 rlwinm. r0, r0, 0, 16
 beq OriginalExit_8006BE00
-prolog
+prolog xTemp, xTempPosX, (0x00000004), xTempPosY, (0x00000004), xTempPosZ, (0x00000004)
 lbz r3, 0x0000221C(rFighterData)
 rlwinm. r0, r3, 31, 31, 31
 li r3, 0
 beq StopPullIn_8006BE00
 li r3, 1
 lwz r0, 0x000018AC(rFighterData)
-cmpwi r0, -1
-beq StopPullIn_8006BE00
-cmpwi r0, 5
-bge StopPullIn_8006BE00
+cmpwi r0, 0
+ble Exit_8006BE00
+cmpwi r0, 6
+bgt StopPullIn_8006BE00
+mr r5, r0
+subi r0, r5, 1
+sth r0, sp.xTemp(sp)
 bl Data
 mflr r5
-lfs f1, 0x00000008(r5)
-lfs f2, 0x0000000C(r5)
-lfs f3, 0x00000004(r5)
-lfs f5, 0(r5)
-addi r3, rFighterData, 0x000000B0
-addi r4, rFighterData, 10692
-addi r5, rFighterData, 0x0000008C
-bl SmoothDamp
-lfs f3, 0xFFFF9584(rtoc)
-lfs f1, 0x00000090(rFighterData)
-lfs f2, 0x0000008C(rFighterData)
+lwz r3, 10992(rFighterData)
+cmplwi r3, 0
+bgt AutoVecPull
+lwz r6, 10996(rFighterData)
+cmplwi r6, 0
+beq StopPullIn_8006BE00
+AutoVecPullPos:
+lwz r3, 20(r6)
+addi r4, r6, 24
+addi r5, sp, sp.xTempPosX
+bla r12, 2147529164
+lfs f0, sp.xTempPosX(sp)
+lfs f2, 0x000000B0(rFighterData)
+fsubs f2, f0, f2
+lfs f0, sp.xTempPosY(sp)
+lfs f1, 0x000000B4(rFighterData)
+fsubs f1, f0, f1
+lwz r6, 10996(rFighterData)
+lfs f3, 40(r6)
+b AddAtkLol
+AutoVecPull:
+lfs f0, 0x0000004C(r3)
+lfs f2, 0x000000B0(rFighterData)
+fsubs f2, f0, f2
+lfs f0, 0x00000050(r3)
+lfs f1, 0x000000B4(rFighterData)
+fsubs f1, f0, f1
+lfs f3, 0x00000008(r5)
+AddAtkLol:
+li r3, 0
 bl AddAtkMomentum_8006BE00
-b StoreNewSpeeds_8006BE00
+stfs f1, 0x00000090(rFighterData)
+stfs f2, 0x0000008C(rFighterData)
+b Exit_8006BE00
+Lerp:
+fsubs f0, f2, f1
+fmuls f0, f0, f3
+fadds f1, f1, f0
+blr
 SmoothDamp:
 mflr r0
 stw r0, 4(r1)
@@ -153,18 +182,38 @@ blrl
 .float 0.235
 .float 0.2
 .float 100
+.float 4
 AddAtkMomentum_8006BE00:
-lwz r3, 0x00001868(rFighterData)
-cmplwi r3, 0
+lwz r4, 0x00001868(rFighterData)
+cmplwi r4, 0
 beqlr-
-regs (3), rAttackerData
-lwz rAttackerData, 0x0000002C(r3)
+regs (4), rAttackerData
+lwz rAttackerData, 0x0000002C(r4)
 cmplwi rAttackerData, 0
 beqlr-
+cmplwi r3, 1
+beq SetAtkMomentum_8006BE00
 lfs f0, 0x00000084(rAttackerData)
 fmadds f1, f1, f3, f0
 lfs f0, 0x00000080(rAttackerData)
 fmadds f2, f2, f3, f0
+blr
+SetAtkMomentum_8006BE00:
+lfs f1, 0x00000084(rAttackerData)
+lfs f2, 0x00000080(rAttackerData)
+blr
+CapGroundSpeed_8006BE00:
+lfs f0, 0xFFFFC928(rtoc)
+fcmpo cr0, f0, f3
+bgt SetGroundCap_8006BE00
+fneg f0, f0
+fcmpo cr0, f3, f0
+bgt SetGroundCap_8006BE00
+b StoreGroundLaunchSpeed_8006BE00
+SetGroundCap_8006BE00:
+fmr f3, f0
+StoreGroundLaunchSpeed_8006BE00:
+stfs f3, 0x000000F0(rFighterData)
 blr
 CapLaunchSpeeds_8006BE00:
 lfs f0, 0xFFFFC928(rtoc)
@@ -196,13 +245,12 @@ lfs f2, 0x0000008C(rFighterData)
 lfs f3, 0xFFFF9584(rtoc)
 cmpwi r3, 0
 beq StopPullInCap_8006BE00
-bl AddAtkMomentum_8006BE00
 StopPullInCap_8006BE00:
 bl CapLaunchSpeeds_8006BE00
 li r3, 0
-lbz r0, 10688(rFighterData)
+lbz r0, 10976(rFighterData)
 rlwimi r0, r3, 4, 16
-stb r0, 10688(rFighterData)
+stb r0, 10976(rFighterData)
 StoreNewSpeeds_8006BE00:
 stfs f1, 0x00000090(rFighterData)
 stfs f2, 0x0000008C(rFighterData)
@@ -210,18 +258,13 @@ Exit_8006BE00:
 epilog
 OriginalExit_8006BE00:
 lwz r12, 0x000021D0(rFighterData)
-gecko 2148065576
-lbz r3, 10688(r29)
-rlwinm. r3, r3, 0, 16
-beq OrigExit_8008e128
-lfs f1, 0xFFFF8870(rtoc)
-OrigExit_8008e128:
-lwz r3, 0xFFFFAEB4(r13)
 gecko 2148064648
 regs (29), rData
 lwz r3, 0x00001848(rData)
 cmpwi r3, 367
-bne OrigExit_8007DD88
+blt OrigExit_8007DD88
+cmpwi r3, 368
+bgt OrigExit_8007DD88
 lwz r3, 0x000000E0(rData)
 cmpwi r3, 1
 beq EnablePullEffect_8008dd88
@@ -229,26 +272,9 @@ li r3, 80
 stw r3, 0x00001848(rData)
 li r3, 1
 EnablePullEffect_8008dd88:
-lbz r0, 10688(rData)
+lbz r0, 10976(rData)
 rlwimi r0, r3, 4, 16
-stb r0, 10688(rData)
+stb r0, 10976(rData)
 OrigExit_8007DD88:
 lfd f0, 0x00000058(sp)
-gecko 2147985716
-regs (3), rHitStruct, (15), rAttackerData, (25), rDefenderData
-cmplwi r0, 367
-li r3, 0
-bne+ OriginalExit_8007a868
-lwz rHitStruct, 0x0000000C(r17)
-lfs f0, 0x0000004C(rHitStruct)
-stfs f0, 10692(rDefenderData)
-lfs f0, 0x00000050(rHitStruct)
-stfs f0, 10696(rDefenderData)
-lfs f0, 0x00000054(rHitStruct)
-stfs f0, 10700(rDefenderData)
-OriginalExit_8007a868:
-stw r0, 0x00000004(r31)
-lbz r0, 10688(rDefenderData)
-rlwimi r0, r3, 4, 16
-stb r0, 10688(rDefenderData)
 gecko.end
