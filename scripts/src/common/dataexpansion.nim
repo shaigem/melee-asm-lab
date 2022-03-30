@@ -33,7 +33,9 @@ type
         ffSetWeight,
         ffDisableMeteorCancel,
         ffForceHitlagOnThrown,
-        ffAttackVecPull # 367 autolink
+        ffAttackVecPull, # 367 autolink
+        ffAttackVecPullNoAttackerMom,
+        ffAttackVecPullUseFrames
     FighterFlags = set[FighterFlag]
 
     SpecialHit* = object
@@ -50,6 +52,8 @@ type
         targetPosPullSpeedMultiplier*: float32
         targetPosHorizontalCap*: float32
         targetPosVerticalCap*: float32
+        targetPosNoAttackerMomen*: float32
+        targetPosUseFrames*: float32
 
     # variables should be added at the end of each ExtItem/FighterData struct
     # should not delete or insert between
@@ -74,6 +78,10 @@ type
         lastHitStruct*: float32
         lastExtHitStruct*: float32
         targetPosFrame*: float32
+        targetPosDistance*: float32
+        lx*: float32
+        ly*: float32
+        lz*: float32
 
 
 template extFtDataOff*(gameInfo: GameHeaderInfo; member: untyped): int = gameInfo.fighterDataSize + offsetOf(ExtFighterData, member)

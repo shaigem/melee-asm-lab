@@ -11,9 +11,15 @@ prolog rExtHit, rFighterData, rScriptPtr, rCmdPtr, xTempUpper, (0x00000002), xTe
 lwz rCmdPtr, 0x00000008(rScriptPtr)
 lbz r4, 0x00000001(rCmdPtr)
 rlwinm r4, r4, 27, 29, 31
-mulli r4, r4, 52
+mulli r4, r4, 60
 addi r4, r4, 9248
 add rExtHit, rFighterData, r4
+lbz r4, 0x00000001(rCmdPtr)
+rlwinm r4, r4, 28, 31, 31
+stw r4, 52(rExtHit)
+lbz r4, 0x00000001(rCmdPtr)
+rlwinm r4, r4, 29, 31, 31
+stw r4, 56(rExtHit)
 lbz r3, 0x00000002(rCmdPtr)
 lwz r4, 0x000005E8(rFighterData)
 rlwinm r0, r3, 4, 0, 27

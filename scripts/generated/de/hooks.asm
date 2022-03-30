@@ -44,17 +44,45 @@ cmplwi r0, 368
 beq shv_AttackVecTargetPos
 b shv_AutolinkExit
 shv_AttackVecPull:
+li r3, 6
+stw r3, 11072(r30)
+li r3, 0
+lbz r5, 11048(r30)
+rlwimi r5, r3, 5, 32
+stb r5, 11048(r30)
+lwz r5, 0x0000004C(r29)
+stw r5, 11052(r30)
+lwz r5, 0x00000050(r29)
+stw r5, 11056(r30)
 mr r3, r29
 b shv_AutolinkExit
 shv_AttackVecTargetPos:
+lwz r4, 36(r28)
+addi r4, r4, 1
+stw r4, 11072(r30)
+lwz r4, 52(r28)
+lbz r5, 11048(r30)
+rlwimi r5, r4, 5, 32
+stb r5, 11048(r30)
+sp.push
+sp.temp xTempPosX, (0x00000004), xTempPosY, (0x00000004), xTempPosZ, (0x00000004)
+lwz r3, 20(r28)
+addi r4, r28, 24
+addi r5, sp, sp.xTempPosX
+bla r12, 2147529164
+addi r3, r30, 11052
+psq_l f0, sp.xTempPosX(sp), 0, 0
+psq_st f0, 0(r3), 0, 0
+sp.pop
+li r3, 0
 mr r4, r28
 shv_AutolinkExit:
-stw r3, 10992(r30)
-stw r4, 10996(r30)
+stw r3, 11064(r30)
+stw r4, 11068(r30)
 li r3, 0
-lbz r0, 10976(r30)
+lbz r0, 11048(r30)
 rlwimi r0, r3, 4, 16
-stb r0, 10976(r30)
+stb r0, 11048(r30)
 cmpwi r24, 1
 bne Epilog_SetHitVarsOnHit
 Epilog_SetHitVarsOnHit:
@@ -105,7 +133,7 @@ GetExtHitLoop:
 b Comparison_GetExtHit
 Loop_GetExtHit:
 add r5, r5, r0
-addi r3, r3, 52
+addi r3, r3, 60
 Comparison_GetExtHit:
 cmplw r5, r4
 bdnzf eq, Loop_GetExtHit

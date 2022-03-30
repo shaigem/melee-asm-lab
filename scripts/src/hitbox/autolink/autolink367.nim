@@ -14,7 +14,7 @@ const
             code:
                 # TODO add x cap for 8007cd0c, if user ASDI into ground, cap speed to 1?
                 # Main Patch for Pulling Opponents
-                gecko 0x8006be00
+                gecko 0x8006b898
                 # pulls towards center of hitbox + adding attacker momentum
                 # r31 = fighter data
 
@@ -25,7 +25,7 @@ const
                 "rlwinm." r0, r0, 0, {flag(ffAttackVecPull)}
                 beq OriginalExit_8006BE00 # if not, exit
 
-                prolog xTemp, xTempPosX, (0x4), xTempPosY, (0x4), xTempPosZ, (0x4)
+                prolog xTemp, (0x4), xTempFrame, (0x4), xTempPosX, (0x4), xTempPosY, (0x4), xTempPosZ, (0x4)
 
 
                 lbz r3, 0x221C(rFighterData)
@@ -36,10 +36,15 @@ const
                 # check vortex timer
                 li r3, 1
                 lwz r0, 0x18AC(rFighterData) # time_since_hit in frames
+                lwz r5, {extFtDataOff(HeaderInfo, targetPosFrame)}(rFighterData)
                 cmpwi r0, 0
                 ble Exit_8006BE00
-                cmpwi r0, {VortexTimeLimit}
+                cmpw r0, r5
                 bgt StopPullIn_8006BE00
+
+                Hihi:
+
+                    sth r5, sp.xTempFrame(sp)
 
                 mr r5, r0
                 subi r0, r5, 1
@@ -59,11 +64,16 @@ const
                 beq StopPullIn_8006BE00
 
                 AutoVecPullPos:
-                    lwz r3, {extHitOff(targetPosNode)}(r6)
+#                    lwz r3, {extHitOff(targetPosNode)}(r6)
+#                    addi r4, r6, {extHitOff(targetPosOffsetX)}
+#                    addi r5, sp, sp.xTempPosX
+#                    bla r12, {JOBJGetWorldPos}
+#[     lwz r3, {extHitOff(targetPosNode)}(r6)
                     addi r4, r6, {extHitOff(targetPosOffsetX)}
                     addi r5, sp, sp.xTempPosX
                     bla r12, {JOBJGetWorldPos}
 
+#                    lfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterX)}(rFighterData)
                     lfs f0, sp.xTempPosX(sp) # hitbox position
                     lfs f2, 0xB0(rFighterData) # pos x
                     fsubs f2, f0, f2 # hitbox x - pos x
@@ -71,17 +81,95 @@ const
                     lfs f0, sp.xTempPosY(sp) # hitbox position
                     lfs f1, 0xB4(rFighterData) # pos y
                     fsubs f1, f0, f1 # hitbox y - pos y
+                    lwz r6, {extFtDataOff(HeaderInfo, lastExtHitStruct)}(rFighterData) ]#
 
-                    lwz r6, {extFtDataOff(HeaderInfo, lastExtHitStruct)}(rFighterData)
-                    lfs f3, {extHitOff(targetPosPullSpeedMultiplier)}(r6)
-                    b AddAtkLol
+
+                        lfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterX)}(rFighterData)
+    #                    lfs f0, 0x4C(r3) # hitbox position
+                        lfs f2, 0xB0(rFighterData) # pos x
+                        fsubs f2, f0, f2 # hitbox x - pos x
+
+                        lfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterY)}(rFighterData) # hitbox position
+                        lfs f1, 0xB4(rFighterData) # pos y
+                        fsubs f1, f0, f1 # hitbox y - pos y
+                        stfs f2, sp.xTempPosX(sp)
+                        stfs f1, sp.xTempPosY(sp)
+                        li r0, 0
+                        stw r0, sp.xTempPosZ(sp)
+
+                        
+                        lwz r0, 0x18AC(rFighterData) # time_since_hit in frames
+                        cmpwi r0, 1
+                        beq CalcDist
+                        b DoStuff
+
+                        CalcDist:
+                            addi r3, sp, sp.xTempPosX
+                            bla r12, 0x80342dfc
+                            psq_l f0, sp.xTempFrame(sp), 1, 5
+                            fdivs f1, f1, f0
+                            stfs f1, {extFtDataOff(HeaderInfo, targetPosDistance)}(rFighterData) # TODO wrong?
+                            addi r3, sp, sp.xTempPosX
+                            bla r12, 0x8000D2EC
+                            lfs f0, {extFtDataOff(HeaderInfo, targetPosDistance)}(rFighterData)
+                            lfs f1, sp.xTempPosX(sp)
+                            fmuls f1, f0, f1
+
+
+                            stfs f1, {extFtDataOff(HeaderInfo, lx)}(rFighterData)
+
+                            bl Data
+                            mflr r5
+                            lfs f2, 0x16C(rFighterData)
+                            lfs f3, 0x14(r5) # 0.075
+                            fsubs f2, f2, f3 # g - 0.075
+                            lfs f3, 0x18(r5) # 5
+                            fmuls f2, f2, f3 # (g - 0.075) * 5
+                            
+
+                            lfs f1, sp.xTempPosY(sp)
+                            fmuls f1, f0, f1
+                            fadds f1, f1, f2
+                            stfs f1, 0x90(rFighterData)
+                            stfs f1, {extFtDataOff(HeaderInfo, ly)}(rFighterData)
+                            
+
+                        DoStuff:
+                            lwz r3, 0(rFighterData)
+                            addi r4, rFighterData, {extFtDataOff(HeaderInfo, lastHitboxCollCenterX)}
+                            lfs f1, {extFtDataOff(HeaderInfo, targetPosDistance)}(rFighterData)
+                            bl MoveTowardsPoint
+#                            lfs f2, {extFtDataOff(HeaderInfo, lx)}(rFighterData)
+#                            lfs f1, {extFtDataOff(HeaderInfo, ly)}(rFighterData)
+                            lfs f3, -0x6A7C(rtoc)
+
+                            li r3, 0
+                            bl AddAtkMomentum_8006BE00
+                            stfs f1, 0x90(rFighterData)
+                            stfs f2, 0x8C(rFighterData)
+                            b Exit_8006BE00
+
+# speed based on # of frames                    lwz r6, {extFtDataOff(HeaderInfo, lastExtHitStruct)}(rFighterData)
+#                    psq_l f0, sp.xTemp(sp), 1, 5
+#                    psq_l f3, sp.xTempFrame(sp), 1, 5
+#                    fdivs f3, f0, f3
+
+#                    lfs f3, {extHitOff(targetPosPullSpeedMultiplier)}(r6)
+#                    b AddAtkLol
+#                    li r3, 0
+#                    bl AddAtkMomentum_8006BE00
+#                    stfs f1, 0x90(rFighterData)
+#                    stfs f2, 0x8C(rFighterData)
+#                    b Exit_8006BE00
+
 
                 AutoVecPull:
-                    lfs f0, 0x4C(r3) # hitbox position
+                    lfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterX)}(rFighterData)
+#                    lfs f0, 0x4C(r3) # hitbox position
                     lfs f2, 0xB0(rFighterData) # pos x
                     fsubs f2, f0, f2 # hitbox x - pos x
 
-                    lfs f0, 0x50(r3) # hitbox position
+                    lfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterY)}(rFighterData) # hitbox position
                     lfs f1, 0xB4(rFighterData) # pos y
                     fsubs f1, f0, f1 # hitbox y - pos y
 
@@ -97,46 +185,115 @@ const
                 # lfs f1, 0x10(r5)
                 # fdivs f3, f0, f1
 
-                # lfs f4, -0x36d8(rtoc) # -3.0
-                # fmr f1, f2 # kb_vel x
-                # lfs f0, -0x36d8(rtoc) # -3.0
-                # fcmpo cr0, f0, f1
-                # bgt Balal
-                # fneg f0, f0
-                # fcmpo cr0, f1, f0
-                # bgt Balal
+                # LERP speed cap
+                LerpSpeed:
+                    lfs f1, 0x90(rFighterData)
+                    lfs f2, 0x8C(rFighterData)
+                    psq_l f0, sp.xTemp(sp), 1, 5
+                psq_l f3, sp.xTempFrame(sp), 1, 5
+                fdivs f3, f0, f3
+
+                lfs f4, -0x36d8(rtoc) # -3.0
+                fmr f1, f2 # kb_vel x
+                lfs f0, -0x36d8(rtoc) # -3.0
+                fcmpo cr0, f0, f1
+                bgt Balal
+                fneg f0, f0
+                fcmpo cr0, f1, f0
+                bgt Balal
                 
-                # b StoreTest
-                # Balal:
-                #     fmr f2, f0
+                b StoreTest
+                Balal:
+                    fmr f2, f0
 
-                # CallLerp:
-                #     bl Lerp
+                CallLerp:
+                    bl Lerp
 
-                # StoreTest:
-                #     stfs f1, 0x8C(rFighterData)
+                StoreTest:
+                    stfs f1, 0x8C(rFighterData)
 
 
-                # lfs f1, 0x90(rFighterData)
-                # lfs f0, -0x7640(rtoc) # -1.0
-                # fcmpo cr0, f0, f1
-                # bgt Balal2
-                # lfs f0, -0x13BC(rtoc) # 3.0
-                # fcmpo cr0, f1, f0
-                # bgt Balal2
+                lfs f1, 0x90(rFighterData)
+                lfs f0, -0x7640(rtoc) # -1.0
+                fcmpo cr0, f0, f1
+                bgt Balal2
+                lfs f0, -0x13BC(rtoc) # 3.0
+                fcmpo cr0, f1, f0
+                bgt Balal2
                 
-                # b StoreTest2
-                # Balal2:
-                #     fmr f2, f0
+                b StoreTest2
+                Balal2:
+                    fmr f2, f0
 
-                # CallLerp2:
-                #     bl Lerp
+                CallLerp2:
+                    bl Lerp
 
-                # StoreTest2:
-                #     stfs f1, 0x90(rFighterData)
+                StoreTest2:
+                    stfs f1, 0x90(rFighterData)
 
 
                 b Exit_8006BE00
+
+
+                MoveTowardsPoint:
+                    # linear interop
+                    # inputs
+                    # f1 = minimum end step
+                    # f2 = steps
+                    # r3 = fighter GOBJ (start)
+                    # r4 = end pos ptr
+                    # outputs
+                    # f1 = y
+                    # f2 = x
+                    mflr r0
+                    stw r0, 4(r1)
+                    stwu r1, -0x58(r1)
+                    stfd f31, 0x50(r1)
+                    fmr f31, f2
+                    stfd f30, 0x48(r1)
+                    fmr f30, f1
+                    stfd f29, 0x40(r1)
+                    stw r31, 0x3c(r1)
+                    stw r30, 0x38(r1)
+                    addi r5, r1, 0x2c
+                    lwz r31, 0x2c(r3)
+                    addi r3, r4, 0
+                    addi r4, r31, 0xB0
+                    bla r12, 0x8000D4F8
+                    addi r3, sp, 0x2C
+                    bla r12, 0x80342dfc
+                    fmr f29, f1
+                    lbl_8015BEF8:
+                        fcmpo cr0, f29, f30
+                        bge lbl_8015BF0C
+                        b MoveTowardsPointEpilog
+                    lbl_8015BF0C:
+                        lfs f1, {extFtDataOff(HeaderInfo, lx)}(rFighterData)
+                        stfs f1, 0x2C(sp)
+#                        lfs f0, 0x2c(r1)
+#                        fmuls f0, f0, f1
+                        lfs f1, {extFtDataOff(HeaderInfo, ly)}(rFighterData)
+#                        stfs f1, 0x2C(sp)
+                        stfs f1, 0x30(r1)
+#                        lfs f0, 0x30(r1)
+#                        fmuls f0, f0, f1
+#                        stfs f0, 0x30(r1)
+#                        lfs f0, 0x34(r1)
+#                        fmuls f0, f0, f1
+#                        stfs f0, 0x34(r1)
+                    MoveTowardsPointEpilog:
+                        lfs f2, 0x2c(r1)
+                        lfs f1, 0x30(r1)
+                        lwz r0, 0x5c(r1)
+                        lfd f31, 0x50(r1)
+                        lfd f30, 0x48(r1)
+                        lfd f29, 0x40(r1)
+                        lwz r31, 0x3c(r1)
+                        lwz r30, 0x38(r1)
+                        addi r1, r1, 0x58
+                        mtlr r0
+                        blr
+
 
                 Lerp:
                     # inputs
@@ -150,140 +307,15 @@ const
                     fadds f1, f1, f0 # a + ((b - a) * t)
                     blr
 
-                SmoothDamp:
-                    # r3 = current vec
-                    # r4 = target vec
-                    # r5 = current velocity
-                    # f1 = smoothTime
-                    # f2 = maxSpeed
-                    # constants
-                    # f3 = 0.235
-                    # f5 = 0.48
-                    mflr r0 
-                    stw r0, 4(r1)
-                    stwu r1, -0x88(r1) 
-                    stfd f31, 0x80(r1) 
-                    stfd f30, 0x78(r1) 
-                    stfd f29, 0x70(r1)
-                    stfd f28, 0x68(r1) 
-                    stfd f27, 0x60(r1)
-                    fmuls f27, f2, f1 # maxChange = maxSpeed * smoothTime
-                    stw r31, 0x5c(r1) 
-                    mr r31, r5 
-                    stw  r30, 0x58(r1) 
-                    addi r30, r4, 0 
-                    stw  r29, 0x54(r1) 
-                    addi r29, r3, 0
-                    lfs f0, -0x7F64(rtoc) # 2.0
-                    lfs f8, -0x7790(rtoc) # @11 # deltaTime, 1.0
-                    fdivs f31, f0, f1 # omega = 2.0F / smoothTime
-                    lfs f2, 4(r3) # current.y
-                    lfs f1, 4(r4) # target.y
-                    fmuls f9, f31, f8 # x = omega * deltaTime
-                    lfs f4, 0(r3) # current.x
-                    fsubs f28, f2, f1 # change_y = current - target
-                    lwz r3, 0(r4) 
-                    lwz r0, 4(r4) 
-                    fmuls f7, f3, f9
-                    lfs f3,0(r4) # target.x
-                    fmuls f6,f5,f9 
-                    fadds f5,f8,f9 
-                    stw    r3,0x38(r1) 
-                    fmuls  f7,f7,f9 
-                    stw    r0,0x3c(r1) 
-                    fmadds f5,f6,f9,f5 
-                    lwz    r0,8(r4) 
-                    fsubs  f29,f4,f3 # change_x = current.x - target.x
-                    fmadds f2,f9,f7,f5 
-                    stw    r0,0x40(r1) 
-                    fmuls  f1,f28,f28 
-                    fmuls  f0,f27,f27 # maxChangeSq
-                    fdivs  f30,f8,f2 
-                    fmadds f1,f29,f29,f1 # sqDist
-                    fcmpo  cr0,f1,f0 
-                    ble    SmoothDamp_e4
-                    # clamp maximum speed
-                    stfs f29, 0x20(sp) # x
-                    stfs f28, 0x24(sp) # y
-                    li r0, 0
-                    stw r0, 0x28(sp)
-                    addi r3, sp, 0x20
-                    bla r12, {PSVecMag}
-                    fdivs f0, f29, f1 # change_x / mag
-                    fmuls f29, f27, f0
-                    fdivs f0, f28, f1 # change_y / mag
-                    fmuls f28, f27, f0
-                    SmoothDamp_e4: 
-                        lfs    f0,0(r29) 
-                        fsubs  f0,f0,f29 
-                        stfs   f0,0(r30) 
-                        lfs    f0,4(r29) 
-                        fsubs  f0,f0,f28 
-                        stfs   f0,4(r30) 
-                        lfs    f2,0(r31) 
-                        lfs    f0,4(r31) 
-                        fmadds f1,f31,f29,f2 
-                        lfs    f6,-0x7790(rtoc) # 1.0 @11(0) 
-                        fmadds f0,f31,f28,f0 
-                        fmuls  f3,f6,f1 
-                        fmuls  f4,f6,f0 
-                        fnmsubs f0,f31,f3,f2 
-                        fadds  f1,f28,f4 
-                        fadds  f3,f29,f3 
-                        fmuls  f0,f30,f0 
-                        stfs   f0,0(r31) 
-                        lfs    f0,4(r31) 
-                        fnmsubs f0,f31,f4,f0 
-                        fmuls  f0,f30,f0 
-                        stfs   f0,4(r31) 
-                        lfs    f0,4(r30) 
-                        lfs    f2,0(r30) 
-                        fmadds f0,f30,f1,f0 
-                        lfs    f7,0x3c(r1) 
-                        lfs    f1,4(r29) 
-                        fmadds f3,f30,f3,f2 
-                        lfs    f5,0x38(r1) 
-                        lfs    f4,0(r29) 
-                        fsubs  f2,f7,f1 
-                        fsubs  f1,f0,f7 
-                        lfs    f0, -0x7700(rtoc) # 0.0 @14(0) 
-                        fsubs  f4,f5,f4 
-                        fsubs  f3,f3,f5 
-                        fmuls  f1,f2,f1 
-                        fmadds f1,f4,f3,f1 
-                        fcmpo  cr0,f1,f0 
-                        ble    SmoothDamp_Epilog
-                        fsubs  f1,f5,f5 
-                        fsubs  f0,f7,f7 
-                        fdivs  f1,f1,f6 
-                        fdivs  f0,f0,f6 
-                        stfs   f1,0(r31) 
-                        stfs   f0,4(r31) 
-
-                    # r31 = current velocity
-                    # r30 = target vec
-                    # r29 = current vec
-                    SmoothDamp_Epilog: # 198
-                        lwz r0, 0x8c(r1)                 
-                        lfd f31, 0x80(r1) 
-                        lfd f30, 0x78(r1) 
-                        lfd f29, 0x70(r1) 
-                        lfd f28, 0x68(r1) 
-                        lfd f27, 0x60(r1) 
-                        lwz r31, 0x5c(r1) 
-                        lwz r30, 0x58(r1) 
-                        lwz r29, 0x54(r1) 
-                        addi r1, r1, 0x88 
-                        mtlr r0 
-                        blr 
-
                 Data:
                     blrl
-                    ".float" 0.48
+                    ".float" 1
                     ".float" 0.235
                     ".float" 0.2 # smoothTime
                     ".float" 100 # maxSpeed
                     ".float" 4
+                    ".float" 0.095
+                    ".float" 5
 
                 AddAtkMomentum_8006BE00:
                     # inputs
@@ -294,6 +326,12 @@ const
                     # outputs
                     # f1 = adjusted y
                     # f2 = adjusted x
+
+                    lbz r4, {extFtDataOff(HeaderInfo, fighterFlags)}(rFighterData)
+                    "rlwinm." r4, r4, 0, {flag(ffAttackVecPullNoAttackerMom)}
+                    bne MultiplySpeed_8006BE00
+
+
                     # adjust with attacker's momentum
                     lwz r4, 0x1868(rFighterData) # hit source/attacker
                     cmplwi r4, 0
@@ -313,6 +351,12 @@ const
                     lfs f0, 0x80(rAttackerData) # attacker vel x
                     fmadds f2, f2, f3, f0 # (x * 0.20) + attacker velocity x
                     blr
+
+                    MultiplySpeed_8006BE00:
+                        fmuls f1, f1, f3
+                        fmuls f2, f2, f3
+                        blr
+
 
                     SetAtkMomentum_8006BE00:
                         lfs f1, 0x84(rAttackerData) # attacker vel y
@@ -398,7 +442,7 @@ const
                     epilog
 
                 OriginalExit_8006BE00:
-                    lwz r12, 0x21D0(rFighterData)
+                    lwz r12, 0x21A4(rFighterData)
 
                 # # patch for NOT entering DamageFlyRoll if attack vec pull effect is active
                 # gecko 0x8008e128
@@ -483,10 +527,46 @@ proc createAutolinkPatch*(): GeckoCodeScript =
         b shv_AutolinkExit
 
         shv_AttackVecPull:
+            li r3, 6
+            stw r3, {extFtDataOff(HeaderInfo, targetPosFrame)}({cb.shvRegDefData})
+            
+            li r3, 0
+            lbz r5, {extFtDataOff(HeaderInfo, fighterFlags)}({cb.shvRegDefData})
+            rlwimi r5, r3, 5, {flag(ffAttackVecPullNoAttackerMom)}
+            stb r5, {extFtDataOff(HeaderInfo, fighterFlags)}({cb.shvRegDefData})
+
+            lwz r5, 0x4C({cb.shvRegHitStruct})
+            stw r5, {extFtDataOff(HeaderInfo, lastHitboxCollCenterX)}({cb.shvRegDefData})
+
+            lwz r5, 0x50({cb.shvRegHitStruct})
+            stw r5, {extFtDataOff(HeaderInfo, lastHitboxCollCenterY)}({cb.shvRegDefData})
+
             mr r3, {cb.shvRegHitStruct}
             b shv_AutolinkExit
 
         shv_AttackVecTargetPos:
+            lwz r4, {extHitOff(targetPosFrame)}({cb.shvRegExtHit})
+            addi r4, r4, 1
+            stw r4, {extFtDataOff(HeaderInfo, targetPosFrame)}({cb.shvRegDefData})
+           
+            lwz r4, {extHitOff(targetPosNoAttackerMomen)}({cb.shvRegExtHit})
+            lbz r5, {extFtDataOff(HeaderInfo, fighterFlags)}({cb.shvRegDefData})
+            rlwimi r5, r4, 5, {flag(ffAttackVecPullNoAttackerMom)}
+            stb r5, {extFtDataOff(HeaderInfo, fighterFlags)}({cb.shvRegDefData})
+
+            sp.push
+            sp.temp xTempPosX, (0x4), xTempPosY, (0x4), xTempPosZ, (0x4)
+            lwz r3, {extHitOff(targetPosNode)}({cb.shvRegExtHit})
+            addi r4, {cb.shvRegExtHit}, {extHitOff(targetPosOffsetX)}
+            addi r5, sp, sp.xTempPosX
+            bla r12, {JOBJGetWorldPos}
+
+            addi r3, {cb.shvRegDefData}, {extFtDataOff(HeaderInfo, lastHitboxCollCenterX)}
+            psq_l f0, sp.xTempPosX(sp), 0, 0
+            psq_st f0, 0(r3), 0, 0
+            sp.pop
+            
+            li r3, 0
             mr r4, {cb.shvRegExtHit}
         
         shv_AutolinkExit:

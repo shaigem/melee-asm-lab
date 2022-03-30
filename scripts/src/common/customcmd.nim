@@ -29,6 +29,14 @@ const
                 mulli r4, r4, {sizeof(SpecialHit)}
                 addi r4, r4, {extFtDataOff(MexHeaderInfo, specialHits)}
                 add rExtHit, rFighterData, r4
+                
+                lbz r4, 0x1(rCmdPtr)
+                rlwinm r4, r4, 28, 31, 31
+                stw r4, {extHitOff(targetPosNoAttackerMomen)}(rExtHit)
+
+                lbz r4, 0x1(rCmdPtr)
+                rlwinm r4, r4, 29, 31, 31
+                stw r4, {extHitOff(targetPosUseFrames)}(rExtHit)
 
                 # get bone JObj
                 lbz r3, 0x2(rCmdPtr) # bone id
