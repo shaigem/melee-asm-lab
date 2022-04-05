@@ -18,7 +18,7 @@ bla r12, 2147533152
 exit:
 mr r3, r30
 lis r4, 0x00008046
-gecko 2147908028, li r4, 10704
+gecko 2147908028, li r4, 10712
 gecko.end
 gecko 2150002648, li r4, 5476
 gecko 2150008660

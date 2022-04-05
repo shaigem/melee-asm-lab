@@ -9,7 +9,7 @@ const
     # major version = m-ex header changes or incompatible changes
     # minor version = new property changes
     # patch version = bug fixes
-    Version* = "1.1.1"
+    Version* = "1.2.0"
     
 type
     GameHeaderInfo* = object
@@ -63,6 +63,8 @@ type
         lastHitboxCollCenterX*: float32
         lastHitboxCollCenterY*: float32
         lastHitboxCollCenterZ*: float32
+        attackVecLastAttackerSpeedX*: float32        
+        attackVecLastAttackerSpeedY*: float32
 
 template extFtDataOff*(gameInfo: GameHeaderInfo; member: untyped): int = gameInfo.fighterDataSize + offsetOf(ExtFighterData, member)
 template extItDataOff*(gameInfo: GameHeaderInfo; member: untyped): int = gameInfo.itemDataSize + offsetOf(ExtItemData, member)
