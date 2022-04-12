@@ -23,18 +23,24 @@ const
                 "rlwinm." r0, r0, 0, {flag(ffAttackVecPull)}
                 beq OriginalExit_8006BE00 # if not, exit
 
-                prolog xTempCurrentFrame, (0x4), xTempEndFrame, (0x4)
+                prolog xTempCurrentFrame, (0x4)
 
-                # check vortex timer
+                # check if in hitstun
+                lbz r0, 0x221C(rFighterData)
+                "rlwinm." r0, r0, 31, 31, 31
+                beq ResetEffect_8006BE00 # if not, reset the pull effect
+
+                # time since hit checks
                 lwz r0, 0x18AC(rFighterData) # time_since_hit in frames
                 cmpwi r0, 0 # safety check
                 blt ResetEffect_8006BE00
-                cmpwi r0, 1 # first frame out of hitlag
-                beq OnFrameAfter
-                cmpwi r0, 7
+                cmpwi r0, 7 # ending timer
                 bge ResetEffect_8006BE00
 
                 bl CalculateLaunchSpeed_8006BE00
+
+                cmpwi r0, 1 # time since hit is 1 frame, don't cap speeds
+                beq Exit_8006BE00                
 
                 LerpSpeedCap_8006BE00:
                     bl ExceedsYSpeedCap_8006BE00
@@ -59,14 +65,11 @@ const
                         fmr f1, f0 # current speed
                         
                         lwz r3, 0x18AC(rFighterData)
-                        subi r3, r3, 1
                         sth r3, sp.xTempCurrentFrame(sp)
-                        li r3, 5
-                        sth r3, sp.xTempEndFrame(sp)
-
+                        
                         psq_l f0, sp.xTempCurrentFrame(sp), 1, 5
-                        psq_l f3, sp.xTempEndFrame(sp), 1, 5
-                        fdivs f3, f0, f3
+                        lfs f3, -0x784C(rtoc) # 0.2
+                        fmuls f3, f0, f3 # current time since hit * 0.2
                 
                 Lerp_8006BE00:
                     # inputs
@@ -79,10 +82,6 @@ const
                     fmuls f0, f0, f3 # (b - a) * t
                     fadds f1, f1, f0 # a + ((b - a) * t)
                     blr
-                
-                OnFrameAfter:
-                    bl CalculateLaunchSpeed_8006BE00
-                    b Exit_8006BE00
 
                 CalculateLaunchSpeed_8006BE00:
                     # for 367
@@ -142,7 +141,13 @@ const
                         blr
                     
                 ResetEffect_8006BE00:
-                    # turns off the ATTACK_VEC_PULL effect
+                    # check to see if we need to cap launch speeds
+                    bl ExceedsYSpeedCap_8006BE00
+                    stfs f1, 0x90(rFighterData)
+                    bl ExceedsXSpeedCap_8006BE00
+                    stfs f1, 0x8C(rFighterData)
+
+                    # turn off the ATTACK_VEC_PULL effect
                     li r3, 0
                     lbz r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rFighterData)
                     rlwimi r0, r3, 4, {flag(ffAttackVecPull)}
@@ -154,14 +159,14 @@ const
                 OriginalExit_8006BE00:
                     lwz r12, 0x21A4(rFighterData)
 
-                # # patch for NOT entering DamageFlyRoll if attack vec pull effect is active
-                # gecko 0x8008e128
-                # lbz r3, {extFtDataOff(HeaderInfo, fighterFlags)}(r29)
-                # "rlwinm." r3, r3, 0, {flag(ffAttackVecPull)}
-                # beq OrigExit_8008e128
-                # lfs f1, -0x7790(rtoc) # use value of 1.0 to skip the use of DamageFlyRoll
-                # OrigExit_8008e128:
-                #     lwz r3, -0x514C(r13) # orig code line
+                # patch for NOT entering DamageFlyRoll if attack vec pull effect is active
+                gecko 0x8008e128
+                lbz r3, {extFtDataOff(HeaderInfo, fighterFlags)}(r29)
+                "rlwinm." r3, r3, 0, {flag(ffAttackVecPull)}
+                beq OrigExit_8008e128
+                lfs f1, -0x7790(rtoc) # use value of 1.0 to skip the use of DamageFlyRoll
+                OrigExit_8008e128:
+                    lwz r3, -0x514C(r13) # orig code line
 
                 # enable attack vec pull effect if kb_angle is an autolink angle
                 # happens when sent into hitstun
@@ -193,31 +198,53 @@ const
                 gecko 0x8007a934
                 # r0 = hitbox angle
                 # r3 = hit struct
-                # r15 = attacker data
                 # r25 = defender data
                 # r17 = damage source?
                 # r31 = points to direction var of struct dmg
                 # f26/launch_speed_kb = calculated kb value based on hitbox settings
-                regs (3), rHitStruct, (15), rAttackerData, (25), rDefenderData
+                regs (3), rHitStruct, (25), rDefenderData
+                stw r0, 0x4(r31) # orig code line, sets kb_angle
 
                 # check if angle of hitbox is 367
                 cmplwi r0, {AutoLinkAngle}
-                li r3, 0
                 bne+ OriginalExit_8007a868 # if not autolink angle, exit
+                
                 lwz rHitStruct, 0xC(r17) # hit struct
                 lfs f0, 0x4C(rHitStruct) # hitbox pos X
                 stfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterX)}(rDefenderData)
                 lfs f0, 0x50(rHitStruct) # hitbox pos y
                 stfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterY)}(rDefenderData)
-                
-                lfs f0, 0x80(rAttackerData) # attacker vel x
-                stfs f0, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedX)}(rDefenderData)
-                lfs f0, 0x84(rAttackerData) # attacker vel y
-                stfs f0, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedY)}(rDefenderData)
+
+                regs (3), rAttackerData
+                # safety checks for attacker
+                lwz r3, 0x8(r17) # attacker gobj
+                cmplwi r3, 0
+                beq OriginalExit_8007a868
+                # check if item or fighter
+                lhz r0, 0(r3)
+                cmplwi r0, 0x4 # fighter
+                beq StoreAttackerVel_Fighter
+                cmplwi r0, 0x6 # item
+                bne OriginalExit_8007a868
+
+                StoreAttackerVel_Item:
+                    lwz rAttackerData, 0x2C(r3)
+                    lfs f0, 0x40(rAttackerData) # attacker vel x
+                    stfs f0, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedX)}(rDefenderData)
+                    lfs f0, 0x44(rAttackerData) # attacker vel y
+                    stfs f0, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedY)}(rDefenderData)
+                    b OriginalExit_8007a868
+
+                StoreAttackerVel_Fighter:
+                    lwz rAttackerData, 0x2C(r3)
+                    lfs f0, 0x80(rAttackerData) # attacker vel x
+                    stfs f0, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedX)}(rDefenderData)
+                    lfs f0, 0x84(rAttackerData) # attacker vel y
+                    stfs f0, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedY)}(rDefenderData)
 
                 OriginalExit_8007a868:
-                    stw r0, 0x4(r31) # orig code line, sets kb_angle
                     # reset attack vec pull effect
+                    li r3, 0
                     lbz r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rDefenderData)
                     rlwimi r0, r3, 4, {flag(ffAttackVecPull)}
                     stb r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rDefenderData)
