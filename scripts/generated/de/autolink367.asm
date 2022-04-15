@@ -1,6 +1,6 @@
 .include "punkpc.s"
 punkpc ppc
-# Special Hitbox Angle: 367 v2.0.1
+# Special Hitbox Angle: 367 v2.1.0
 # authors: @["sushie"]
 # description: Pulls victims towards the center of collided hitbox and adjusts launch speed
 gecko 2147924120
@@ -39,6 +39,7 @@ SetupLerpSpeed_8006BE00:
 fmr f2, f1
 fmr f1, f0
 lwz r3, 0x000018AC(rFighterData)
+subi r3, r3, 1
 sth r3, sp.xTempCurrentFrame(sp)
 psq_l f0, sp.xTempCurrentFrame(sp), 1, 5
 lfs f3, 0xFFFF87B4(rtoc)

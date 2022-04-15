@@ -7,7 +7,7 @@ const
     AutoLinkAngle = 367
 
     AutoLink367* =
-        createCode "Special Hitbox Angle: 367 v2.0.1":
+        createCode "Special Hitbox Angle: 367 v2.1.0":
             description: "Pulls victims towards the center of collided hitbox and adjusts launch speed"
             authors: ["sushie"]
             code:
@@ -65,6 +65,7 @@ const
                         fmr f1, f0 # current speed
                         
                         lwz r3, 0x18AC(rFighterData)
+                        subi r3, r3, 1
                         sth r3, sp.xTempCurrentFrame(sp)
                         
                         psq_l f0, sp.xTempCurrentFrame(sp), 1, 5
