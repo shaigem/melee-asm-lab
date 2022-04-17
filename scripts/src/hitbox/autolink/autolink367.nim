@@ -195,6 +195,51 @@ const
                 OrigExit_8007DD88:
                     lfd f0, 0x58(sp) # orig code line
 
+                # gecko 0x8007aaf8
+                # patch for setting hitlag to be the same for both attacker and defender if electric
+                # # r0 at this point contains hit attribute
+                # regs (25), rDefenderData, (31), rFtDmgLog
+
+                # lwz r3, 0x4(rFtDmgLog) # angle of hit
+                # cmplwi r3, {AutoLinkAngle}
+                # bne OrigExit_8007AAF8 # not autolink 367, exit
+
+                # lwz r3, 0x1C(rFtDmgLog) # hit attribute
+                # cmplwi r3, 2
+                # bne OrigExit_8007AAF8 # exit if not electric
+
+                # lwz r4, 0x8(r19)
+                # cmplwi r4, 0
+                # beq OrigExit_8007AAF8 # NULL attacker
+                # lhz r5, 0(r4)
+                # cmplwi r5, 0x4
+                # bne OrigExit_8007AAF8 # != fighter
+
+                # regs (4), rAttackerData
+               
+                # lwz rAttackerData, 0x2C(r4)
+
+                # # if r0 != hit attribute of ftHit, hitbox extension is installed
+                # cmplw r3, r0
+                # bne SetBoth
+
+                # # otherwise, vanilla
+                # lwz r5, -0x514C(r13)
+                # lfs f0, 0x1A4(r5)
+                # stfs f0, 0x1960(rDefenderData)
+                # stfs f0, 0x1960(rAttackerData)
+                # li r0, 0 # skip vanilla electric check
+                # b OrigExit_8007AAF8
+
+                # SetBoth:
+                #     lfs f0, 0x1960(rDefenderData)
+                #     stfs f0, 0x1960(rAttackerData)
+
+
+                # OrigExit_8007AAF8:
+                #     cmplwi r0, 2 # orig check electric attribute
+                
+
                 # CalculateKnockback Function Patch - Sets the Necessary Hit Variables
                 gecko 0x8007a934
                 # r0 = hitbox angle
