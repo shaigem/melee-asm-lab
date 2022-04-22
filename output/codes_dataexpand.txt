@@ -1,4 +1,4 @@
-$sushie's Ft/ItData Expansion v1.1.1 [sushie]
+$sushie's Ft/ItData Expansion v1.2.0 [sushie]
 *Must be installed or enabled first
 C2068EEC 00000006
 3BC30000 3C808045
