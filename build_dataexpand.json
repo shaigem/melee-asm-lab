@@ -25,6 +25,21 @@
         ]
       },
       {
+        "name": "sushie's Custom Subaction Commands Loader v1.0.0",
+        "authors": [
+          "sushie"
+        ],
+        "description": [
+          "Required by certain codes for their custom commands to work"
+        ],
+        "build": [
+          {
+            "type": "inject",
+            "sourceFile": "scripts/generated/de/customcmdscript.asm"
+          }
+        ]
+      },
+      {
         "name": "Enable 8 Hitbox Support v1.0.0",
         "authors": [
           "sushie"
@@ -51,6 +66,21 @@
           {
             "type": "inject",
             "sourceFile": "scripts/generated/de/autolink367.asm"
+          }
+        ]
+      },
+      {
+        "name": "Enable Special Flags for Fighter Hitboxes v2.0.0",
+        "authors": [
+          "sushie"
+        ],
+        "description": [
+          "Lets you use special flags that are normally found in item hitboxes"
+        ],
+        "build": [
+          {
+            "type": "inject",
+            "sourceFile": "scripts/generated/de/specialflagsfthit.asm"
           }
         ]
       }

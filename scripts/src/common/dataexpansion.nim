@@ -143,7 +143,8 @@ proc createPatchFor(gameInfo: GameHeaderInfo): GeckoCodeScript =
 when isMainModule:
     generate "./generated/" & DataExpansionDir & "dataexpansion.asm", createPatchFor(MexHeaderInfo)
     # generate all mods that rely on the same extended data structures
-    import ../hitbox/[autolink/autolink367, eight/eighthitbox]
+    import ../hitbox/[autolink/autolink367, eight/eighthitbox, specialflagsfthit], customcmdscript
+    generate "./generated/" & DataExpansionDir & "customcmdscript.asm", CustomCmdScript
     generate "./generated/" & DataExpansionDir & "autolink367.asm", AutoLink367
     generate "./generated/" & DataExpansionDir & "eighthitboxes.asm", EightHitboxes
-    # TODO hitbox ext
+    generate "./generated/" & DataExpansionDir & "specialflagsfthit.asm", SpecialFlagsFtHitScript
