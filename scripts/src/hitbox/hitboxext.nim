@@ -9,6 +9,7 @@ const
 proc getParseCmdCode*(): string =
     # r27 = fighter/item gobj
     ppc:
+        prolog
         lhz r0, 0(r27)
         cmplwi r0, 0x4
         beq HitboxExtCmd_SetupFighter
@@ -42,8 +43,8 @@ proc getParseCmdCode*(): string =
         HitboxExtCmd_ReadEvent:
             bla r12, {CustomFunctionReadEvent}
 
-
         HitboxExtCmd_Exit:
-            ""
+            epilog
+            blr
 
         

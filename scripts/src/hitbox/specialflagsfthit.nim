@@ -38,6 +38,7 @@ const
                     "rlwinm." r0, r3, 28, 31, 31 # original code line
 
                 # Reset Hit Players for Fighter Hitboxes
+                # TODO better spot since rehit keeps counting even in hitlag. Maybe in PlayerThink_Animation
                 gecko 0x8006c9cc
                 mr r3, r29 # r29 is gobj
                 # inputs
@@ -141,3 +142,4 @@ proc getParseCmdCode*(): string =
         stw rCmdEvtPtr, 0x8(r29)
 #                    addi rHitStruct, rHitStruct, {FtHitSize} # goto next hit struct ptr
 #                    bdnz+ ReadLoop
+        blr

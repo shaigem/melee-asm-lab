@@ -5,15 +5,27 @@ punkpc ppc
 # description: 
 gecko 2147955480
 lwz r12, 0(r3)
+bl JumpCustomCmdEvent
+cmpwi r28, 0
+beq OriginalExit_80073318
+ba r12, 2147955500
+JumpCustomCmdEvent:
 cmpwi r28, 60
-li r3, 0
-beq- CustomFighterCmd_Jump
+beq CustomCmd_HitboxExtension
 cmpwi r28, 61
-li r3, 1
-beq- CustomFighterCmd_Jump
-b OriginalExit_80073318
+beq CustomCmd_SpecialFlags
+li r28, 0
+blr
+GetCustomCmdEventLen:
+cmpwi r28, 60
+li r0, 8
+beqlr
+cmpwi r28, 61
+li r0, 4
+beqlr
+li r0, 0
+blr
 CustomCmd_HitboxExtension:
-hitboxextcmd.__start = .
 prolog
 lhz r0, 0(r27)
 cmplwi r0, 0x00000004
@@ -48,7 +60,6 @@ HitboxExtCmd_Exit:
 epilog
 blr
 CustomCmd_SpecialFlags:
-specialflagscmd.__start = .
 lwz r3, 0x00000008(r29)
 lbz r4, 0x00000001(r3)
 rlwinm r4, r4, 27, 29, 31
@@ -83,64 +94,30 @@ stb r5, 0x00000042(rHitStruct)
 addi rCmdEvtPtr, rCmdEvtPtr, 4
 stw rCmdEvtPtr, 0x00000008(r29)
 blr
-CustomItemCmd_Jump:
-bl CustomCmd_DetermineJump
-ba r12, 2150079184
-CustomFighterCmd_Jump:
-bl CustomCmd_DetermineJump
-ba r12, 2147955500
-CustomFighterCmd_FastForward_Jump:
-bl CustomCmd_DetermineJump
-ba r12, 2147955792
-CustomCmd_DetermineJump:
-prolog
-bl CustomCmd_JumpTable
-mflr r4
-slwi r0, r3, 2
-lwzx r0, r4, r0
-sub r0, r4, r0
-mtctr r0
-bctrl
-epilog
-blr
-CustomCmd_JumpTable:
-blrl
-customcmdjmp.__start = .
-.4byte customcmdjmp.__start - hitboxextcmd.__start
-.4byte customcmdjmp.__start - specialflagscmd.__start
 OriginalExit_80073318:
 
 gecko 2150079164
 lwz r12, 0(r3)
-cmpwi r28, 60
-li r3, 0
-beq- CustomItemCmd_Jump
-cmpwi r28, 61
-li r3, 1
-beq- CustomItemCmd_Jump
+bl JumpCustomCmdEvent
+cmpwi r28, 0
+beq OriginalExit_80279abc
+ba r12, 2150079056
 OriginalExit_80279abc:
 
 gecko.end
 gecko 2147955760
 subi r0, r28, 10
-cmpwi r28, 60
-li r3, 0
-beq- CustomFighterCmd_FastForward_Jump
-cmpwi r28, 61
-li r3, 1
-beq- CustomFighterCmd_FastForward_Jump
+bl JumpCustomCmdEvent
+cmpwi r28, 0
+beq SubactionFastForward_OrigExit
+ba r12, 2147955500
 SubactionFastForward_OrigExit:
 
 gecko 2147956084
 lwz r4, 0x00000008(r29)
-cmpwi r28, 60
-li r0, 8
-beq- SubactionFastForwardPtr2_Skip
-cmpwi r28, 61
-li r0, 4
-beq- SubactionFastForwardPtr2_Skip
-b SubactionFastForwardPtr2_OrigExit
-SubactionFastForwardPtr2_Skip:
+bl GetCustomCmdEventLen
+cmpwi r0, 0
+beq SubactionFastForwardPtr2_OrigExit
 add r4, r4, r0
 stw r4, 0x00000008(r29)
 ba r12, 2147956104
