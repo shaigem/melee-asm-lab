@@ -1,8 +1,6 @@
 import ../melee
 import ../common/customcmds
 
-# TODO support eight hitboxes
-
 const
     SpecialFlagsFtHitScript* =
         createCode "Enable Special Flags for Fighter Hitboxes v2.0.0":
@@ -38,9 +36,8 @@ const
                     "rlwinm." r0, r3, 28, 31, 31 # original code line
 
                 # Reset Hit Players for Fighter Hitboxes
-                # TODO better spot since rehit keeps counting even in hitlag. Maybe in PlayerThink_Animation
-                gecko 0x8006c9cc
-                mr r3, r29 # r29 is gobj
+                gecko 0x8006ab2c
+                mr r3, r30 # r30 is gobj
                 # inputs
                 # r3 = fighter gobj
                 prolog rHitStruct, rLoopCount
@@ -58,7 +55,7 @@ const
                 epilog
             
                 # restore r3
-                mr r3, r29
+                mr r3, r30
 
                 # Enable Rehit Rate on Fighter Hitboxes Vs Players
                 gecko 0x80077230
@@ -140,6 +137,4 @@ proc getParseCmdCode*(): string =
         stb r5, 0x42(rHitStruct)
         addi rCmdEvtPtr, rCmdEvtPtr, {SpecialFlagsCmd.eventLen}
         stw rCmdEvtPtr, 0x8(r29)
-#                    addi rHitStruct, rHitStruct, {FtHitSize} # goto next hit struct ptr
-#                    bdnz+ ReadLoop
         blr

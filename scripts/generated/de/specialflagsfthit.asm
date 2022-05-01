@@ -24,8 +24,8 @@ SkipShield:
 ba r12, 2147979444
 Exit_80078fe8:
 rlwinm. r0, r3, 28, 31, 31
-gecko 2147928524
-mr r3, r29
+gecko 2147920684
+mr r3, r30
 prolog rHitStruct, rLoopCount
 li rLoopCount, 0
 mulli r0, rLoopCount, 312
@@ -39,7 +39,7 @@ cmplwi rLoopCount, 4
 addi rHitStruct, rHitStruct, 312
 blt+ Loop_8006c9cc
 epilog
-mr r3, r29
+mr r3, r30
 gecko 2147971632
 lbz r4, 0x00000041(r27)
 rlwinm. r4, r4, 30, 31, 31
