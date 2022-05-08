@@ -10,6 +10,8 @@ cmpwi r28, 0
 beq OriginalExit_80073318
 ba r12, 2147955500
 JumpCustomCmdEvent:
+cmpwi r28, 59
+beq CustomCmd_HitboxExtensionAdvanced
 cmpwi r28, 60
 beq CustomCmd_HitboxExtension
 cmpwi r28, 61
@@ -17,6 +19,9 @@ beq CustomCmd_SpecialFlags
 li r28, 0
 blr
 GetCustomCmdEventLen:
+cmpwi r28, 59
+li r0, 12
+beqlr
 cmpwi r28, 60
 li r0, 8
 beqlr
@@ -25,6 +30,7 @@ li r0, 4
 beqlr
 li r0, 0
 blr
+CustomCmd_HitboxExtensionAdvanced:
 CustomCmd_HitboxExtension:
 prolog
 lhz r0, 0(r27)
@@ -38,7 +44,7 @@ li r4, 0
 li r5, 4048
 li r6, 1492
 li r7, 316
-li r8, 1452
+li r8, 1804
 b HitboxExtCmd_ReadEvent
 HitboxExtCmd_SetupFighter:
 lwz r3, 0x00000008(r29)
@@ -47,14 +53,19 @@ rlwinm. r3, r3, 0, 1
 li r3, 0
 li r4, 0
 beq HitboxExtCmd_SetupFighter_NoThrow
-addi r3, r30, 9408
+addi r3, r30, 9760
 addi r4, r30, 0x00000DF4
 HitboxExtCmd_SetupFighter_NoThrow:
 li r5, 9248
 li r6, 2324
 li r7, 312
-li r8, 5856
+li r8, 6252
 HitboxExtCmd_ReadEvent:
+cmpwi r28, 59
+li r9, 1
+beq HitBoxEventCmd_ReadEvent_Branch
+li r9, 0
+HitBoxEventCmd_ReadEvent_Branch:
 bla r12, 0x801510e0
 HitboxExtCmd_Exit:
 epilog

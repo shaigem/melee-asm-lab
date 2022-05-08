@@ -1,0 +1,24 @@
+{
+    "outputFiles": [
+      {
+        "file": "output/codes_general.txt"
+      }
+    ],
+    "codes": [
+      {
+        "name": "Enable Other Elements for Throws v1.0.0",
+        "authors": [
+          "sushie"
+        ],
+        "description": [
+          "Allows throws to sleep, bury, disable, screw attack or poison flower victims"
+        ],
+        "build": [
+          {
+            "type": "inject",
+            "sourceFile": "scripts/generated/general/throwelements.asm"
+          }
+        ]
+      }
+    ]
+  }

@@ -41,10 +41,13 @@ proc getParseCmdCode*(): string =
                 li r8, {extFtDataOff(HeaderInfo, newHits) - ((OldHitboxCount * FtHitSize) + FighterData.fdFtHit.int)}
 
         HitboxExtCmd_ReadEvent:
-            bla r12, {CustomFunctionReadEvent}
+            cmpwi r28, {HitboxExtensionAdvancedCmd.code}
+            li r9, 1
+            beq HitBoxEventCmd_ReadEvent_Branch
+            li r9, 0
+            HitBoxEventCmd_ReadEvent_Branch:
+                bla r12, {CustomFunctionReadEvent}
 
         HitboxExtCmd_Exit:
             epilog
             blr
-
-        

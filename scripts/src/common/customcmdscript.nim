@@ -1,5 +1,6 @@
 import ../melee
 import customcmds
+import dataexpansion
 
 import ../hitbox/[hitboxext, specialflagsfthit]
 
@@ -26,6 +27,8 @@ const
                 JumpCustomCmdEvent:
                     # outputs
                     # r28 = 0 for unhandled, > 0 for handled
+                    cmpwi r28, {HitboxExtensionAdvancedCmd.code}
+                    beq CustomCmd_HitboxExtensionAdvanced
                     cmpwi r28, {HitboxExtensionCmd.code}
                     beq CustomCmd_HitboxExtension
                     cmpwi r28, {SpecialFlagsCmd.code}
@@ -36,6 +39,9 @@ const
                 GetCustomCmdEventLen:
                     # outputs
                     # r0 = event length
+                    cmpwi r28, {HitboxExtensionAdvancedCmd.code}
+                    li r0, {HitboxExtensionAdvancedCmd.eventLen}
+                    beqlr
                     cmpwi r28, {HitboxExtensionCmd.code}
                     li r0, {HitboxExtensionCmd.eventLen}
                     beqlr
@@ -46,8 +52,9 @@ const
                     blr
 
                 # Custom Cmd Functions
-                CustomCmd_HitboxExtension:
-                    %hitboxext.getParseCmdCode()
+                CustomCmd_HitboxExtensionAdvanced:
+                    CustomCmd_HitboxExtension:
+                        %hitboxext.getParseCmdCode()
 
                 CustomCmd_SpecialFlags:
                     %specialflagsfthit.getParseCmdCode()

@@ -18,12 +18,12 @@ bla r12, 2147533152
 exit:
 mr r3, r30
 lis r4, 0x00008046
-gecko 2147908028, li r4, 10712
+gecko 2147908028, li r4, 11108
 gecko.end
-gecko 2150002648, li r4, 5476
+gecko 2150002648, li r4, 5828
 gecko 2150008660
 addi r29, r3, 0
-li r4, 5476
+li r4, 5828
 bla r12, 2147533152
 mr r3, r29
 mr. r6, r3

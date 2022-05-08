@@ -9,7 +9,7 @@ const
     # major version = m-ex header changes or incompatible changes
     # minor version = new property changes
     # patch version = bug fixes
-    Version* = "1.2.0"
+    Version* = "2.0.0"
     
 type
     GameHeaderInfo* = object
@@ -42,6 +42,10 @@ type
         shieldStunMultiplier*: float32
         hitstunModifier*: float32
         hitFlags*: HitFlags
+        offsetX2*: float32
+        offsetY2*: float32
+        offsetZ2*: float32
+        padding*: array[8, float32] # spots for a few more variables
 
     # variables should be added at the end of each ExtItem/FighterData struct
     # should not delete or insert between
