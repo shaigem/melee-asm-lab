@@ -18,4 +18,5 @@ task generate, "generate all of the codes":
     exec "nim r ./" & srcDir & "/fighters/boss/controlallports"
     exec "nim r ./" & srcDir & "/fighters/boss/improvementmod/handsimprovement"
     exec "nim r ./" & srcDir & "/hitbox/throwelements"
+    exec "nim r ./" & srcDir & "/rel"
     exec "nim r ./" & srcDir & "/common/dataexpansion"

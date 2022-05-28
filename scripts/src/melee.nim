@@ -43,3 +43,7 @@ const
     Vector3SubtractR5* = 0x8000d4f8 # returns in r5
     Vector3Normalize* = 0x8000d2ec
     JOBJGetWorldPos* = 0x8000B1CC
+    DCFlushRange* = 0x8034480c
+    ICInvalidateRange* = 0x803448d4
+    OSReport* = 0x803456a8
+    Memset* = 0x80003100

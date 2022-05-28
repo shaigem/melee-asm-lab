@@ -19,6 +19,21 @@
             "sourceFile": "scripts/generated/general/throwelements.asm"
           }
         ]
+      },
+      {
+        "name": "Enable REL Support v1.0.0",
+        "authors": [
+          "sushie"
+        ],
+        "description": [
+          "Implements REL functions OSLink and OSUnlink"
+        ],
+        "build": [
+          {
+            "type": "inject",
+            "sourceFile": "scripts/generated/general/rel.asm"
+          }
+        ]
       }
     ]
   }
