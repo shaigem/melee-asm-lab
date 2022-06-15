@@ -16,6 +16,8 @@ cmpwi r28, 60
 beq CustomCmd_HitboxExtension
 cmpwi r28, 61
 beq CustomCmd_SpecialFlags
+cmpwi r28, 62
+beq CustomCmd_AttackCapsule
 li r28, 0
 blr
 GetCustomCmdEventLen:
@@ -27,6 +29,9 @@ li r0, 8
 beqlr
 cmpwi r28, 61
 li r0, 4
+beqlr
+cmpwi r28, 62
+li r0, 8
 beqlr
 li r0, 0
 blr
@@ -73,11 +78,21 @@ blr
 CustomCmd_SpecialFlags:
 lwz r3, 0x00000008(r29)
 lbz r4, 0x00000001(r3)
+li r7, 4
+rlwinm. r0, r4, 0, 27, 27
 rlwinm r4, r4, 27, 29, 31
+beq SpecialFlagsCmd_GetHitStruct
+li r4, 0
+li r7, 0
+SpecialFlagsCmd_GetHitStruct:
 mulli r4, r4, 312
 addi r4, r4, 2324
 add r4, r30, r4
 regs (3), rCmdEvtPtr, rHitStruct
+SpecialFlagsCmd_ReadLoop:
+lwz r0, 0(r4)
+cmpwi r0, 0
+beq SpecialFlagsCmd_ReadLoop_Next
 lhz r5, 0x00000040(rHitStruct)
 lbz r6, 0x00000002(rCmdEvtPtr)
 rlwimi r5, r6, 4, 20, 27
@@ -102,8 +117,54 @@ lbz r5, 0x00000042(rHitStruct)
 lbz r6, 0x00000003(rCmdEvtPtr)
 rlwimi r5, r6, 4, 26, 26
 stb r5, 0x00000042(rHitStruct)
+SpecialFlagsCmd_ReadLoop_Next:
+addi r7, r7, 1
+cmplwi r7, 4
+addi r4, r4, 312
+blt SpecialFlagsCmd_ReadLoop
 addi rCmdEvtPtr, rCmdEvtPtr, 4
 stw rCmdEvtPtr, 0x00000008(r29)
+blr
+CustomCmd_AttackCapsule:
+li r3, 9248
+lhz r0, 0(r27)
+cmplwi r0, 0x00000004
+beq AttackCapsuleCmd_Read
+cmplwi r0, 0x00000006
+li r3, 4048
+bne AttackCapsuleCmd_Exit
+regs (3), rExtHit, rCmdPtr, (29), rCmdInfo, rData
+AttackCapsuleCmd_Read:
+lwz rCmdPtr, 0x00000008(rCmdInfo)
+lbz r0, 0x00000001(rCmdPtr)
+rlwinm r5, r0, 27, 29, 31
+mulli r5, r5, 64
+add r3, r5, r3
+add rExtHit, rData, r3
+sp.push
+sp.temp +2, x1, x2
+lfs f1, 0xFFFF88C0(rtoc)
+lhz r0, 0x00000002(rCmdPtr)
+sth r0, sp.x1(sp)
+lhz r0, 0x00000004(rCmdPtr)
+sth r0, sp.x2(sp)
+psq_l f0, sp.x1(sp), 0, 5
+ps_mul f0, f1, f0
+psq_st f0, 20(rExtHit), 0, 0
+lhz r0, 0x00000006(rCmdPtr)
+sth r0, sp.x1(sp)
+psq_l f0, sp.x1(sp), 1, 5
+ps_mul f0, f1, f0
+stfs f0, 28(rExtHit)
+li r5, 1
+lbz r0, 32(rExtHit)
+rlwimi r0, r5, 7, 128
+stb r0, 32(rExtHit)
+sp.pop
+AttackCapsuleCmd_Exit:
+lwz r4, 0x00000008(rCmdInfo)
+addi r4, r4, 8
+stw r4, 0x00000008(rCmdInfo)
 blr
 OriginalExit_80073318:
 

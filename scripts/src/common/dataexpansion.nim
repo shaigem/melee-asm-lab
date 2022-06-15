@@ -21,11 +21,22 @@ type
         hfNoStale,
         hfNoMeteorCancel,
         hfFlinchless,
-        hfStretch,
+        hfUnk,
         hfAngleFlipCurrent,
         hfAngleFlipOpposite,
         hfSetWeight
     HitFlags = set[HitFlag]
+
+    HitAdvFlag* {.size: sizeof(uint32).} = enum
+        hafUnk1,
+        hafUnk2,
+        hafUnk3,
+        hafUnk4,
+        hafUnk5,
+        hafUnk6,
+        hafUnk7,
+        hafStretch
+    HitAdvFlags = set[HitAdvFlag]
 
     FighterFlag* {.size: sizeof(uint32).} = enum
         # should contain only 8 flags
@@ -36,16 +47,20 @@ type
         ffAttackVecPull # 367 autolink
     FighterFlags = set[FighterFlag]
 
+    SpecialHitAdvanced* = object
+        offsetX2*: float32
+        offsetY2*: float32
+        offsetZ2*: float32
+        hitAdvFlags*: HitAdvFlags
+        shaPadding*: array[7, float32] # spots for a few more variables
+
     SpecialHit* = object
         hitlagMultiplier*: float32
         sdiMultiplier*: float32
         shieldStunMultiplier*: float32
         hitstunModifier*: float32
         hitFlags*: HitFlags
-        offsetX2*: float32
-        offsetY2*: float32
-        offsetZ2*: float32
-        padding*: array[8, float32] # spots for a few more variables
+        advanced*: SpecialHitAdvanced
 
     # variables should be added at the end of each ExtItem/FighterData struct
     # should not delete or insert between
@@ -73,13 +88,14 @@ type
 template extFtDataOff*(gameInfo: GameHeaderInfo; member: untyped): int = gameInfo.fighterDataSize + offsetOf(ExtFighterData, member)
 template extItDataOff*(gameInfo: GameHeaderInfo; member: untyped): int = gameInfo.itemDataSize + offsetOf(ExtItemData, member)
 template extHitOff*(member: untyped): int = offsetOf(SpecialHit, member)
+template extHitAdvOff*(member: untyped): int = extHitOff(advanced) + offsetOf(SpecialHitAdvanced, member)
 
 proc initGameHeaderInfo(name: string; fighterDataSize, itemDataSize: int): GameHeaderInfo =
     result.name = name
     result.fighterDataSize = fighterDataSize
     result.itemDataSize = itemDataSize
 
-proc flag*(f: HitFlag|FighterFlag): int = 1 shl f.ord
+proc flag*(f: HitFlag|FighterFlag|HitAdvFlag): int = 1 shl f.ord
 
 const
     VanillaHeaderInfo* = initGameHeaderInfo("Vanilla", fighterDataSize = 0x23EC, itemDataSize = 0xFCC)

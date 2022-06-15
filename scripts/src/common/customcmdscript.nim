@@ -2,7 +2,7 @@ import ../melee
 import customcmds
 import dataexpansion
 
-import ../hitbox/[hitboxext, specialflagsfthit]
+import ../hitbox/[hitboxext, specialflagsfthit, attackcapsule]
 
 # TODO needs MCM library
 
@@ -33,6 +33,9 @@ const
                     beq CustomCmd_HitboxExtension
                     cmpwi r28, {SpecialFlagsCmd.code}
                     beq CustomCmd_SpecialFlags
+                    cmpwi r28, {AttackCapsuleCmd.code}
+                    beq CustomCmd_AttackCapsule
+
                     li r28, 0
                     blr
 
@@ -48,6 +51,9 @@ const
                     cmpwi r28, {SpecialFlagsCmd.code}
                     li r0, {SpecialFlagsCmd.eventLen}
                     beqlr
+                    cmpwi r28, {AttackCapsuleCmd.code}
+                    li r0, {AttackCapsuleCmd.eventLen}
+                    beqlr
                     li r0, 0
                     blr
 
@@ -58,6 +64,9 @@ const
 
                 CustomCmd_SpecialFlags:
                     %specialflagsfthit.getParseCmdCode()
+
+                CustomCmd_AttackCapsule:
+                    %attackcapsule.getParseCmdCode()
 
                 OriginalExit_80073318:
                     ""
