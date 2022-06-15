@@ -92,49 +92,67 @@ const
 
 proc getParseCmdCode*(): string =
     ppc:
-        # TODO support the setting of all active hitboxes
         lwz r3, 0x8(r29) # load current subaction ptr
         lbz r4, 0x1(r3)
-        rlwinm r4, r4, 27, 29, 31 # 0xE0 start hitbox id
+        li r7, {HitboxCount}
 
-        # get hitbox struct from ID
-        mulli r4, r4, {FtHitSize}
-        addi r4, r4, {FighterData.fdFtHit.int}
-        add r4, r30, r4
+        "rlwinm." r0, r4, 0, 27, 27 # 0x10, apply to all active hitboxes
+        rlwinm r4, r4, 27, 29, 31 # 0xE0 start hitbox id
+        beq SpecialFlagsCmd_GetHitStruct # no looping
+
+        # start at hitbox id 0
+        li r4, 0
+        li r7, 0 # current hitbox id loop counter
+
+        SpecialFlagsCmd_GetHitStruct:
+            # get hitbox struct from ID
+            mulli r4, r4, {FtHitSize}
+            addi r4, r4, {FighterData.fdFtHit.int}
+            add r4, r30, r4
 
         regs (3), rCmdEvtPtr, rHitStruct
 
-        # r4 contains FtHit struct
-        # rehit rate
-        lhz r5, 0x40(rHitStruct)
-        lbz r6, 0x2(rCmdEvtPtr) # load rehit rate
-        rlwimi r5, r6, 4, 20, 27
-        sth r5, 0x40(rHitStruct)
-        # timed rehit on non-fighter
-        lbz r5, 0x41(rHitStruct)
-        lbz r6, 0x3(rCmdEvtPtr)
-        rlwimi r5, r6, 28, 28, 28 # 0x80
-        stb r5, 0x41(rHitStruct)
-        # timed rehit on fighter
-        lbz r5, 0x41(rHitStruct)
-        lbz r6, 0x3(rCmdEvtPtr)
-        rlwimi r5, r6, 28, 29, 29 # 0x40
-        stb r5, 0x41(rHitStruct)
-        # timed rehit on shield
-        lbz r5, 0x41(rHitStruct)
-        lbz r6, 0x3(rCmdEvtPtr)
-        rlwimi r5, r6, 28, 30, 30 # 0x20
-        stb r5, 0x41(rHitStruct)
-        # blockability
-        lbz r5, 0x42(rHitStruct)
-        lbz r6, 0x3(rCmdEvtPtr)
-        rlwimi r5, r6, 4, 25, 25 # 0x4
-        stb r5, 0x42(rHitStruct)
-        # hit facing only
-        lbz r5, 0x42(rHitStruct)
-        lbz r6, 0x3(rCmdEvtPtr)
-        rlwimi r5, r6, 4, 26, 26 # 0x2
-        stb r5, 0x42(rHitStruct)
+        SpecialFlagsCmd_ReadLoop:
+            # r4 contains FtHit struct
+            lwz r0, 0(r4) # active
+            cmpwi r0, 0
+            beq SpecialFlagsCmd_ReadLoop_Next
+            # rehit rate
+            lhz r5, 0x40(rHitStruct)
+            lbz r6, 0x2(rCmdEvtPtr) # load rehit rate
+            rlwimi r5, r6, 4, 20, 27
+            sth r5, 0x40(rHitStruct)
+            # timed rehit on non-fighter
+            lbz r5, 0x41(rHitStruct)
+            lbz r6, 0x3(rCmdEvtPtr)
+            rlwimi r5, r6, 28, 28, 28 # 0x80
+            stb r5, 0x41(rHitStruct)
+            # timed rehit on fighter
+            lbz r5, 0x41(rHitStruct)
+            lbz r6, 0x3(rCmdEvtPtr)
+            rlwimi r5, r6, 28, 29, 29 # 0x40
+            stb r5, 0x41(rHitStruct)
+            # timed rehit on shield
+            lbz r5, 0x41(rHitStruct)
+            lbz r6, 0x3(rCmdEvtPtr)
+            rlwimi r5, r6, 28, 30, 30 # 0x20
+            stb r5, 0x41(rHitStruct)
+            # blockability
+            lbz r5, 0x42(rHitStruct)
+            lbz r6, 0x3(rCmdEvtPtr)
+            rlwimi r5, r6, 4, 25, 25 # 0x4
+            stb r5, 0x42(rHitStruct)
+            # hit facing only
+            lbz r5, 0x42(rHitStruct)
+            lbz r6, 0x3(rCmdEvtPtr)
+            rlwimi r5, r6, 4, 26, 26 # 0x2
+            stb r5, 0x42(rHitStruct)
+            SpecialFlagsCmd_ReadLoop_Next:
+                addi r7, r7, 1
+                cmplwi r7, {HitboxCount}
+                addi r4, r4, {FtHitSize}
+                blt SpecialFlagsCmd_ReadLoop
+
         addi rCmdEvtPtr, rCmdEvtPtr, {SpecialFlagsCmd.eventLen}
         stw rCmdEvtPtr, 0x8(r29)
         blr

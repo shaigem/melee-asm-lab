@@ -29,6 +29,7 @@ const
     ItemDataOrigSize* = 0xFCC
     FtHitSize* = 312
     ItHitSize* = 316
+    HitboxCount* = 4
 
 const 
     SelfInducedPhysics* = 0x80085134
