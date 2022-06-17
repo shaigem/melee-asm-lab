@@ -99,7 +99,7 @@ const
                 bl JumpCustomCmdEvent
                 cmpwi r28, 0
                 beq SubactionFastForward_OrigExit
-                ba r12, 0x8007332c
+                ba r12, 0x80073450
 
                 SubactionFastForward_OrigExit:
                     ""

@@ -5,7 +5,7 @@ punkpc ppc
 # description: Pulls victims towards the center of collided hitbox and adjusts launch speed
 gecko 2147924120
 regs (r31), rFighterData
-lbz r0, 11084(rFighterData)
+lbz r0, 11228(rFighterData)
 rlwinm. r0, r0, 0, 16
 beq OriginalExit_8006BE00
 prolog xTempCurrentFrame, (0x00000004)
@@ -50,16 +50,16 @@ fmuls f0, f0, f3
 fadds f1, f1, f0
 blr
 CalculateLaunchSpeed_8006BE00:
-lfs f0, 11088(rFighterData)
+lfs f0, 11232(rFighterData)
 lfs f2, 0x000000B0(rFighterData)
 fsubs f2, f0, f2
-lfs f0, 11092(rFighterData)
+lfs f0, 11236(rFighterData)
 lfs f1, 0x000000B4(rFighterData)
 fsubs f1, f0, f1
 lfs f3, 0xFFFF87B4(rtoc)
-lfs f0, 11104(rFighterData)
+lfs f0, 11248(rFighterData)
 fmadds f1, f1, f3, f0
-lfs f0, 11100(rFighterData)
+lfs f0, 11244(rFighterData)
 fmadds f2, f2, f3, f0
 stfs f1, 0x00000090(rFighterData)
 stfs f2, 0x0000008C(rFighterData)
@@ -92,15 +92,15 @@ stfs f1, 0x00000090(rFighterData)
 bl ExceedsXSpeedCap_8006BE00
 stfs f1, 0x0000008C(rFighterData)
 li r3, 0
-lbz r0, 11084(rFighterData)
+lbz r0, 11228(rFighterData)
 rlwimi r0, r3, 4, 16
-stb r0, 11084(rFighterData)
+stb r0, 11228(rFighterData)
 Exit_8006BE00:
 epilog
 OriginalExit_8006BE00:
 lwz r12, 0x000021A4(rFighterData)
 gecko 2148065576
-lbz r3, 11084(r29)
+lbz r3, 11228(r29)
 rlwinm. r3, r3, 0, 16
 beq OrigExit_8008e128
 lfs f1, 0xFFFF8870(rtoc)
@@ -118,9 +118,9 @@ li r3, 80
 stw r3, 0x00001848(rData)
 li r3, 1
 EnablePullEffect_8008dd88:
-lbz r0, 11084(rData)
+lbz r0, 11228(rData)
 rlwimi r0, r3, 4, 16
-stb r0, 11084(rData)
+stb r0, 11228(rData)
 OrigExit_8007DD88:
 lfd f0, 0x00000058(sp)
 gecko 2147985716
@@ -130,9 +130,9 @@ cmplwi r0, 367
 bne+ OriginalExit_8007a868
 lwz rHitStruct, 0x0000000C(r17)
 lfs f0, 0x0000004C(rHitStruct)
-stfs f0, 11088(rDefenderData)
+stfs f0, 11232(rDefenderData)
 lfs f0, 0x00000050(rHitStruct)
-stfs f0, 11092(rDefenderData)
+stfs f0, 11236(rDefenderData)
 regs (3), rAttackerData
 lwz r3, 0x00000008(r17)
 cmplwi r3, 0
@@ -145,19 +145,19 @@ bne OriginalExit_8007a868
 StoreAttackerVel_Item:
 lwz rAttackerData, 0x0000002C(r3)
 lfs f0, 0x00000040(rAttackerData)
-stfs f0, 11100(rDefenderData)
+stfs f0, 11244(rDefenderData)
 lfs f0, 0x00000044(rAttackerData)
-stfs f0, 11104(rDefenderData)
+stfs f0, 11248(rDefenderData)
 b OriginalExit_8007a868
 StoreAttackerVel_Fighter:
 lwz rAttackerData, 0x0000002C(r3)
 lfs f0, 0x00000080(rAttackerData)
-stfs f0, 11100(rDefenderData)
+stfs f0, 11244(rDefenderData)
 lfs f0, 0x00000084(rAttackerData)
-stfs f0, 11104(rDefenderData)
+stfs f0, 11248(rDefenderData)
 OriginalExit_8007a868:
 li r3, 0
-lbz r0, 11084(rDefenderData)
+lbz r0, 11228(rDefenderData)
 rlwimi r0, r3, 4, 16
-stb r0, 11084(rDefenderData)
+stb r0, 11228(rDefenderData)
 gecko.end

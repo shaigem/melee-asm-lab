@@ -49,7 +49,7 @@ li r4, 0
 li r5, 4048
 li r6, 1492
 li r7, 316
-li r8, 1804
+li r8, 1932
 b HitboxExtCmd_ReadEvent
 HitboxExtCmd_SetupFighter:
 lwz r3, 0x00000008(r29)
@@ -58,13 +58,13 @@ rlwinm. r3, r3, 0, 1
 li r3, 0
 li r4, 0
 beq HitboxExtCmd_SetupFighter_NoThrow
-addi r3, r30, 9760
+addi r3, r30, 9888
 addi r4, r30, 0x00000DF4
 HitboxExtCmd_SetupFighter_NoThrow:
 li r5, 9248
 li r6, 2324
 li r7, 312
-li r8, 6252
+li r8, 6396
 HitboxExtCmd_ReadEvent:
 cmpwi r28, 59
 li r9, 1
@@ -138,7 +138,7 @@ AttackCapsuleCmd_Read:
 lwz rCmdPtr, 0x00000008(rCmdInfo)
 lbz r0, 0x00000001(rCmdPtr)
 rlwinm r5, r0, 27, 29, 31
-mulli r5, r5, 64
+mulli r5, r5, 80
 add r3, r5, r3
 add rExtHit, rData, r3
 sp.push
@@ -157,9 +157,9 @@ psq_l f0, sp.x1(sp), 1, 5
 ps_mul f0, f1, f0
 stfs f0, 28(rExtHit)
 li r5, 1
-lbz r0, 32(rExtHit)
+lbz r0, 48(rExtHit)
 rlwimi r0, r5, 7, 128
-stb r0, 32(rExtHit)
+stb r0, 48(rExtHit)
 sp.pop
 AttackCapsuleCmd_Exit:
 lwz r4, 0x00000008(rCmdInfo)

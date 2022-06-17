@@ -46,20 +46,20 @@ proc getParseCmdCode*(): string =
 
             psq_l f0, sp.x1(sp), 0, 5 # load both x2 and y2 offsets into f0
             ps_mul f0, f1, f0 # multiply by ~1/256
-            psq_st f0, {extHitAdvOff(offsetX2)}(rExtHit), 0, 0
+            psq_st f0, {extHitAtkCapOff(offsetX2)}(rExtHit), 0, 0
 
             # load and store z2 offset
             lhz r0, 0x6(rCmdPtr) # z2 offset
             sth r0, sp.x1(sp)
             psq_l f0, sp.x1(sp), 1, 5
             ps_mul f0, f1, f0 # multiply by ~1/256
-            stfs f0, {extHitAdvOff(offsetZ2)}(rExtHit)
+            stfs f0, {extHitAtkCapOff(offsetZ2)}(rExtHit)
 
             # enable stretch flag
             li r5, 1
-            lbz r0, {extHitAdvOff(hitAdvFlags)}(rExtHit)
-            rlwimi r0, r5, 7, {flag(hafStretch)}
-            stb r0, {extHitAdvOff(hitAdvFlags)}(rExtHit)
+            lbz r0, {extHitOff(hitStdFlags)}(rExtHit)
+            rlwimi r0, r5, 7, {flag(hsfStretch)}
+            stb r0, {extHitOff(hitStdFlags)}(rExtHit)
 
             sp.pop
 
