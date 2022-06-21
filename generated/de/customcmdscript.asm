@@ -6,117 +6,68 @@ punkpc ppc
 gecko 2148864224
 cmpwi r4, 343
 beq OriginalExit_801510E0
-prolog rGObj, rData, rCmdInfo, rEventParse, rCmdData, rHitStructSize, rEightHitOff, rCurrentId, rExtHitTemplate, rCurExtHit, rCurHit
+prolog rGObj, rData, rCmdInfo, rEventParse, rCmdData, rExtDataOff, rHitStructOff, rHitStructSize, rEightHitOff, rCurrentId
 mr rGObj, r3
 lwz rData, 0x0000002C(rGObj)
 mr rCmdInfo, r4
 mr rEventParse, r5
-lwz rCmdData, 0x00000008(rCmdInfo)
-li rCurrentId, -1
-li rExtHitTemplate, 0
-li rCurExtHit, 0
-li rCurHit, 0
+li rCurrentId, 8
 lhz r0, 0(rGObj)
 cmplwi r0, 0x00000004
 beq ParseHitboxExt_SetFighterVars
 cmplwi r0, 0x00000006
 bne ParseHitboxExt_Exit
 ParseHitboxExt_SetItemVars:
-lwz r5, 0x00000014(rEventParse)
-cmplwi r5, 2
-beq ParseHitboxExt_Exit
-li r5, 4048
-li r6, 1492
+li rExtDataOff, 4048
+li rHitStructOff, 1492
 li rHitStructSize, 316
 li rEightHitOff, 1932
 b ParseHitboxExt_Begin
 ParseHitboxExt_SetFighterVars:
-lwz r5, 0x00000014(rEventParse)
-cmplwi r5, 2
-beq ParseHitboxExt_SetForThrow
-li r5, 9248
-li r6, 2324
+li rExtDataOff, 9248
+li rHitStructOff, 2324
 li rHitStructSize, 312
 li rEightHitOff, 6396
-b ParseHitboxExt_Begin
-ParseHitboxExt_SetForThrow:
-lwz r12, 0(rEventParse)
-cmplwi r12, 0
-beq ParseHitboxExt_Exit
-mtlr r12
-addi r3, rData, 9888
-addi r4, rData, 0x00000DF4
-mr r5, rCmdData
-blrl
-b ParseHitboxExt_Exit
 ParseHitboxExt_Begin:
+lwz rCmdData, 0x00000008(rCmdInfo)
 lbz r0, 0x00000001(rCmdData)
 rlwinm r3, r0, 27, 29, 31
-lwz r0, 0x00000014(rEventParse)
-cmplwi r0, 0
+rlwinm. r0, r0, 0, 0x00000010
 beq ParseHitboxExt_GetHitStructs
 li r3, 0
 li rCurrentId, 0
 ParseHitboxExt_GetHitStructs:
-mullw rCurHit, r3, rHitStructSize
+mullw r4, r3, rHitStructSize
 cmplwi r3, 4
 blt CalcNormal
-add rCurHit, rCurHit, rEightHitOff
+add r4, r4, rEightHitOff
 CalcNormal:
-add rCurHit, rCurHit, r6
-add rCurHit, rData, rCurHit
-mulli rCurExtHit, r3, 80
-add rCurExtHit, rCurExtHit, r5
-add rCurExtHit, rData, rCurExtHit
+add r4, r4, rHitStructOff
+add r4, rData, r4
+mulli r3, r3, 80
+add r3, r3, rExtDataOff
+add r3, rData, r3
 ParseHitboxExt_FindActiveHitboxes:
-lwz r0, 0(rCurHit)
+regs (3), rExtHit, rNormHit
+lwz r0, 0(rNormHit)
 cmpwi r0, 0
 beq ParseHitboxExt_FindActiveHitboxes_Next
-mr r3, rCurExtHit
-mr r4, rCurHit
-cmplwi rExtHitTemplate, 0
-bne ParseHitboxExt_FindActiveHitboxes_Copy
-ParseHitboxExt_FindActiveHitboxes_Parse:
 lwz r12, 0(rEventParse)
-cmplwi r12, 0
-beq ParseHitboxExt_FindActiveHitboxes_Next
-mtlr r12
-mr r5, rCmdData
-blrl
-mr rExtHitTemplate, r3
-b ParseHitboxExt_FindActiveHitboxes_Next
-ParseHitboxExt_FindActiveHitboxes_Copy:
-subi r5, rExtHitTemplate, 4
-subi r6, r3, 4
-lwz r0, 0x00000004(rEventParse)
-add r5, r5, r0
-add r6, r6, r0
-lwz r0, 0x00000008(rEventParse)
-cmpwi r0, 0
-beq- ParseHitboxExt_FindActiveHitboxes_Next
-mtctr r0
-ParseHitboxExt_FindActiveHitboxes_CopyLoop:
-lwzu r0, 0x00000004(r5)
-stwu r0, 0x00000004(r6)
-bdnz+ ParseHitboxExt_FindActiveHitboxes_CopyLoop
-lwz r12, 0x0000000C(rEventParse)
 cmplwi r12, 0
 beq ParseHitboxExt_FindActiveHitboxes_Next
 mtlr r12
 mr r5, rCmdData
 blrl
 ParseHitboxExt_FindActiveHitboxes_Next:
-cmpwi rCurrentId, 0
-blt- ParseHitboxExt_Exit
 addi rCurrentId, rCurrentId, 1
 cmplwi rCurrentId, 4
-bne+ Advance
-add rCurHit, rCurHit, rEightHitOff
+bne Advance
+add r4, r4, rEightHitOff
 Advance:
 cmplwi rCurrentId, 8
-add rCurHit, rCurHit, rHitStructSize
-addi rCurExtHit, rCurExtHit, 80
-blt+ ParseHitboxExt_FindActiveHitboxes
+add r4, r4, rHitStructSize
+addi r3, r3, 80
+blt ParseHitboxExt_FindActiveHitboxes
 ParseHitboxExt_Exit:
 lwz r0, 0x00000010(rEventParse)
 add rCmdData, rCmdData, r0
@@ -159,44 +110,18 @@ li r0, 0
 blr
 CustomCmd_HitboxExtensionAdvanced:
 CustomCmd_HitboxExtension:
-prolog xParseFunc, (0x00000004), xStartCopyOff, (0x00000004), xNumVarsCopy, (0x00000004), xAfterCopyFunc, (0x00000004), xEventLen, (0x00000004), xApplyType, (0x00000004)
-cmpwi r28, 59
-bne ParseStandard
-ParseAdvanced:
-bl HitboxExtCmd_Advanced_Parse
-mflr r3
-li r4, 32
-li r5, 4
-li r6, 0
-li r7, 8
-lwz r8, 0x00000008(r29)
-lbz r0, 0x00000001(r8)
-rlwinm r8, r0, 29, 30, 31
-b ParseSetupStack
-ParseStandard:
-bl HitboxExtCmd_Standard_Parse
-mflr r3
-li r4, 0
-li r5, 5
-bl HitboxExtCmd_Standard_Copy
-mflr r6
-li r7, 8
-lwz r9, 0x00000008(r29)
-lbz r0, 0x00000007(r9)
-rlwinm. r8, r0, 1, 30, 30
-bne ParseSetupStack
-lbz r0, 0x00000001(r9)
-rlwinm r8, r0, 28, 31, 31
-ParseSetupStack:
-stw r3, sp.xParseFunc(sp)
-stw r4, sp.xStartCopyOff(sp)
-stw r5, sp.xNumVarsCopy(sp)
-stw r6, sp.xAfterCopyFunc(sp)
-stw r7, sp.xEventLen(sp)
-stw r8, sp.xApplyType(sp)
+prolog xParseData, (0x00000020)
 mr r3, r27
 mr r4, r29
-addi r5, sp, sp.xParseFunc
+addi r5, sp, sp.xParseData
+bl HitboxExtCmd_Standard_Parse
+mflr r0
+stw r0, 0(r5)
+li r0, 0
+stw r0, 0x00000004(r5)
+li r0, 9
+li r0, 0x00000008
+stw r0, 0x00000010(r5)
 bla r12, 2148864224
 HitboxExtCmd_Exit:
 epilog
@@ -250,11 +175,6 @@ beq HitboxExtCmd_Standard_Copy_Begin
 li r0, 0
 stw r0, 0(r3)
 b HitboxExtCmd_Standard_Copy_Begin
-HitboxExtCmd_Advanced_Parse:
-blrl
-lbz r0, 0x00000007(r5)
-stb r0, 44(r3)
-blr
 CustomCmd_SpecialFlags:
 lwz r3, 0x00000008(r29)
 lbz r4, 0x00000001(r3)

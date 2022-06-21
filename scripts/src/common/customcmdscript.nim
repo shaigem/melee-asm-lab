@@ -12,6 +12,13 @@ const
             description: ""
             authors: ["sushie"]
             code:
+                
+                gecko 0x801510e0
+                cmpwi r4, 343
+                beq OriginalExit_801510E0
+                %hitboxext.parseHitboxExt()
+                OriginalExit_801510E0:
+                    fmr f3, f1
 
                 # Custom Fighter Subaction Event
                 gecko 0x80073318
