@@ -25,6 +25,21 @@
         ]
       },
       {
+        "name": "sushie's Common ExtHit Functions",
+        "authors": [
+          "sushie"
+        ],
+        "description": [
+          ""
+        ],
+        "build": [
+          {
+            "type": "inject",
+            "sourceFile": "scripts/generated/de/exthit.asm"
+          }
+        ]
+      },
+      {
         "name": "sushie's Custom Subaction Commands Loader v1.0.0",
         "authors": [
           "sushie"

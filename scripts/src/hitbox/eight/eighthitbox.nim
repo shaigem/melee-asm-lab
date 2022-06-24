@@ -2,6 +2,8 @@ import ../../melee
 import ../../common/dataexpansion
 import strutils, sugar
 
+# TODO find out why this starts to crash with Altimor's FSM code
+
 type LoopPatch = proc(gameData: GameHeaderInfo, regData, regHitboxId, regNextHitPtr: Register, isItem: bool = false): string
 
 proc offsetToNewHit(gameData: GameHeaderInfo, isItem: bool = false): int =

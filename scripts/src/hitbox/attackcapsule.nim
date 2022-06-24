@@ -64,7 +64,4 @@ proc getParseCmdCode*(): string =
             sp.pop
 
         AttackCapsuleCmd_Exit:
-            lwz r4, 0x8(rCmdInfo)
-            addi r4, r4, {AttackCapsuleCmd.eventLen}
-            stw r4, 0x8(rCmdInfo)
             blr

@@ -1,4 +1,4 @@
-import ../../common/dataexpansion
+import ../../common/[dataexpansion, exthit]
 import ../../melee
 
 
@@ -20,10 +20,10 @@ const
 
                 # check if fighter is under the ATTACK_VEC_PULL effect
                 lbz r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rFighterData)
-                "rlwinm." r0, r0, 0, {flag(ffAttackVecPull)}
+                "rlwinm." r0, r0, 0, {flag(ffAttackVecTargetPos)}
                 beq OriginalExit_8006BE00 # if not, exit
 
-                prolog xTempCurrentFrame, (0x4)
+                prolog xTempCurrentFrame, (0x4), xSpeed, (0x4)
 
                 # check if in hitstun
                 lbz r0, 0x221C(rFighterData)
@@ -32,12 +32,22 @@ const
 
                 # time since hit checks
                 lwz r0, 0x18AC(rFighterData) # time_since_hit in frames
+                lwz r3, {extFtDataOff(HeaderInfo, attackVecTargetPosFrame)}(rFighterData)
+
+                sth r3, sp.xSpeed(sp)
+                psq_l f0, sp.xSpeed(sp), 1, 5
+                fres f0, f0
+                stfs f0, sp.xSpeed(sp)
+
+                addi r3, r3, 2
                 cmpwi r0, 0 # safety check
                 blt ResetEffect_8006BE00
-                cmpwi r0, 7 # ending timer
+                cmpw r0, r3 # ending timer
                 bge ResetEffect_8006BE00
 
                 bl CalculateLaunchSpeed_8006BE00
+               
+                lwz r0, 0x18AC(rFighterData) # time_since_hit in frames
 
                 cmpwi r0, 1 # time since hit is 1 frame, don't cap speeds
                 beq Exit_8006BE00                
@@ -69,7 +79,7 @@ const
                         sth r3, sp.xTempCurrentFrame(sp)
                         
                         psq_l f0, sp.xTempCurrentFrame(sp), 1, 5
-                        lfs f3, -0x784C(rtoc) # 0.2
+                        lfs f3, sp.xSpeed(sp) #-0x784C(rtoc) # 0.2
                         fmuls f3, f0, f3 # current time since hit * 0.2
                 
                 Lerp_8006BE00:
@@ -88,27 +98,63 @@ const
                     # for 367
                     # launch speed = attacker momentum + (hitbox position - opponent's position) * 0.20
 
-                    # first calculate diff between hitbox and opponent positions
-                    lfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterX)}(rFighterData)
-                    lfs f2, 0xB0(rFighterData) # pos x
-                    fsubs f2, f0, f2 # hitbox x - pos x
-                    lfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterY)}(rFighterData)
-                    lfs f1, 0xB4(rFighterData) # pos y
-                    fsubs f1, f0, f1 # hitbox y - pos y
+                    lwz r3, 0x18AC(rFighterData)
+                    cmpwi r3, 1
+                    beq Calc
+
+                    # reuse
+                    lfs f1, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedY)}(rFighterData)
+                    lfs f2, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedX)}(rFighterData)
                     
-                    # next, add the atacker's momentum and 20%
-                    lfs f3, -0x784C(rtoc) # 0.2
-                    # add momentum
-                    lfs f0, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedY)}(rFighterData) # attacker vel y
-                    fmadds f1, f1, f3, f0 # (y * 0.20) + attacker velocity y
-                    lfs f0, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedX)}(rFighterData)  # attacker vel x
-                    fmadds f2, f2, f3, f0 # (x * 0.20) + attacker velocity x
+                    lbz r0, {extFtDataOff(HeaderInfo, fighterFlags2)}(rFighterData)
+                    "rlwinm." r0, r0, 0, {flag(ffAttackVecSmooth)}
+                    beq CalcStore
+
+                    li r0, 0
+                    stw r0, 0x84(rFighterData)
+
+                    b CalcStore
+
+                    Calc:
+                        # first calculate diff between hitbox and opponent positions
+                        lfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterX)}(rFighterData)
+                        lfs f2, 0xB0(rFighterData) # pos x
+                        fsubs f2, f0, f2 # hitbox x - pos x
+                        lfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterY)}(rFighterData)
+                        lfs f1, 0xB4(rFighterData) # pos y
+                        fsubs f1, f0, f1 # hitbox y - pos y
+                        
+                        # next, add the atacker's momentum and 20%
+                        lfs f3, sp.xSpeed(sp)#-0x784C(rtoc) # 0.2
+                        # add momentum
+                        lfs f0, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedY)}(rFighterData) # attacker vel y
+                        fmadds f1, f1, f3, f0 # (y * 0.20) + attacker velocity y
+                        lfs f0, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedX)}(rFighterData)  # attacker vel x
+                        fmadds f2, f2, f3, f0 # (x * 0.20) + attacker velocity x
+
+                        CheckSmooth:
+                            lbz r0, {extFtDataOff(HeaderInfo, fighterFlags2)}(rFighterData)
+                            "rlwinm." r0, r0, 0, {flag(ffAttackVecSmooth)}
+                            beq SavePullSpeed
+
+                            li r0, 0
+                            stw r0, 0x84(rFighterData)
+
+                            lfs f0, 0x16C(rFighterData)
+                            fadds f1, f1, f0
+
+                        SavePullSpeed:
+                            stfs f1, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedY)}(rFighterData)
+                            stfs f2, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedX)}(rFighterData)
+
 
                     # store launch speeds
-                    stfs f1, 0x90(rFighterData)
-                    stfs f2, 0x8C(rFighterData)
+                    CalcStore:
 
-                    blr
+                        stfs f1, 0x90(rFighterData)
+                        stfs f2, 0x8C(rFighterData)
+
+                        blr
 
                 ExceedsYSpeedCap_8006BE00:
                     lfs f1, 0x90(rFighterData)
@@ -128,8 +174,11 @@ const
                     # f3 = lower cap
                     # returns
                     # f1 = original or capped value
-                    fmr f0, f3
                     li r3, 0
+                    lbz r0, {extFtDataOff(HeaderInfo, fighterFlags2)}(rFighterData)
+                    "rlwinm." r0, r0, 0, {flag(ffAttackVecCap)}
+                    beqlr
+                    fmr f0, f3
                     fcmpo cr0, f0, f1
                     bgt ExceedsSpeedCap_True
                     fmr f0, f2
@@ -140,6 +189,8 @@ const
                         fmr f1, f0
                         li r3, 1
                         blr
+
+
                     
                 ResetEffect_8006BE00:
                     # check to see if we need to cap launch speeds
@@ -151,7 +202,7 @@ const
                     # turn off the ATTACK_VEC_PULL effect
                     li r3, 0
                     lbz r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rFighterData)
-                    rlwimi r0, r3, 4, {flag(ffAttackVecPull)}
+                    rlwimi r0, r3, 4, {flag(ffAttackVecTargetPos)}
                     stb r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rFighterData)
 
                 Exit_8006BE00:
@@ -163,7 +214,7 @@ const
                 # patch for NOT entering DamageFlyRoll if attack vec pull effect is active
                 gecko 0x8008e128
                 lbz r3, {extFtDataOff(HeaderInfo, fighterFlags)}(r29)
-                "rlwinm." r3, r3, 0, {flag(ffAttackVecPull)}
+                "rlwinm." r3, r3, 0, {flag(ffAttackVecTargetPos)}
                 beq OrigExit_8008e128
                 lfs f1, -0x7790(rtoc) # use value of 1.0 to skip the use of DamageFlyRoll
                 OrigExit_8008e128:
@@ -190,7 +241,7 @@ const
                 li r3, 1
                 EnablePullEffect_8008dd88:
                     lbz r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rData)
-                    rlwimi r0, r3, 4, {flag(ffAttackVecPull)}
+                    rlwimi r0, r3, 4, {flag(ffAttackVecTargetPos)}
                     stb r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rData)
                 OrigExit_8007DD88:
                     lfd f0, 0x58(sp) # orig code line
@@ -248,53 +299,104 @@ const
                 # r17 = damage source?
                 # r31 = points to direction var of struct dmg
                 # f26/launch_speed_kb = calculated kb value based on hitbox settings
-                regs (3), rHitStruct, (25), rDefenderData
-                stw r0, 0x4(r31) # orig code line, sets kb_angle
+                stw r0, 0x4(r31) # orig line, set kb_angle
 
-                # check if angle of hitbox is 367
-                cmplwi r0, {AutoLinkAngle}
-                bne+ OriginalExit_8007a868 # if not autolink angle, exit
-                
-                lwz rHitStruct, 0xC(r17) # hit struct
-                lfs f0, 0x4C(rHitStruct) # hitbox pos X
-                stfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterX)}(rDefenderData)
-                lfs f0, 0x50(rHitStruct) # hitbox pos y
-                stfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterY)}(rDefenderData)
 
-                regs (3), rAttackerData
-                # safety checks for attacker
-                lwz r3, 0x8(r17) # attacker gobj
+                prolog rDefenderData, rAttackerData, rAttackerGObj, rExtHit, rHit, rDmgLog
+                mr rHit, r3
+                mr rDefenderData, r25
+                mr rDmgLog, r31
+                lwz rHit, 0xC(r17)
+
+                lwz rAttackerGObj, 0x8(r17)
                 cmplwi r3, 0
                 beq OriginalExit_8007a868
-                # check if item or fighter
-                lhz r0, 0(r3)
-                cmplwi r0, 0x4 # fighter
-                beq StoreAttackerVel_Fighter
-                cmplwi r0, 0x6 # item
-                bne OriginalExit_8007a868
 
-                StoreAttackerVel_Item:
-                    lwz rAttackerData, 0x2C(r3)
-                    lfs f0, 0x40(rAttackerData) # attacker vel x
-                    stfs f0, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedX)}(rDefenderData)
-                    lfs f0, 0x44(rAttackerData) # attacker vel y
-                    stfs f0, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedY)}(rDefenderData)
-                    b OriginalExit_8007a868
+                lwz rAttackerData, 0x2C(rAttackerGObj)
 
-                StoreAttackerVel_Fighter:
-                    lwz rAttackerData, 0x2C(r3)
-                    lfs f0, 0x80(rAttackerData) # attacker vel x
-                    stfs f0, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedX)}(rDefenderData)
-                    lfs f0, 0x84(rAttackerData) # attacker vel y
-                    stfs f0, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedY)}(rDefenderData)
+                # get ExtHit
+                mr r3, rAttackerGObj
+                mr r4, rHit
+                bla r12, {GetExtHitFunc}
+                "mr." rExtHit, r3
+                beq OriginalExit_8007a868
+
+                lbz r0, {extHitOff(hitStdFlags)}(rExtHit)
+                "rlwinm." r3, r0, 0, {flag(hsfVecTargetPos)}
+                beq SetDefaultsForAutoLink
+
+                # set vec target positions
+                lwz r3, {extHitTargetPosOff(targetPosNode)}(rExtHit)
+                addi r4, rExtHit, {extHitTargetPosOff(targetPosOffsetX)}
+                addi r5, rDefenderData, {extFtDataOff(HeaderInfo, lastHitboxCollCenterX)}
+                bla r12, {JOBJGetWorldPos}
+
+                # set frame
+                lwz r3, {extHitTargetPosOff(targetPosFrame)}(rExtHit)
+                stw r3, {extFtDataOff(HeaderInfo, attackVecTargetPosFrame)}(rDefenderData)
+                
+                lbz r0, {extHitOff(hitStdFlags)}(rExtHit)
+                lbz r4, {extFtDataOff(HeaderInfo, fighterFlags2)}(rDefenderData)
+                
+                rlwinm r3, r0, 27, 31, 31 # speed cap
+                rlwimi r4, r3, 7, {flag(ffAttackVecCap)}
+
+                rlwinm r3, r0, 28, 31, 31 # smooth
+                rlwimi r4, r3, 6, {flag(ffAttackVecSmooth)}
+
+                stb r4, {extFtDataOff(HeaderInfo, fighterFlags2)}(rDefenderData)
+
+                rlwinm r3, r0, 29, 31, 31 # use atk momentum
+                b SetAutoLinkVars
+
+                SetDefaultsForAutoLink:
+                    lfs f0, 0x4C(rHit) # hitbox pos X
+                    stfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterX)}(rDefenderData)
+                    lfs f0, 0x50(rHit) # hitbox pos y
+                    stfs f0, {extFtDataOff(HeaderInfo, lastHitboxCollCenterY)}(rDefenderData)
+                    li r0, 5
+                    stw r0, {extFtDataOff(HeaderInfo, attackVecTargetPosFrame)}(rDefenderData)
+
+                    lbz r0, {extFtDataOff(HeaderInfo, fighterFlags2)}(rDefenderData)
+
+                    li r3, 0
+                    rlwimi r0, r3, 6, {flag(ffAttackVecSmooth)}
+
+                    li r3, 1
+                    rlwimi r0, r3, 7, {flag(ffAttackVecCap)}
+
+                    stb r0, {extFtDataOff(HeaderInfo, fighterFlags2)}(rDefenderData)
+
+                SetAutoLinkVars:
+                    # r3 = use attacker momentum bool
+                    cmplwi r3, 0
+                    beq SetAutoLinkVars_NoAttackerMomentum
+
+                    lhz r0, 0(rAttackerGObj)
+                    addi r3, rAttackerData, 0x80
+                    cmplwi r0, 0x4 # fighter
+                    beq SetAutoLinkVars_AttackerVel
+                    addi r3, rAttackerData, 0x40
+                    cmplwi r0, 0x6 # item
+
+                    SetAutoLinkVars_AttackerVel:
+                        psq_l f0, 0(r3), 0, 0
+                        addi r4, rDefenderData, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedX)}
+                        psq_st f0, 0(r4), 0, 0
+                        b OriginalExit_8007a868
+                    
+                    SetAutoLinkVars_NoAttackerMomentum:
+                        li r0, 0
+                        stw r0, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedX)}(rDefenderData)
+                        stw r0, {extFtDataOff(HeaderInfo, attackVecLastAttackerSpeedY)}(rDefenderData)
 
                 OriginalExit_8007a868:
-                    # reset attack vec pull effect
                     li r3, 0
                     lbz r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rDefenderData)
-                    rlwimi r0, r3, 4, {flag(ffAttackVecPull)}
+                    rlwimi r0, r3, 4, {flag(ffAttackVecTargetPos)}
                     stb r0, {extFtDataOff(HeaderInfo, fighterFlags)}(rDefenderData)
-                    
+                    epilog
+                
                 gecko.end
 
 when isMainModule:

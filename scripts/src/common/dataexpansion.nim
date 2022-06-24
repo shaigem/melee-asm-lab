@@ -42,20 +42,32 @@ type
         hsfUnk1,
         hsfUnk2,
         hsfUnk3,
-        hsfUnk4,
-        hsfUnk5,
-        hsfUnk6,
-        hsfUnk7,
+        hsfTargetVecAtkMom,
+        hsfTargetVecSmooth,
+        hsfTargetVecCap,
+        hsfVecTargetPos,
         hsfStretch
     HitStdFlags = set[HitStdFlag]
 
-    FighterFlag* {.size: sizeof(uint32).} = enum
+    FighterFlag2* {.size: sizeof(uint8).} = enum
+        ffUnk0,
+        ffUnk1,
+        ffUnk2,
+        ffUnk3,
+        ffUnk4
+        ffUnk5
+        ffAttackVecSmooth
+        ffAttackVecCap
+    FighterFlags2 = set[FighterFlag2]
+
+    FighterFlag* {.size: sizeof(uint8).} = enum
         ffHitByFlinchless,
         ffSetWeight,
         ffDisableMeteorCancel,
         ffForceHitlagOnThrown,
-        ffAttackVecPull # 367 autolink
+        ffAttackVecTargetPos
         ffDisableHitlag
+        ffNoHitstunCancel
     FighterFlags = set[FighterFlag]
 
     SpecialHitAdvanced* = object
@@ -74,12 +86,20 @@ type
         offsetY2*: float32
         offsetZ2*: float32
 
+    SpecialHitSetVecTargetPos* = object
+        targetPosNode*: float32
+        targetPosFrame*: float32
+        targetPosOffsetX*: float32
+        targetPosOffsetY*: float32
+        targetPosOffsetZ*: float32
+
     SpecialHit* = object
         hitNormal*: SpecialHitNormal
         hitCapsule*: SpecialHitAttackCapsule
         hitAdvanced*: SpecialHitAdvanced
         hitStdFlags*: HitStdFlags
-        padding*: array[7, float32] # spots for a few more variables
+        hitTargetPos*: SpecialHitSetVecTargetPos
+        padding*: array[2, float32] # spots for a few more variables
 
     # variables should be added at the end of each ExtItem/FighterData struct
     # should not delete or insert between
@@ -97,12 +117,15 @@ type
         hitstunModifier*: float32
         shieldstunMultiplier*: float32
         fighterFlags*: FighterFlags
+        fighterFlags2*: FighterFlags
+        padding2*: int16
         # autolink related
         lastHitboxCollCenterX*: float32
         lastHitboxCollCenterY*: float32
         lastHitboxCollCenterZ*: float32
         attackVecLastAttackerSpeedX*: float32        
         attackVecLastAttackerSpeedY*: float32
+        attackVecTargetPosFrame*: float32
 
 template extFtDataOff*(gameInfo: GameHeaderInfo; member: untyped): int = gameInfo.fighterDataSize + offsetOf(ExtFighterData, member)
 template extItDataOff*(gameInfo: GameHeaderInfo; member: untyped): int = gameInfo.itemDataSize + offsetOf(ExtItemData, member)
@@ -110,13 +133,14 @@ template extHitOff*(member: untyped): int = offsetOf(SpecialHit, member)
 template extHitNormOff*(member: untyped): int = extHitOff(hitNormal) + offsetOf(SpecialHitNormal, member)
 template extHitAtkCapOff*(member: untyped): int = extHitOff(hitCapsule) + offsetOf(SpecialHitAttackCapsule, member)
 template extHitAdvOff*(member: untyped): int = extHitOff(hitAdvanced) + offsetOf(SpecialHitAdvanced, member)
+template extHitTargetPosOff*(member: untyped): int = extHitOff(hitTargetPos) + offsetOf(SpecialHitSetVecTargetPos, member)
 
 proc initGameHeaderInfo(name: string; fighterDataSize, itemDataSize: int): GameHeaderInfo =
     result.name = name
     result.fighterDataSize = fighterDataSize
     result.itemDataSize = itemDataSize
 
-proc flag*(f: HitFlag|FighterFlag|HitStdFlag): int = 1 shl f.ord
+proc flag*(f: HitFlag|FighterFlag|FighterFlag2|HitStdFlag): int = 1 shl f.ord
 
 const
     VanillaHeaderInfo* = initGameHeaderInfo("Vanilla", fighterDataSize = 0x23EC, itemDataSize = 0xFCC)

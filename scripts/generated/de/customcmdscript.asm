@@ -118,49 +118,112 @@ add rCurHit, rCurHit, rHitStructSize
 addi rCurExtHit, rCurExtHit, 80
 blt+ ParseHitboxExt_FindActiveHitboxes
 ParseHitboxExt_Exit:
-lwz r0, 0x00000010(rEventParse)
-add rCmdData, rCmdData, r0
-stw rCmdData, 0x00000008(rCmdInfo)
 epilog
 blr
 OriginalExit_801510E0:
 fmr f3, f1
 gecko 2147955480
-lwz r12, 0(r3)
-bl JumpCustomCmdEvent
-cmpwi r28, 0
-beq OriginalExit_80073318
-ba r12, 2147955500
-JumpCustomCmdEvent:
-cmpwi r28, 59
-beq CustomCmd_HitboxExtensionAdvanced
-cmpwi r28, 60
-beq CustomCmd_HitboxExtension
-cmpwi r28, 61
-beq CustomCmd_SpecialFlags
-cmpwi r28, 62
-beq CustomCmd_AttackCapsule
-li r28, 0
-blr
-GetCustomCmdEventLen:
-cmpwi r28, 59
-li r0, 8
-beqlr
-cmpwi r28, 60
-li r0, 8
-beqlr
-cmpwi r28, 61
-li r0, 4
-beqlr
-cmpwi r28, 62
-li r0, 8
-beqlr
-li r0, 0
-blr
-CustomCmd_HitboxExtensionAdvanced:
-CustomCmd_HitboxExtension:
+bl CustomFighterCmdHandler_Start
+_customCmdTable:
+blrl
+data.table customCmdTable
+errata.new e
+errata.mode e, stack, solve_iter
+customCmdTable.__start = .
+0:
+.4byte 0x3AEA0C00
+.4byte e$0
+1:
+.4byte 0x3BEF0800
+.4byte e$1
+2:
+.4byte 0x3CF10800
+.4byte e$2
+3:
+.4byte 0x3DF50400
+.4byte e$3
+4:
+.4byte 0x3EF80800
+.4byte e$4
+customCmdTable.__count = (. - customCmdTable.__start) / 8
+CustomCmd_SetVecTargetPos:
+e.solve CustomCmd_SetVecTargetPos - ((8 * 0) + _data.table)
 prolog xParseFunc, (0x00000004), xStartCopyOff, (0x00000004), xNumVarsCopy, (0x00000004), xAfterCopyFunc, (0x00000004), xEventLen, (0x00000004), xApplyType, (0x00000004)
-cmpwi r28, 59
+bl SetTargetPosCmd_Parse
+mflr r0
+stw r0, sp.xParseFunc(sp)
+li r0, 52
+stw r0, sp.xStartCopyOff(sp)
+li r0, 5
+stw r0, sp.xNumVarsCopy(sp)
+bl SetTargetPosCmd_OnCopy
+mflr r0
+stw r0, sp.xAfterCopyFunc(sp)
+li r0, 12
+stw r0, sp.xEventLen(sp)
+lwz r3, 0x00000008(r29)
+lbz r0, 0x00000001(r3)
+rlwinm r0, r0, 29, 30, 31
+stw r0, sp.xApplyType(sp)
+mr r3, r27
+mr r4, r29
+addi r5, sp, sp.xParseFunc
+bla r12, 2148864224
+epilog
+blr
+SetTargetPosCmd_OnCopy:
+regs (3), rExtHit, rNormHit, rCmdData
+blrl
+SetTargetPosCmd_OnCopy_Set:
+lbz r0, 0x00000001(rCmdData)
+lbz r5, 48(rExtHit)
+rlwinm r4, r0, 30, 31, 31
+rlwimi r5, r4, 3, 8
+rlwinm r4, r0, 31, 31, 31
+rlwimi r5, r4, 4, 16
+rlwinm r4, r0, 0, 0x00000001
+rlwimi r5, r4, 5, 32
+li r4, 1
+rlwimi r5, r4, 6, 64
+stb r5, 48(rExtHit)
+blr
+SetTargetPosCmd_Parse:
+blrl
+sp.push
+sp.temp +2, ru, rl
+regs (3), rExtHit, rNormHit, rCmdData
+lbz r0, 0x00000002(rCmdData)
+lwz r4, 0x000005E8(r30)
+rlwinm r0, r0, 4, 0, 27
+lwzx r4, r4, r0
+stw r4, 52(rExtHit)
+lfs f1, 0xFFFF88C0(rtoc)
+lhz r0, 0x00000003(rCmdData)
+sth r0, sp.ru(sp)
+lhz r0, 0x00000005(rCmdData)
+sth r0, sp.rl(sp)
+psq_l f0, sp.ru(sp), 0, 5
+ps_mul f0, f1, f0
+psq_st f0, 60(rExtHit), 0, 0
+lhz r0, 0x00000007(rCmdData)
+sth r0, sp.ru(sp)
+psq_l f0, sp.ru(sp), 1, 5
+fmuls f0, f1, f0
+stfs f0, 68(rExtHit)
+lbz r0, 0x00000009(rCmdData)
+stw r0, 56(rExtHit)
+sp.pop
+b SetTargetPosCmd_OnCopy_Set
+CustomCmd_HitboxExtAdv:
+e.solve CustomCmd_HitboxExtAdv - ((8 * 1) + _data.table)
+li r3, 1
+b HitboxExtCmd_Begin
+CustomCmd_HitboxExtStd:
+e.solve CustomCmd_HitboxExtStd - ((8 * 2) + _data.table)
+li r3, 0
+HitboxExtCmd_Begin:
+prolog xParseFunc, (0x00000004), xStartCopyOff, (0x00000004), xNumVarsCopy, (0x00000004), xAfterCopyFunc, (0x00000004), xEventLen, (0x00000004), xApplyType, (0x00000004)
+cmpwi r3, 1
 bne ParseStandard
 ParseAdvanced:
 bl HitboxExtCmd_Advanced_Parse
@@ -256,6 +319,7 @@ lbz r0, 0x00000007(r5)
 stb r0, 44(r3)
 blr
 CustomCmd_SpecialFlags:
+e.solve CustomCmd_SpecialFlags - ((8 * 3) + _data.table)
 lwz r3, 0x00000008(r29)
 lbz r4, 0x00000001(r3)
 li r7, 4
@@ -302,10 +366,9 @@ addi r7, r7, 1
 cmplwi r7, 4
 addi r4, r4, 312
 blt SpecialFlagsCmd_ReadLoop
-addi rCmdEvtPtr, rCmdEvtPtr, 4
-stw rCmdEvtPtr, 0x00000008(r29)
 blr
 CustomCmd_AttackCapsule:
+e.solve CustomCmd_AttackCapsule - ((8 * 4) + _data.table)
 li r3, 9248
 lhz r0, 0(r27)
 cmplwi r0, 0x00000004
@@ -342,37 +405,85 @@ rlwimi r0, r5, 7, 128
 stb r0, 48(rExtHit)
 sp.pop
 AttackCapsuleCmd_Exit:
-lwz r4, 0x00000008(rCmdInfo)
-addi r4, r4, 8
-stw r4, 0x00000008(rCmdInfo)
+blr
+
+CustomFighterCmdHandler_Start:
+lwz r12, 0(r3)
+mflr r3
+addi r3, r3, 0x00000004
+bl CustomCmdTable_Find
+cmplwi r3, 0
+beq OriginalExit_80073318
+load r4, 2147955500
+CustomCmdTable_Handle:
+sp.push
+sp.temp +4, xCustomCmdTable, xExitPtr
+stw r3, sp.xCustomCmdTable(sp)
+stw r4, sp.xExitPtr(sp)
+lwz r0, 0x00000004(r3)
+add r0, r3, r0
+mr r3, r27
+mr r4, r29
+mtlr r0
+blrl
+lwz r3, sp.xCustomCmdTable(sp)
+lbz r0, 0x00000002(r3)
+lwz r4, 0x00000008(r29)
+add r0, r4, r0
+stw r0, 0x00000008(r29)
+lwz r12, sp.xExitPtr(sp)
+mtctr r12
+sp.pop
+bctr
+CustomCmdTable_Find:
+li r0, "customCmdTable.__count"
+mtctr r0
+b CustomCmdTable_Find_Loop_Body
+CustomCmdTable_Find_Loop:
+addi r3, r3, 0x00000008
+CustomCmdTable_Find_Loop_Body:
+lbz r0, 0x00000000(r3)
+cmpw r28, r0
+bdnzf eq, CustomCmdTable_Find_Loop
+beqlr
+li r3, 0
 blr
 OriginalExit_80073318:
 
 gecko 2150079164
 lwz r12, 0(r3)
-bl JumpCustomCmdEvent
-cmpwi r28, 0
+bl "_customCmdTable"
+mflr r3
+bl CustomCmdTable_Find
+cmplwi r3, 0
 beq OriginalExit_80279abc
-ba r12, 2150079056
+load r4, 2147955500
+b CustomCmdTable_Handle
 OriginalExit_80279abc:
 
 gecko.end
 gecko 2147955760
-subi r0, r28, 10
-bl JumpCustomCmdEvent
-cmpwi r28, 0
+bl "_customCmdTable"
+mflr r3
+bl CustomCmdTable_Find
+cmplwi r3, 0
 beq SubactionFastForward_OrigExit
-ba r12, 2147955792
+load r4, 2147955792
+b CustomCmdTable_Handle
 SubactionFastForward_OrigExit:
-
+subi r0, r28, 10
 gecko 2147956084
-lwz r4, 0x00000008(r29)
-bl GetCustomCmdEventLen
-cmpwi r0, 0
+bl "_customCmdTable"
+mflr r3
+bl CustomCmdTable_Find
+cmplwi r3, 0
 beq SubactionFastForwardPtr2_OrigExit
+lwz r4, 0x00000008(r29)
+lbz r0, 0x00000002(r3)
 add r4, r4, r0
 stw r4, 0x00000008(r29)
 ba r12, 2147956104
 SubactionFastForwardPtr2_OrigExit:
-
+add r3, r31, r28
+lwz r4, 0x00000008(r29)
 gecko.end

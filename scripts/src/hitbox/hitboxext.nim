@@ -6,6 +6,7 @@ const
     HeaderInfo = MexHeaderInfo
     CustomFunctionReadEvent = "0x801510e0"
 
+# TODO provide the fighter data for callback funcs
 proc parseHitboxExt*(): string =
     ppc:
         # inputs
@@ -157,18 +158,19 @@ proc parseHitboxExt*(): string =
                         blt+ ParseHitboxExt_FindActiveHitboxes
 
         ParseHitboxExt_Exit:
-            lwz r0, 0x10(rEventParse)
-            add rCmdData, rCmdData, r0
-            stw rCmdData, 0x8(rCmdInfo)
+#            lwz r0, 0x10(rEventParse)
+#            add rCmdData, rCmdData, r0
+#            stw rCmdData, 0x8(rCmdInfo)
             epilog
             blr
 
 proc getParseCmdCode*(): string =
     # r27 = fighter/item gobj
     ppc:
+
         prolog xParseFunc, (0x4), xStartCopyOff, (0x4), xNumVarsCopy, (0x4), xAfterCopyFunc, (0x4), xEventLen, (0x4), xApplyType, (0x4)
 
-        cmpwi r28, {HitboxExtensionAdvancedCmd.code}
+        cmpwi r3, 1
         bne ParseStandard
 
         # setup the following

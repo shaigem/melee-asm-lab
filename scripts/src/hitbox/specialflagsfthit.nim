@@ -153,6 +153,4 @@ proc getParseCmdCode*(): string =
                 addi r4, r4, {FtHitSize}
                 blt SpecialFlagsCmd_ReadLoop
 
-        addi rCmdEvtPtr, rCmdEvtPtr, {SpecialFlagsCmd.eventLen}
-        stw rCmdEvtPtr, 0x8(r29)
         blr
