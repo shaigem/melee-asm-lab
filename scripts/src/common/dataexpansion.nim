@@ -42,23 +42,23 @@ type
         hsfUnk1,
         hsfUnk2,
         hsfUnk3,
-        hsfTargetVecAtkMom,
-        hsfTargetVecSmooth,
-        hsfTargetVecCap,
-        hsfVecTargetPos,
+        hsfUnk4,
+        hsfUnk5,
+        hsfUnk6,
+        hsfUnk7,
         hsfStretch
     HitStdFlags = set[HitStdFlag]
 
-    FighterFlag2* {.size: sizeof(uint8).} = enum
-        ffUnk0,
-        ffUnk1,
-        ffUnk2,
-        ffUnk3,
-        ffUnk4
-        ffUnk5
-        ffAttackVecSmooth
-        ffAttackVecCap
-    FighterFlags2 = set[FighterFlag2]
+    HitVecTargetPosFlag* {.size: sizeof(uint8).} = enum
+        hvtfIsSet
+        hvtfUnk2
+        hvtfLerpAtkMom
+        hvtfLerpSpeedCap
+        hvtfCalcVecPull
+        hvtfCalcVecTargetPos
+        hvtfOverrideSpeed
+        hvtfAfterHitlag
+    HitVecTargetPosFlags = set[HitVecTargetPosFlag]
 
     FighterFlag* {.size: sizeof(uint8).} = enum
         ffHitByFlinchless,
@@ -92,6 +92,8 @@ type
         targetPosOffsetX*: float32
         targetPosOffsetY*: float32
         targetPosOffsetZ*: float32
+        targetPosFlags*: HitVecTargetPosFlags
+        targetPosPadding: int8
 
     SpecialHit* = object
         hitNormal*: SpecialHitNormal
@@ -120,12 +122,13 @@ type
         fighterFlags2*: FighterFlags
         padding2*: int16
         # autolink related
-        lastHitboxCollCenterX*: float32
-        lastHitboxCollCenterY*: float32
-        lastHitboxCollCenterZ*: float32
-        attackVecLastAttackerSpeedX*: float32        
-        attackVecLastAttackerSpeedY*: float32
-        attackVecTargetPosFrame*: float32
+        vecTargetPosFrame*: float32
+        vecTargetPosX*: float32
+        vecTargetPosY*: float32
+        vecTargetAttackerSpeedX*: float32        
+        vecTargetAttackerSpeedY*: float32
+        vecTargetPosFlags*: HitVecTargetPosFlags
+        padding3*: array[3, int8]
 
 template extFtDataOff*(gameInfo: GameHeaderInfo; member: untyped): int = gameInfo.fighterDataSize + offsetOf(ExtFighterData, member)
 template extItDataOff*(gameInfo: GameHeaderInfo; member: untyped): int = gameInfo.itemDataSize + offsetOf(ExtItemData, member)
@@ -140,7 +143,9 @@ proc initGameHeaderInfo(name: string; fighterDataSize, itemDataSize: int): GameH
     result.fighterDataSize = fighterDataSize
     result.itemDataSize = itemDataSize
 
-proc flag*(f: HitFlag|FighterFlag|FighterFlag2|HitStdFlag): int = 1 shl f.ord
+func flag*(f: enum): int = 1 shl f.ord
+
+template flagOrd*(f: enum): string = $f.ord & ", " & $flag(f)
 
 const
     VanillaHeaderInfo* = initGameHeaderInfo("Vanilla", fighterDataSize = 0x23EC, itemDataSize = 0xFCC)

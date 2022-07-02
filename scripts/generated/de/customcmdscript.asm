@@ -28,7 +28,7 @@ beq ParseHitboxExt_Exit
 li r5, 4048
 li r6, 1492
 li rHitStructSize, 316
-li rEightHitOff, 1932
+li rEightHitOff, 1964
 b ParseHitboxExt_Begin
 ParseHitboxExt_SetFighterVars:
 lwz r5, 0x00000014(rEventParse)
@@ -37,14 +37,14 @@ beq ParseHitboxExt_SetForThrow
 li r5, 9248
 li r6, 2324
 li rHitStructSize, 312
-li rEightHitOff, 6396
+li rEightHitOff, 6432
 b ParseHitboxExt_Begin
 ParseHitboxExt_SetForThrow:
 lwz r12, 0(rEventParse)
 cmplwi r12, 0
 beq ParseHitboxExt_Exit
 mtlr r12
-addi r3, rData, 9888
+addi r3, rData, 9920
 addi r4, rData, 0x00000DF4
 mr r5, rCmdData
 blrl
@@ -65,7 +65,7 @@ add rCurHit, rCurHit, rEightHitOff
 CalcNormal:
 add rCurHit, rCurHit, r6
 add rCurHit, rData, rCurHit
-mulli rCurExtHit, r3, 80
+mulli rCurExtHit, r3, 84
 add rCurExtHit, rCurExtHit, r5
 add rCurExtHit, rData, rCurExtHit
 ParseHitboxExt_FindActiveHitboxes:
@@ -115,7 +115,7 @@ add rCurHit, rCurHit, rEightHitOff
 Advance:
 cmplwi rCurrentId, 8
 add rCurHit, rCurHit, rHitStructSize
-addi rCurExtHit, rCurExtHit, 80
+addi rCurExtHit, rCurExtHit, 84
 blt+ ParseHitboxExt_FindActiveHitboxes
 ParseHitboxExt_Exit:
 epilog
@@ -154,10 +154,9 @@ mflr r0
 stw r0, sp.xParseFunc(sp)
 li r0, 52
 stw r0, sp.xStartCopyOff(sp)
-li r0, 5
+li r0, 6
 stw r0, sp.xNumVarsCopy(sp)
-bl SetTargetPosCmd_OnCopy
-mflr r0
+li r0, 0
 stw r0, sp.xAfterCopyFunc(sp)
 li r0, 12
 stw r0, sp.xEventLen(sp)
@@ -171,49 +170,41 @@ addi r5, sp, sp.xParseFunc
 bla r12, 2148864224
 epilog
 blr
-SetTargetPosCmd_OnCopy:
-regs (3), rExtHit, rNormHit, rCmdData
-blrl
-SetTargetPosCmd_OnCopy_Set:
-lbz r0, 0x00000001(rCmdData)
-lbz r5, 48(rExtHit)
-rlwinm r4, r0, 30, 31, 31
-rlwimi r5, r4, 3, 8
-rlwinm r4, r0, 31, 31, 31
-rlwimi r5, r4, 4, 16
-rlwinm r4, r0, 0, 0x00000001
-rlwimi r5, r4, 5, 32
-li r4, 1
-rlwimi r5, r4, 6, 64
-stb r5, 48(rExtHit)
-blr
 SetTargetPosCmd_Parse:
 blrl
 sp.push
 sp.temp +2, ru, rl
 regs (3), rExtHit, rNormHit, rCmdData
-lbz r0, 0x00000002(rCmdData)
+lbz r0, 0x00000004(rCmdData)
 lwz r4, 0x000005E8(r30)
 rlwinm r0, r0, 4, 0, 27
 lwzx r4, r4, r0
 stw r4, 52(rExtHit)
 lfs f1, 0xFFFF88C0(rtoc)
-lhz r0, 0x00000003(rCmdData)
-sth r0, sp.ru(sp)
 lhz r0, 0x00000005(rCmdData)
+sth r0, sp.ru(sp)
+lhz r0, 0x00000007(rCmdData)
 sth r0, sp.rl(sp)
 psq_l f0, sp.ru(sp), 0, 5
 ps_mul f0, f1, f0
 psq_st f0, 60(rExtHit), 0, 0
-lhz r0, 0x00000007(rCmdData)
+lhz r0, 0x00000009(rCmdData)
 sth r0, sp.ru(sp)
 psq_l f0, sp.ru(sp), 1, 5
 fmuls f0, f1, f0
 stfs f0, 68(rExtHit)
-lbz r0, 0x00000009(rCmdData)
+lbz r0, 0x0000000B(rCmdData)
+cmplwi r0, 0
+bf- eq, 0f
+li r0, 1
+0:
 stw r0, 56(rExtHit)
+lbz r0, 0x00000002(rCmdData)
+li r4, 1
+rlwimi r0, r4, 0, 1
+stb r0, 72(rExtHit)
 sp.pop
-b SetTargetPosCmd_OnCopy_Set
+blr
 CustomCmd_HitboxExtAdv:
 e.solve CustomCmd_HitboxExtAdv - ((8 * 1) + _data.table)
 li r3, 1
@@ -381,7 +372,7 @@ AttackCapsuleCmd_Read:
 lwz rCmdPtr, 0x00000008(rCmdInfo)
 lbz r0, 0x00000001(rCmdPtr)
 rlwinm r5, r0, 27, 29, 31
-mulli r5, r5, 80
+mulli r5, r5, 84
 add r3, r5, r3
 add rExtHit, rData, r3
 sp.push
