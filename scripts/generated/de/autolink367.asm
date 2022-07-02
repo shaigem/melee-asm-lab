@@ -32,11 +32,23 @@ cmpwi r0, 0
 blt AutoLinkPhysics_ResetEffect
 cmpw r0, r3
 bge AutoLinkPhysics_ResetEffect_TurnOff
-lwz r0, 0x000018AC(rFighterData)
 cmplwi r0, 1
-beq AutoLinkPhysics_Exit
+crand eq, eq, bCalcOverrideSpeed
+bt eq, AutoLinkPhysics_SetLaunchSpeeds
 psq_l f1, sp.xTempFrameInfo(sp), 0, 0
 bl AutoLinkPhysics_LerpVels
+b AutoLinkPhysics_Exit
+AutoLinkPhysics_SetLaunchSpeeds:
+addi r4, rFighterData, 11268
+bf bAfterHitlag, AutoLinkPhysics_SetLaunchSpeeds_UsePrecalc
+AutoLinkPhysics_SetLaunchSpeeds_CalcNew:
+mr r3, rFighterData
+bl CalculateAutoLinkLaunchSpeed
+b AutoLinkPhysics_SetLaunchSpeeds_Set
+AutoLinkPhysics_SetLaunchSpeeds_UsePrecalc:
+psq_l f2, 0x00000004(r4), 0, 0
+AutoLinkPhysics_SetLaunchSpeeds_Set:
+psq_st f2, 0x0000008C(rFighterData), 0, 0
 b AutoLinkPhysics_Exit
 AutoLinkPhysics_LerpVels:
 ps_muls1 f4, f1, f1
@@ -126,11 +138,37 @@ lwz r0, 56(rExtHit)
 stw r0, 11268(rDefenderData)
 b SetAutoLinkVars_IsAutoLink
 SetAutoLinkVars_CheckAngle:
-nop
+lwz r0, 0x00000004(rDmgLog)
+cmplwi r0, 367
+beq SetAutoLinkVars_Set_Vec_Pull
+b SetAutoLinkVars_Exit
+SetAutoLinkVars_Set_Vec_Pull:
+crset bLerpSpeedCap
+crset bUseVecTargetPos
+crset bUseAtkMom
+crset bCalcOverrideSpeed
+crset bAfterHitlag
+addi r3, rDefenderData, 11268
+psq_l f0, 0x0000004C(rHit), 0, 0
+psq_st f0, 0x00000004(r3), 0, 0
+li r0, 10
+stw r0, 0(r3)
 SetAutoLinkVars_IsAutoLink:
 mr r3, rDefenderData
 addi r4, rDefenderData, 11268
+cmplwi rAttackerGObj, 0
+beq- SetAutoLinkVars_IsAutoLink_NoAttacker
+lhz r0, 0(rAttackerGObj)
+cmplwi r0, 0x00000004
 psq_l f0, 0x00000080(rAttackerData), 0, 0
+beq SetAutoLinkVars_IsAutoLink_SetAtkMom
+cmplwi r0, 0x00000006
+psq_l f0, 0x00000040(rAttackerData), 0, 0
+beq SetAutoLinkVars_IsAutoLink_SetAtkMom
+SetAutoLinkVars_IsAutoLink_NoAttacker:
+crclr bLerpAtkMom
+lfs f0, 0xFFFF8900(rtoc)
+SetAutoLinkVars_IsAutoLink_SetAtkMom:
 psq_st f0, 0x0000000C(r4), 0, 0
 bl CalculateAutoLinkLaunchSpeed
 crandc eq, bCalcOverrideSpeed, bAfterHitlag
