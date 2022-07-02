@@ -175,10 +175,29 @@ blrl
 sp.push
 sp.temp +2, ru, rl
 regs (3), rExtHit, rNormHit, rCmdData
+lhz r0, 0(r31)
+cmplwi cr0, r0, 0x00000004
+cmplwi cr1, r0, 0x00000006
 lbz r0, 0x00000004(rCmdData)
+beq cr0, SetTargetPosCmd_Parse_FighterBone
+bne cr1, SetTargetPosCmd_Parse_Exit
+SetTargetPosCmd_Parse_ItemBone:
+cmplwi r0, 0
+bne 0f
+lwz r4, 0x00000028(r31)
+b SetTargetPosCmd_Parse_StoreBoneJObj
+0:
+lwz r4, 0x00000BBC(r30)
+cmplwi r4, 0
+beq SetTargetPosCmd_Parse_Exit
+rlwinm r0, r0, 2, 0, 29
+b SetTargetPosCmd_Parse_GetBoneJObj
+SetTargetPosCmd_Parse_FighterBone:
 lwz r4, 0x000005E8(r30)
 rlwinm r0, r0, 4, 0, 27
+SetTargetPosCmd_Parse_GetBoneJObj:
 lwzx r4, r4, r0
+SetTargetPosCmd_Parse_StoreBoneJObj:
 stw r4, 52(rExtHit)
 lfs f1, 0xFFFF88C0(rtoc)
 lhz r0, 0x00000005(rCmdData)
@@ -203,6 +222,7 @@ lbz r0, 0x00000002(rCmdData)
 li r4, 1
 rlwimi r0, r4, 0, 1
 stb r0, 72(rExtHit)
+SetTargetPosCmd_Parse_Exit:
 sp.pop
 blr
 CustomCmd_HitboxExtAdv:

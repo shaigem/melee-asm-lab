@@ -50,11 +50,35 @@ proc getParseCmdCode*(): string =
             regs (3), rExtHit, rNormHit, rCmdData
 
             # get bone JObj and store it
+            lhz r0, 0(r31)
+            cmplwi cr0, r0, 0x4 # fighter
+            cmplwi cr1, r0, 0x6 # item
             lbz r0, 0x4(rCmdData) # bone id
-            lwz r4, 0x5E8(r30)
-            rlwinm r0, r0, 4, 0, 27
-            lwzx r4, r4, r0 # bone jobj ptr
-            stw r4, {extHitTargetPosOff(targetPosNode)}(rExtHit)
+            beq cr0, SetTargetPosCmd_Parse_FighterBone
+            bne cr1, SetTargetPosCmd_Parse_Exit
+           
+            SetTargetPosCmd_Parse_ItemBone:
+                cmplwi r0, 0 # if bone id is 0, just get the JObj from 0x28 of item GObj
+                "bne 0f"
+                lwz r4, 0x28(r31)
+                b SetTargetPosCmd_Parse_StoreBoneJObj
+                0:
+                    # for getting bone JObjs with an ID != 0
+                    lwz r4, 0xBBC(r30)
+                    cmplwi r4, 0
+                    beq SetTargetPosCmd_Parse_Exit
+                    rlwinm r0, r0, 2, 0, 29
+                b SetTargetPosCmd_Parse_GetBoneJObj
+
+            SetTargetPosCmd_Parse_FighterBone:
+                lwz r4, 0x5E8(r30)
+                rlwinm r0, r0, 4, 0, 27
+
+            SetTargetPosCmd_Parse_GetBoneJObj:
+                lwzx r4, r4, r0
+            
+            SetTargetPosCmd_Parse_StoreBoneJObj:
+                stw r4, {extHitTargetPosOff(targetPosNode)}(rExtHit)
 
             # get vec pos offsets
             lfs f1, -0x7740(rtoc) # ~1/256
@@ -90,6 +114,8 @@ proc getParseCmdCode*(): string =
             rlwimi r0, r4, 0, {flag(hvtfIsSet)}
             stb r0, {extHitTargetPosOff(targetPosFlags)}(rExtHit)
 
-            sp.pop
-            
-            blr
+            SetTargetPosCmd_Parse_Exit:
+
+                sp.pop
+                
+                blr
