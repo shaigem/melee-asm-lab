@@ -5,12 +5,46 @@ punkpc ppc
 # description: Pulls victims towards the center of collided hitbox and adjusts launch speed
 enumb Set, Unk2, LerpAtkMom, LerpSpeedCap, UseVecTargetPos, UseAtkMom, CalcOverrideSpeed, AfterHitlag
 enum (0), +4, xVecTargetPosFrame, xVecTargetPosX, xVecTargetPosY, xVecTargetAtkSpeedX, xVecTargetAtkSpeedY, xVecTargetPosFlags
+gecko 2148864184
+cmpwi r4, 343
+beq- CalcAutoLinkSpeed_OriginalExit
+lfs f1, 0xFFFF8900(rtoc)
+lfs f2, 0xFFFF8900(rtoc)
+crnot eq, bUseAtkMom
+crandc eq, eq, bUseVecTargetPos
+beqlr-
+sp.push
+sp.temp xTemp, (0x0000000C)
+lwz r0, 0(r4)
+sth r0, sp.xTemp(sp)
+psq_l f0, sp.xTemp(sp), 1, 5
+fres f0, f0
+sp.pop
+bf bUseAtkMom, CalculateAutoLinkLaunchSpeed_TargetPos
+CalculateAutoLinkLaunchSpeed_AtkMom:
+psq_l f1, 0x0000000C(r4), 0, 0
+bt bUseVecTargetPos, CalculateAutoLinkLaunchSpeed_TargetPos
+ps_muls0 f2, f1, f0
+ps_merge10 f1, f2, f2
+blr
+CalculateAutoLinkLaunchSpeed_TargetPos:
+psq_l f2, 0x00000004(r4), 0, 0
+psq_l f3, 0x000000B0(r3), 0, 0
+ps_sub f2, f2, f3
+bf- bCalcOverrideSpeed, 0f
+ps_muls0 f2, f2, f0
+0:
+ps_add f2, f1, f2
+ps_merge10 f1, f2, f2
+blr
+CalcAutoLinkSpeed_OriginalExit:
+stw r0, 0x00000004(sp)
 gecko 2147924120
 regs (r31), rFighterData
 lbz r0, 11264(rFighterData)
 rlwinm. r0, r0, 0, 16
 beq AutoLinkPhysics_OriginalExit
-prolog xU, (0x00000002), xL, (0x00000002), xTempFrameInfo, (0x00000004)
+prolog xU, (0x00000002), xL, (0x00000002), xTempFrameInfo, (0x00000004), xTempVec2, (0x00000008)
 lbz r0, 11288(rFighterData)
 mtcrf 0x00000003, r0
 lwz r3, 0x000018AC(rFighterData)
@@ -33,26 +67,41 @@ blt AutoLinkPhysics_ResetEffect
 cmpw r0, r3
 bge AutoLinkPhysics_ResetEffect_TurnOff
 cmplwi r0, 1
-crand eq, eq, bCalcOverrideSpeed
-bt eq, AutoLinkPhysics_SetLaunchSpeeds
+beq- AutoLinkPhysics_SetLaunchSpeeds
+addi r3, rFighterData, 11268
+psq_l f0, 0x00000004(r3), 0, 0
+psq_st f0, 0x0000008C(rFighterData), 0, 0
 psq_l f1, sp.xTempFrameInfo(sp), 0, 0
 bl AutoLinkPhysics_LerpVels
 b AutoLinkPhysics_Exit
 AutoLinkPhysics_SetLaunchSpeeds:
 addi r4, rFighterData, 11268
-bf bAfterHitlag, AutoLinkPhysics_SetLaunchSpeeds_UsePrecalc
-AutoLinkPhysics_SetLaunchSpeeds_CalcNew:
-mr r3, rFighterData
-bl CalculateAutoLinkLaunchSpeed
-b AutoLinkPhysics_SetLaunchSpeeds_Set
-AutoLinkPhysics_SetLaunchSpeeds_UsePrecalc:
+bt bAfterHitlag, AutoLinkPhysics_SetLaunchSpeeds_Recalc
+AutoLinkPhysics_SetLaunchSpeeds_NoCalc:
+psq_l f2, 0x0000008C(rFighterData), 0, 0
+bf bCalcOverrideSpeed, AutoLinkPhysics_SetLaunchSpeeds_Set
 psq_l f2, 0x00000004(r4), 0, 0
+b AutoLinkPhysics_SetLaunchSpeeds_Set
+AutoLinkPhysics_SetLaunchSpeeds_Recalc:
+mr r3, rFighterData
+bla r12, 2148864184
+bt bCalcOverrideSpeed, AutoLinkPhysics_SetLaunchSpeeds_Set
+addi r3, sp, sp.xTempVec2
+psq_st f2, 0(r3), 0, 0
+bla r12, 2147537840
+addi r3, rFighterData, 0x0000008C
+bla r12, 2150903292
+psq_l f2, sp.xTempVec2(sp), 0, 0
+ps_mul f2, f2, f1
+b AutoLinkPhysics_SetLaunchSpeeds_Set
 AutoLinkPhysics_SetLaunchSpeeds_Set:
 psq_st f2, 0x0000008C(rFighterData), 0, 0
+psq_st f2, 0x00000004(r4), 0, 0
 b AutoLinkPhysics_Exit
 AutoLinkPhysics_LerpVels:
 ps_muls1 f4, f1, f1
-psq_l f1, 0x0000008C(rFighterData), 0, 0
+addi r3, rFighterData, 11268
+psq_l f1, 0x00000004(r3), 0, 0
 bt bLerpSpeedCap, AutoLinkPhysics_LerpVels_Speed
 bt bLerpAtkMom, AutoLinkPhysics_LerpVels_AtkMom
 blr
@@ -68,7 +117,6 @@ ps_sel f2, f0, f2, f3
 fmr f3, f4
 b AutoLinkPhysics_Lerp
 AutoLinkPhysics_LerpVels_AtkMom:
-addi r3, rFighterData, 11268
 psq_l f2, 0x0000000C(r3), 0, 0
 fmr f3, f4
 b AutoLinkPhysics_Lerp
@@ -109,121 +157,4 @@ rlwimi r0, r3, 4, 16
 stb r0, 11264(rData)
 OrigExit_8007DD88:
 lfd f0, 0x00000058(sp)
-gecko 2147985716
-stw r0, 0x00000004(r31)
-prolog rDmgLog, rAttackerData, rAttackerGObj, rExtHit, rHit, xTemp, (0x0000000C)
-regs (17), rDmgSrc, (25), rDefenderData
-lwz rHit, 0x0000000C(rDmgSrc)
-lwz rAttackerGObj, 0x00000008(rDmgSrc)
-li r0, 0
-mtcrf 0x00000003, r0
-cmplwi rAttackerGObj, 0
-beq SetAutoLinkVars_CheckAngle
-lwz rAttackerData, 0x0000002C(rAttackerGObj)
-mr r3, rAttackerGObj
-mr r4, rHit
-bla r12, 2148864212
-mr rExtHit, r3
-cmplwi r3, 0
-beq SetAutoLinkVars_CheckAngle
-lbz r0, 72(rExtHit)
-mtcrf 0x00000003, r0
-bf- bSet, SetAutoLinkVars_CheckAngle
-SetAutoLinkVars_CustomVecTargetPos:
-lwz r3, 52(rExtHit)
-addi r4, rExtHit, 60
-addi r5, rDefenderData, 11272
-bla r12, 2147529164
-lwz r0, 56(rExtHit)
-stw r0, 11268(rDefenderData)
-b SetAutoLinkVars_IsAutoLink
-SetAutoLinkVars_CheckAngle:
-lwz r0, 0x00000004(rDmgLog)
-cmplwi r0, 367
-beq SetAutoLinkVars_Set_Vec_Pull
-b SetAutoLinkVars_Exit
-SetAutoLinkVars_Set_Vec_Pull:
-crset bLerpSpeedCap
-crset bUseVecTargetPos
-crset bUseAtkMom
-crset bCalcOverrideSpeed
-crset bAfterHitlag
-addi r3, rDefenderData, 11268
-psq_l f0, 0x0000004C(rHit), 0, 0
-psq_st f0, 0x00000004(r3), 0, 0
-li r0, 10
-stw r0, 0(r3)
-SetAutoLinkVars_IsAutoLink:
-mr r3, rDefenderData
-addi r4, rDefenderData, 11268
-cmplwi rAttackerGObj, 0
-beq- SetAutoLinkVars_IsAutoLink_NoAttacker
-lhz r0, 0(rAttackerGObj)
-cmplwi r0, 0x00000004
-psq_l f0, 0x00000080(rAttackerData), 0, 0
-beq SetAutoLinkVars_IsAutoLink_SetAtkMom
-cmplwi r0, 0x00000006
-psq_l f0, 0x00000040(rAttackerData), 0, 0
-beq SetAutoLinkVars_IsAutoLink_SetAtkMom
-SetAutoLinkVars_IsAutoLink_NoAttacker:
-crclr bLerpAtkMom
-lfs f0, 0xFFFF8900(rtoc)
-SetAutoLinkVars_IsAutoLink_SetAtkMom:
-psq_st f0, 0x0000000C(r4), 0, 0
-bl CalculateAutoLinkLaunchSpeed
-crandc eq, bCalcOverrideSpeed, bAfterHitlag
-bf eq, SetAutoLinkVars_IsAutoLink_CalcAngle
-psq_st f2, 0x00000004(r4), 0, 0
-SetAutoLinkVars_IsAutoLink_CalcAngle:
-lfs f0, 0xFFFF8900(rtoc)
-lfs f3, 0(rDmgLog)
-fcmpo cr0, f3, f0
-bt lt, 0f
-fneg f2, f2
-0:
-
-bla r12, 2147626032
-lfs f0, 0xFFFF893C(rtoc)
-fmuls f1, f0, f1
-fctiw f0, f1
-stfd f0, sp.xTemp(sp)
-lwz r0, sp.xTemp + 0x00000004(sp)
-stw r0, 0x00000004(rDmgLog)
-cror eq, bLerpAtkMom, bLerpSpeedCap
-crnot lt, bCalcOverrideSpeed
-crandc eq, lt, eq
-bt- eq, 0f
-crset bSet
-b SetAutoLinkVars_Exit
-0:
-crclr bSet
-b SetAutoLinkVars_Exit
-CalculateAutoLinkLaunchSpeed:
-sp.push
-sp.temp xTemp, (0x0000000C)
-lwz r0, 0(r4)
-sth r0, sp.xTemp(sp)
-psq_l f0, sp.xTemp(sp), 1, 5
-fres f0, f0
-lfs f1, 0xFFFF8900(rtoc)
-sp.pop
-bf bUseAtkMom, CalculateAutoLinkLaunchSpeed_TargetPos
-CalculateAutoLinkLaunchSpeed_AtkMom:
-psq_l f1, 0x0000000C(r4), 0, 0
-bt bUseVecTargetPos, CalculateAutoLinkLaunchSpeed_TargetPos
-ps_muls0 f2, f1, f0
-ps_merge10 f1, f2, f2
-blr
-CalculateAutoLinkLaunchSpeed_TargetPos:
-psq_l f2, 0x00000004(r4), 0, 0
-psq_l f3, 0x000000B0(r3), 0, 0
-ps_sub f2, f2, f3
-ps_muls0 f2, f2, f0
-ps_add f2, f1, f2
-ps_merge10 f1, f2, f2
-blr
-SetAutoLinkVars_Exit:
-mfcr r0
-stb r0, 11288(rDefenderData)
-epilog
 gecko.end

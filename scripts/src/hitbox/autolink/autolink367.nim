@@ -14,6 +14,61 @@ const
                 enumb Set, Unk2, LerpAtkMom, LerpSpeedCap, UseVecTargetPos, UseAtkMom, CalcOverrideSpeed, AfterHitlag
                 "enum" (0), +4, xVecTargetPosFrame, xVecTargetPosX, xVecTargetPosY, xVecTargetAtkSpeedX, xVecTargetAtkSpeedY, xVecTargetPosFlags
 
+                gecko 0x801510b8
+                cmpwi r4, 343
+                beq- CalcAutoLinkSpeed_OriginalExit
+
+                # inputs
+                # r3 = fighter data
+                # r4 = ptr to VecTargetPos of fighter data
+                # cr6, cr7 = autolink bools
+                # outputs
+                # f1 = vel y
+                # f2 = vel x
+
+                lfs f1, -0x7700(rtoc) # 0.0
+                lfs f2, -0x7700(rtoc) # 0.0
+
+                crnot eq, bUseAtkMom # !bUseAtkMom
+                crandc eq, eq, bUseVecTargetPos # !bUseAtkMom && !bUseVecTargetPos
+                "beqlr-" # if both are false, return 0
+
+                sp.push
+                sp.temp xTemp, (0xC)
+                lwz r0, 0(r4)
+                sth r0, sp.xTemp(sp)
+                psq_l f0, sp.xTemp(sp), 1, 5
+                fres f0, f0
+                sp.pop
+
+                bf bUseAtkMom, CalculateAutoLinkLaunchSpeed_TargetPos
+
+                CalculateAutoLinkLaunchSpeed_AtkMom:
+                    psq_l f1, 0xC(r4), 0, 0
+                    bt bUseVecTargetPos, CalculateAutoLinkLaunchSpeed_TargetPos
+                    ps_muls0 f2, f1, f0 # multiply by 1/frames
+                    ps_merge10 f1, f2, f2
+                    blr
+                    
+                CalculateAutoLinkLaunchSpeed_TargetPos:
+                    psq_l f2, 0x4(r4), 0, 0 # load target pos x and y
+                    psq_l f3, 0xB0(r3), 0, 0 # load defender x and y pos
+                    ps_sub f2, f2, f3 # diff = (target pos - def pos)
+
+                    "bf- bCalcOverrideSpeed, 0f"
+                    # multiply diff by 1/frames
+                    ps_muls0 f2, f2, f0
+
+                    0:
+                        # add attacker momentum, if any
+                        ps_add f2, f1, f2 # attacker momentum + diff
+                        ps_merge10 f1, f2, f2
+
+                blr
+
+                CalcAutoLinkSpeed_OriginalExit:
+                    stw r0, 0x4(sp)
+
                 # Main Patch - Physics Callback
                 gecko 0x8006b898
                 # r31 = fighter data
@@ -25,7 +80,7 @@ const
                 "rlwinm." r0, r0, 0, {flag(ffAttackVecTargetPos)}
                 beq AutoLinkPhysics_OriginalExit # if not, exit
 
-                prolog xU, (0x2), xL, (0x2), xTempFrameInfo, (0x4)
+                prolog xU, (0x2), xL, (0x2), xTempFrameInfo, (0x4), xTempVec2, (0x8)
                 lbz r0, {extFtDataOff(HeaderInfo, vecTargetPosFlags)}(rFighterData)
                 mtcrf 0x3, r0
 
@@ -54,36 +109,65 @@ const
                 blt AutoLinkPhysics_ResetEffect
                 cmpw r0, r3 # ending timer
                 bge AutoLinkPhysics_ResetEffect_TurnOff
-                # if timer == 1 and overrideSpeed is enabled
                 cmplwi r0, 1
-                crand eq, eq, bCalcOverrideSpeed
-                bt eq, AutoLinkPhysics_SetLaunchSpeeds
-                
+#                cror lt, bCalcOverrideSpeed, bAfterHitlag
+#                crand eq, eq, lt
+#                bt eq, AutoLinkPhysics_SetLaunchSpeeds
+                beq- AutoLinkPhysics_SetLaunchSpeeds
+
+
+                addi r3, rFighterData, {extFtDataOff(HeaderInfo, vecTargetPosFrame)}
+                psq_l f0, 0x4(r3), 0, 0
+                psq_st f0, 0x8C(rFighterData), 0, 0
+
                 psq_l f1, sp.xTempFrameInfo(sp), 0, 0
                 bl AutoLinkPhysics_LerpVels
                 b AutoLinkPhysics_Exit
 
                 AutoLinkPhysics_SetLaunchSpeeds:
                     addi r4, rFighterData, {extFtDataOff(HeaderInfo, vecTargetPosFrame)}
-                    bf bAfterHitlag, AutoLinkPhysics_SetLaunchSpeeds_UsePrecalc             
 
-                    AutoLinkPhysics_SetLaunchSpeeds_CalcNew:  
-                        mr r3, rFighterData
-                        bl CalculateAutoLinkLaunchSpeed
+                    bt bAfterHitlag, AutoLinkPhysics_SetLaunchSpeeds_Recalc
+
+                    AutoLinkPhysics_SetLaunchSpeeds_NoCalc:
+                        psq_l f2, 0x8C(rFighterData), 0, 0
+                        bf bCalcOverrideSpeed, AutoLinkPhysics_SetLaunchSpeeds_Set
+                        psq_l f2, 0x4(r4), 0, 0
                         b AutoLinkPhysics_SetLaunchSpeeds_Set
 
-                    AutoLinkPhysics_SetLaunchSpeeds_UsePrecalc: 
-                        psq_l f2, 0x4(r4), 0, 0
+                    AutoLinkPhysics_SetLaunchSpeeds_Recalc:
+                        mr r3, rFighterData
+                        bla r12, 0x801510b8
+
+                        bt bCalcOverrideSpeed, AutoLinkPhysics_SetLaunchSpeeds_Set
+
+                        # otherwise, change current launch speed direction
+                        
+                        # normalize the new speed vectors
+                        addi r3, sp, sp.xTempVec2
+                        psq_st f2, 0(r3), 0, 0
+                        bla r12, 0x8000d3b0
+
+                        # calc magnitude of old speed
+                        addi r3, rFighterData, 0x8C
+                        bla r12, 0x80342dfc
+                        
+                        psq_l f2, sp.xTempVec2(sp), 0, 0
+                        ps_mul f2, f2, f1
+                        b AutoLinkPhysics_SetLaunchSpeeds_Set
 
                     AutoLinkPhysics_SetLaunchSpeeds_Set:
                         psq_st f2, 0x8C(rFighterData), 0, 0
+                        psq_st f2, 0x4(r4), 0, 0
                         b AutoLinkPhysics_Exit
 
                 AutoLinkPhysics_LerpVels:
                     # inputs
                     # f1[0] = currentFrame, f1[1] = 1/frames
                     ps_muls1 f4, f1, f1 # multiply currentFrame by 1/frames to get t
-                    psq_l f1, 0x8C(rFighterData), 0, 0
+                    addi r3, rFighterData, {extFtDataOff(HeaderInfo, vecTargetPosFrame)}
+                    psq_l f1, 0x4(r3), 0, 0
+                    #psq_l f1, 0x8C(rFighterData), 0, 0
                     bt bLerpSpeedCap, AutoLinkPhysics_LerpVels_Speed
                     bt bLerpAtkMom, AutoLinkPhysics_LerpVels_AtkMom
                     blr
@@ -111,7 +195,6 @@ const
                         b AutoLinkPhysics_Lerp
 
                     AutoLinkPhysics_LerpVels_AtkMom:
-                        addi r3, rFighterData, {extFtDataOff(HeaderInfo, vecTargetPosFrame)}
                         psq_l f2, 0xC(r3), 0, 0
                         fmr f3, f4
                         b AutoLinkPhysics_Lerp
@@ -149,25 +232,6 @@ const
                 AutoLinkPhysics_OriginalExit:
                     lwz r12, 0x21A4(rFighterData)
 
-                
-                    
-               
-
-                # Exit_8006BE00:
-                #     epilog
-
-                # OriginalExit_8006BE00:
-                #     lwz r12, 0x21A4(rFighterData)
-
-                # # patch for NOT entering DamageFlyRoll if attack vec pull effect is active
-                # gecko 0x8008e128
-                # lbz r3, {extFtDataOff(HeaderInfo, fighterFlags)}(r29)
-                # "rlwinm." r3, r3, 0, {flag(ffAttackVecTargetPos)}
-                # beq OrigExit_8008e128
-                # lfs f1, -0x7790(rtoc) # use value of 1.0 to skip the use of DamageFlyRoll
-                # OrigExit_8008e128:
-                #     lwz r3, -0x514C(r13) # orig code line
-
                 # enable attack vec pull effect if kb_angle is an autolink angle
                 # happens when sent into hitstun
                 gecko 0x8008dd88
@@ -188,195 +252,6 @@ const
                 OrigExit_8007DD88:
                     lfd f0, 0x58(sp) # orig code line
 
-                # CalculateKnockback Function Patch - Sets the Necessary Hit Variables
-                gecko 0x8007a934
-                # r0 = hitbox angle
-                # r3 = hit struct
-                # r25 = defender data
-                # r17 = damage source?
-                # r31 = points to direction var of struct dmg
-                # f26/launch_speed_kb = calculated kb value based on hitbox settings
-                stw r0, 0x4(r31) # orig line, set kb_angle
-
-                # TODO apply only if there is kb > 0
-
-                prolog rDmgLog, rAttackerData, rAttackerGObj, rExtHit, rHit, xTemp, (0xC)
-                regs (17), rDmgSrc, (25), rDefenderData
-                lwz rHit, 0xC(rDmgSrc)
-                lwz rAttackerGObj, 0x8(rDmgSrc)
-
-                # init the autolink flags to 0
-                # we use cr6 and cr7
-                li r0, 0
-                mtcrf 0x3, r0
-
-                cmplwi rAttackerGObj, 0
-                beq SetAutoLinkVars_CheckAngle
-
-                # attacker exists, get the ExtHit struct
-                lwz rAttackerData, 0x2C(rAttackerGObj)
-                mr r3, rAttackerGObj
-                mr r4, rHit
-                bla r12, {GetExtHitFunc}
-                mr rExtHit, r3
-                cmplwi r3, 0
-                beq SetAutoLinkVars_CheckAngle
-
-                # if ExtHit exists, check if there is a custom vec target pos to calculate
-                lbz r0, {extHitTargetPosOff(targetPosFlags)}(rExtHit)
-                mtcrf 0x3, r0
-                "bf-" bSet, SetAutoLinkVars_CheckAngle
-
-                SetAutoLinkVars_CustomVecTargetPos:
-                    # calculate target pos using given bone and offsets
-                    lwz r3, {extHitTargetPosOff(targetPosNode)}(rExtHit)
-                    addi r4, rExtHit, {extHitTargetPosOff(targetPosOffsetX)}
-                    addi r5, rDefenderData, {extFtDataOff(HeaderInfo, vecTargetPosX)} # store it in defender data
-                    bla r12, {JOBJGetWorldPos}
-
-                    # store # of frames
-                    lwz r0, {extHitTargetPosOff(targetPosFrame)}(rExtHit)
-                    stw r0, {extFtDataOff(HeaderInfo, vecTargetPosFrame)}(rDefenderData)
-                    b SetAutoLinkVars_IsAutoLink
-
-                SetAutoLinkVars_CheckAngle:
-                    # TODO should we reset the cr6-cr7 in case it isn't an autolink?
-                    # seems to be fine without resetting...
-                    lwz r0, 0x4(rDmgLog) # kb_angle
-                    cmplwi r0, 367
-                    beq SetAutoLinkVars_Set_Vec_Pull
-                    b SetAutoLinkVars_Exit
-
-                SetAutoLinkVars_Set_Vec_Pull:
-                    crset bLerpSpeedCap
-                    crset bUseVecTargetPos
-                    crset bUseAtkMom
-                    crset bCalcOverrideSpeed
-                    crset bAfterHitlag
-
-                    addi r3, rDefenderData, {extFtDataOff(HeaderInfo, vecTargetPosFrame)}
-
-                    # use hitbox positions
-                    psq_l f0, 0x4C(rHit), 0, 0
-                    psq_st f0, 0x4(r3), 0, 0
-
-                    # default 10 frames
-                    li r0, 10
-                    stw r0, 0(r3)
-
-                SetAutoLinkVars_IsAutoLink:
-                    # inputs
-                    # frame, posX, posY should all be set in defender data
-                    # cr6, cr7 = autolink flags
-
-                    mr r3, rDefenderData
-                    addi r4, rDefenderData, {extFtDataOff(HeaderInfo, vecTargetPosFrame)}
-
-                    # set attacker speed to 0 if there is no attacker
-                    # otherwise, use appropriate speed var if they are item or fighter
-                    cmplwi rAttackerGObj, 0
-                    beq- SetAutoLinkVars_IsAutoLink_NoAttacker
-
-                    lhz r0, 0(rAttackerGObj)
-                    cmplwi r0, 0x4 # fighter
-                    psq_l f0, 0x80(rAttackerData), 0, 0
-                    beq SetAutoLinkVars_IsAutoLink_SetAtkMom
-                    cmplwi r0, 0x6 # item
-                    psq_l f0, 0x40(rAttackerData), 0, 0
-                    beq SetAutoLinkVars_IsAutoLink_SetAtkMom
-                    
-                    SetAutoLinkVars_IsAutoLink_NoAttacker:
-                        crclr bLerpAtkMom
-                        lfs f0, -0x7700(rtoc) # 0.0
-
-                    SetAutoLinkVars_IsAutoLink_SetAtkMom:
-                        psq_st f0, 0xC(r4), 0, 0
-                        
-
-                    bl CalculateAutoLinkLaunchSpeed
-                    # returned f1[0] = y vel, f2[0] = x vel
-                    
-                    # if override speed && calculate using values BEFORE hitlag, save calculated launch speed
-                    crandc eq, bCalcOverrideSpeed, bAfterHitlag
-                    bf eq, SetAutoLinkVars_IsAutoLink_CalcAngle
-
-                    psq_st f2, 0x4(r4), 0, 0
-
-                    SetAutoLinkVars_IsAutoLink_CalcAngle:
-                        # calculate launch angle and store it
-                        lfs f0, -0x7700(rtoc) # 0.0
-                        lfs f3, 0(rDmgLog) # calculated direction
-                        fcmpo cr0, f3, f0
-                        "bt lt, 0f"
-                        fneg f2, f2
-                        0: ""
-                        bla r12, {Atan2} 
-                        lfs f0, -0x76C4(rtoc) # 180/PI
-                        fmuls f1, f0, f1
-                        fctiw f0, f1
-                        stfd f0, sp.xTemp(sp)
-                        lwz r0, sp.xTemp+0x4(sp)
-                        stw r0, 0x4(rDmgLog) # store new calculated angle
-
-                    cror eq, bLerpAtkMom, bLerpSpeedCap # hasLerp
-                    crnot lt, bCalcOverrideSpeed # !bOverrideSpeed
-                    crandc eq, lt, eq # (!bOverrideSpeed && !hasLerp)
-                    "bt- eq, 0f"
-                    crset bSet
-                    b SetAutoLinkVars_Exit
-                    0: crclr bSet
-                    b SetAutoLinkVars_Exit
-
-                CalculateAutoLinkLaunchSpeed:
-                    # inputs
-                    # r3 = fighter data
-                    # r4 = ptr to VecTargetPos of fighter data
-                    # cr6, cr7 = autolink bools
-                    # outputs
-                    # f1 = vel y
-                    # f2 = vel x
-                    sp.push
-                    sp.temp xTemp, (0xC)
-                    lwz r0, 0(r4)
-                    sth r0, sp.xTemp(sp)
-                    psq_l f0, sp.xTemp(sp), 1, 5
-                    fres f0, f0
-                    lfs f1, -0x7700(rtoc) # 0.0
-                    sp.pop
-                    #crand eq, bUseAtkMom, bUseVecTargetPos
-                    #crorc eq, bUseAtkMom
-
-                    # TODO what if useAtkMom and useVecTargetPos is not set?
-
-                    bf bUseAtkMom, CalculateAutoLinkLaunchSpeed_TargetPos
-
-                    CalculateAutoLinkLaunchSpeed_AtkMom:
-                        psq_l f1, 0xC(r4), 0, 0
-                        bt bUseVecTargetPos, CalculateAutoLinkLaunchSpeed_TargetPos
-                        ps_muls0 f2, f1, f0 # multiply by 1/frames
-                        ps_merge10 f1, f2, f2
-                        blr
-                        
-                    CalculateAutoLinkLaunchSpeed_TargetPos:
-                        psq_l f2, 0x4(r4), 0, 0 # load target pos x and y
-                        psq_l f3, 0xB0(r3), 0, 0 # load defender x and y pos
-                        ps_sub f2, f2, f3 # diff = (target pos - def pos)
-
-                        # multiply diff by 1/frames
-                        ps_muls0 f2, f2, f0
-
-                        # add attacker momentum, if any
-                        ps_add f2, f1, f2 # attacker momentum + diff
-                        ps_merge10 f1, f2, f2
-
-                    blr
-
-                SetAutoLinkVars_Exit:
-                    # TODO turn off ffAttackVecTargetPos?
-                    mfcr r0
-                    stb r0, {extFtDataOff(HeaderInfo, vecTargetPosFlags)}(rDefenderData)
-                    epilog
-                
                 gecko.end
 
 when isMainModule:
