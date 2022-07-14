@@ -10,12 +10,22 @@ const
     # minor version = new property changes
     # patch version = bug fixes
     Version* = "2.0.0"
+
     
 type
     GameHeaderInfo* = object
         name*: string
         fighterDataSize*: int
         itemDataSize*: int
+
+    DamageReactionMode* = enum
+        drmNormal
+        drmAlways
+        drmReactionValue
+        drmReactionValueSub
+        drmDamagePower
+        drmHpDamagePower
+
     HitFlag* {.size: sizeof(uint32).} = enum
         hfAffectOnlyThrow,
         hfNoStale,
@@ -119,7 +129,7 @@ type
         hitstunModifier*: float32
         shieldstunMultiplier*: float32
         fighterFlags*: FighterFlags
-        fighterFlags2*: FighterFlags
+        noReactionMode*: int8
         padding2*: int16
         # autolink related
         vecTargetPosFrame*: float32
@@ -214,7 +224,9 @@ when isMainModule:
     generate "./generated/" & DataExpansionDir & "dataexpansion.asm", createPatchFor(MexHeaderInfo)
     # generate all mods that rely on the same extended data structures
     import ../hitbox/[autolink/autolink367, eight/eighthitbox, specialflagsfthit], customcmdscript
+    import ../noreactioncmd
     generate "./generated/" & DataExpansionDir & "customcmdscript.asm", CustomCmdScript
     generate "./generated/" & DataExpansionDir & "autolink367.asm", AutoLink367
     generate "./generated/" & DataExpansionDir & "eighthitboxes.asm", EightHitboxes
     generate "./generated/" & DataExpansionDir & "specialflagsfthit.asm", SpecialFlagsFtHitScript
+    generate "./generated/" & DataExpansionDir & "noreactioncmd.asm", DamageNoReactionScript

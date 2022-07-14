@@ -4,6 +4,7 @@ import dataexpansion
 import strutils
 
 import ../hitbox/[hitboxext, specialflagsfthit, attackcapsule, vectargetpos]
+import ../noreactioncmd
 
 # TODO needs MCM library
 
@@ -70,7 +71,9 @@ const
                         HitboxExtCmd_Begin:
                             %hitboxext.getParseCmdCode()),
                     (SpecialFlagsCmd, specialflagsfthit.getParseCmdCode()),
-                    (AttackCapsuleCmd, attackcapsule.getParseCmdCode()))
+                    (AttackCapsuleCmd, attackcapsule.getParseCmdCode()),
+                    (DamageNoReactionModeCmd, noreactioncmd.getParseCmdCode())
+                    )
 
                 CustomFighterCmdHandler_Start:
                     lwz r12, 0(r3) # orig code line

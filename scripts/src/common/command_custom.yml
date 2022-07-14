@@ -1,0 +1,292 @@
+- code: 0x75
+  name: Enter Action State
+  parameters:
+  - name: Default
+    bitCount: 8
+    enums:
+    - Default Float Parameters
+    - Specify Parameters
+  - name: Action State ID
+    bitCount: 16
+    hex: true
+  - name: Starting Frame
+    bitCount: 32
+    isFloat: true
+  - name: Speed Modifier
+    bitCount: 32
+    isFloat: true
+  - name: Keyframe Blend Level
+    bitCount: 32
+    isFloat: true
+
+- code: 0x33
+  name: Interrupt Swap
+  parameters:
+  - name: Default
+    bitCount: 8
+    enums:
+    - IASA Function
+    - Physics Function
+    - Collision Function
+  - name: Padding
+    bitCount: 16
+  - name: Move Logic
+    bitCount: 32
+    hex: true
+
+- code: 0xFF
+  name: Reflect Box
+  parameters:
+  - name: Enable
+    bitCount: 8
+    enums:
+    - Disable
+    - Enable
+  - name: Radius
+    bitCount: 16
+    hex: true
+  - name: Damage Multiplier
+    bitCount: 16
+    hex: true
+  - name: Projectile Speed
+    bitCount: 16
+    hex: true
+  - name: X Position
+    bitCount: 16
+    hex: true
+  - name: Y Position
+    bitCount: 16
+    hex: true
+
+- code: 0xEF
+  name: Hitbox Extension Advanced
+  parameters:
+  - name: Hitbox ID
+    bitCount: 3
+  - name: Apply to
+    bitCount: 2
+    enums:
+    - Hitbox with the ID Above
+    - All Active Hitboxes
+    - Throw Hitbox
+  - name: Padding
+    bitCount: 19
+  - name: Shieldstun Modifier (±)
+    bitCount: 8
+    signed: true
+  - name: Set Weight for X Frames
+    bitCount: 8
+  - name: Padding8
+    bitCount: 8
+  - name: No Hitstun Land Cancel
+    bitCount: 1
+    enums:
+      - false
+      - true
+  - name: No Tech
+    bitCount: 1
+    enums:
+      - false
+      - true
+  - name: No Extra Electric Hitlag
+    bitCount: 1
+    enums:
+      - false
+      - true
+  - name: Padding5Flags
+    bitCount: 5
+
+- code: 0xF1
+  name: Hitbox Extension
+  parameters:
+  - name: Hitbox ID
+    bitCount: 3
+  - name: Apply to All Active Hitboxes
+    bitCount: 1
+    enums:
+    - use Hitbox ID above
+    - ignore Hitbox ID and apply to all active hitboxes instead
+  - name: Hitlag Multiplier %
+    bitCount: 12
+  - name: SDI Multiplier %
+    bitCount: 12
+  - name: Shieldstun Multiplier %
+    bitCount: 12
+  - name: Hitstun Modifier (±)
+    bitCount: 8
+    signed: true
+  - name: Set Weight for 10 Frames
+    bitCount: 1
+    enums:
+      - false
+      - true
+  - name: Facing Restrict
+    bitCount: 2
+    enums:
+      - Default
+      - Send Facing
+      - Send Opposite
+      - Send ?
+  - name: Disable Hitlag (No A/S/DI)
+    bitCount: 1
+    enums:
+      - false
+      - true
+  - name: Flinchless
+    bitCount: 1
+    enums:
+      - false
+      - true
+  - name: No Meteor Cancel
+    bitCount: 1
+    enums:
+      - false
+      - true
+  - name: No Stale
+    bitCount: 1
+    enums:
+      - false
+      - true
+  - name: Affect Only Throw Hitbox
+    bitCount: 1
+    enums:
+      - false
+      - true
+
+- code: 0xF5
+  name: Set Special Hitbox Flags (Fighters)
+  parameters:
+  - name: Hitbox ID
+    bitCount: 3
+  - name: Apply to All Active Hitboxes
+    bitCount: 1
+    enums:
+    - use Hitbox ID above
+    - ignore Hitbox ID and apply to all active hitboxes
+  - name: Padding
+    bitCount: 4
+  - name: Rehit Rate (per fighter)
+    bitCount: 8
+  - name: Timed Rehit on Non-Fighter Enabled
+    bitCount: 1
+    enums:
+    - false
+    - true
+  - name: Timed Rehit on Fighter Enabled
+    bitCount: 1
+    enums:
+    - false
+    - true
+  - name: Timed Rehit on Shield Enabled
+    bitCount: 1
+    enums:
+    - false
+    - true
+  - name: Padding
+    bitCount: 2
+  - name: Blockability
+    bitCount: 1
+    enums:
+    - false
+    - true
+  - name: Only Hit Front
+    bitCount: 1
+    enums:
+    - false
+    - true
+  - name: Padding
+    bitCount: 1
+
+- code: 0xF8
+  name: Set Attack Capsule
+  parameters:
+  - name: Hitbox ID
+    bitCount: 3
+  - name: Padding
+    bitCount: 5
+  - name: X2 Offset
+    bitCount: 16
+    signed: true
+  - name: Y2 Offset
+    bitCount: 16
+    signed: true
+  - name: Z2 Offset
+    bitCount: 16
+    signed: true
+
+- code: 0xEA
+  name: Set Vec Target Pos
+  parameters:
+  - name: Hitbox ID
+    bitCount: 3
+  - name: Apply to
+    bitCount: 2
+    enums:
+    - Hitbox with the ID Above
+    - All Active Hitboxes
+  - name: Padding
+    bitCount: 3
+  - name: Calculate
+    bitCount: 1
+    enums:
+    - Before Hitlag (363°/365°)
+    - After Hitlag (366°/367°/368°)
+  - name: Override
+    bitCount: 1
+    enums:
+    - Launch Angle/Direction (363°/366°)
+    - Launch Speed (365°/367°/368°)
+  - name: Use
+    bitCount: 2
+    enums:
+    - Nothing
+    - XYZ Pos
+    - Attacker's Momentum
+    - Attacker's Momentum & XYZ Pos
+  - name: Adjust Launch Speed to
+    bitCount: 2
+    enums:
+    - No Change
+    - Attacker's Momentum in X Frames (366°)
+    - Speed Cap in X Frames (367°)
+  - name: Padding
+    bitCount: 10
+  - name: Bone ID
+    bitCount: 8
+  - name: X-Offset
+    bitCount: 16
+    signed: true
+  - name: Y-Offset
+    bitCount: 16
+    signed: true
+  - name: Z-Offset
+    bitCount: 16
+    signed: true
+  - name: Frames
+    bitCount: 8
+
+- code: 0xE4
+  name: Set No Reaction Mode
+  parameters:
+  - name: Mode
+    bitCount: 3
+    enums:
+    - Normal
+    - Always
+    - Reaction Value (Knockback-based)
+    - Subtractive Reaction Value (Yoshi's Double Jump)
+    - Damage Power (Damage-based)
+    - HP Damage Power (Kirby's Stone)
+  - name: Damage Threshold
+    bitCount: 21
+
+- code: 0xFC
+  name: Frame Speed Modifier
+  parameters:
+  - name: Default
+    bitCount: 24
+    enums:
+    - Specify Parameters
+  - name: Speed Modifier
+    bitCount: 32
+    isFloat: true

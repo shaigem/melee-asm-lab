@@ -145,6 +145,9 @@ customCmdTable.__start = .
 4:
 .4byte 0x3EF80800
 .4byte e$4
+5:
+.4byte 0x39E40400
+.4byte e$5
 customCmdTable.__count = (. - customCmdTable.__start) / 8
 CustomCmd_SetVecTargetPos:
 e.solve CustomCmd_SetVecTargetPos - ((8 * 0) + _data.table)
@@ -416,6 +419,70 @@ rlwimi r0, r5, 7, 128
 stb r0, 48(rExtHit)
 sp.pop
 AttackCapsuleCmd_Exit:
+blr
+CustomCmd_DamageNoReactionMode:
+e.solve CustomCmd_DamageNoReactionMode - ((8 * 5) + _data.table)
+li r3, 9248
+lhz r0, 0(r27)
+cmplwi r0, 0x00000004
+bnelr
+regs (3), rExtHit, rCmdPtr, (29), rCmdInfo, rData
+DamageNoReactionModeCmd_Read:
+lwz rCmdPtr, 0x00000008(rCmdInfo)
+sp.push
+sp.temp +2, x1, x2
+lwz r0, 0(rCmdPtr)
+rlwinm r0, r0, 0, 0x001FFFFF
+sth r0, sp.x1(sp)
+psq_l f0, sp.x1(sp), 1, 3
+sp.pop
+lbz r0, 0x00000001(rCmdPtr)
+rlwinm r0, r0, 27, 29, 31
+stb r0, 11265(rData)
+cmplwi r0, 0
+beq DamageNoReactionModeCmd_Mode_Normal
+cmplwi r0, 1
+beq DamageNoReactionModeCmd_Mode_Always
+cmplwi r0, 2
+beq DamageNoReactionModeCmd_Mode_Reaction_Value
+cmplwi r0, 3
+beq DamageNoReactionModeCmd_Mode_Reaction_Value_Sub
+cmplwi r0, 4
+beq DamageNoReactionModeCmd_Mode_Damage_Power
+cmplwi r0, 5
+beq DamageNoReactionModeCmd_Mode_Kirby_Stone
+blr
+DamageNoReactionModeCmd_Mode_Normal:
+lfs f0, 0xFFFF8900(rtoc)
+li r3, 0
+stfs f0, 0x000018B4(rData)
+stfs f0, 0x00001834(rData)
+lbz r0, 0x00002220(rData)
+rlwimi r0, r3, 4, 27, 27
+stb r0, 0x00002220(rData)
+lbz r0, 0x0000221C(rData)
+rlwimi r0, r3, 3, 28, 28
+stb r0, 0x0000221C(rData)
+blr
+DamageNoReactionModeCmd_Mode_Always:
+li r3, 1
+lbz r0, 0x00002220(rData)
+rlwimi r0, r3, 4, 27, 27
+stb r0, 0x00002220(rData)
+blr
+DamageNoReactionModeCmd_Mode_Damage_Power:
+DamageNoReactionModeCmd_Mode_Reaction_Value:
+stfs f0, 0x00001834(rData)
+blr
+DamageNoReactionModeCmd_Mode_Reaction_Value_Sub:
+stfs f0, 0x000018B4(rData)
+blr
+DamageNoReactionModeCmd_Mode_Kirby_Stone:
+li r3, 1
+lbz r0, 0x0000221C(rData)
+rlwimi r0, r3, 3, 28, 28
+stb r0, 0x0000221C(rData)
+stfs f0, 0x00001834(rData)
 blr
 
 CustomFighterCmdHandler_Start:

@@ -3,6 +3,14 @@ punkpc ppc
 # sushie's Common ExtHit Functions
 # authors: @["sushie"]
 # description: 
+gecko 2147915552
+stfs f0, 0x000018B4(r26)
+stb r29, 11265(r26)
+gecko.end
+gecko 2147909156
+stfs f1, 0x000018B4(r27)
+stb r28, 11265(r27)
+gecko.end
 gecko 2148864228
 cmpwi r4, 343
 beq- InitDefaultExtHit_OrigExit

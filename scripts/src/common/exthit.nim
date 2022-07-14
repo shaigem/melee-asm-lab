@@ -7,6 +7,23 @@ const
     InitDefaultExtHitFunc* = 0x801510e4
     InitDefaultValuesMeleeHitboxInj = 0x80071288
 
+proc createOnActionStateChangeReset(): string =
+    ppc:
+        gecko 0x80069720
+        # r29 = 0
+        stfs f0, 0x18B4(r26) # orig code line
+        stb r29, {extFtDataOff(HeaderInfo, noReactionMode)}(r26)
+        gecko.end
+
+proc createOnDataEntryAndDeath(): string =
+    ppc:
+        # Init Vars on DataOffset_InitializeDataEntryAndDeath
+        gecko 0x80067e24
+        # r28 = 0
+        stfs f1, 0x18B4(r27) # orig code line
+        stb r28, {extFtDataOff(HeaderInfo, noReactionMode)}(r27)
+        gecko.end
+
 proc createOnKnockback(): string =
     ppc:
 
@@ -521,6 +538,8 @@ const
             description: ""
             authors: ["sushie"]
             code:
+                %createOnActionStateChangeReset()
+                %createOnDataEntryAndDeath()
                 %createInitDefaultExtHitValuesFunc()
                 %createGetExtHitFunc()
                 %createInitDefaultValuesMeleeHitbox()

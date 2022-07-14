@@ -11,6 +11,7 @@ const
     SpecialFlagsCmd* = CustomCmd(name: "SpecialFlags", id: 0x3D, code: 0xF5, eventLen: 0x4)
     AttackCapsuleCmd* = CustomCmd(name: "AttackCapsule", id: 0x3E, code: 0xF8, eventLen: 0x8)
     SetVecTargetPosCmd* = CustomCmd(name: "SetVecTargetPos", id: 0x3A, code: 0xEA, eventLen: 0xC)
+    DamageNoReactionModeCmd* = CustomCmd(name: "DamageNoReactionMode", id: 0x39, code: 0xE4, eventLen: 0x4)
 
 func asHeaderString*(c: CustomCmd): string =
     var l = 0

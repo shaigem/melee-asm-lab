@@ -98,6 +98,21 @@
             "sourceFile": "scripts/generated/de/specialflagsfthit.asm"
           }
         ]
+      },
+      {
+        "name": "No Reaction Mode Support",
+        "authors": [
+          "sushie"
+        ],
+        "description": [
+          "Armor"
+        ],
+        "build": [
+          {
+            "type": "inject",
+            "sourceFile": "scripts/generated/de/noreactioncmd.asm"
+          }
+        ]
       }
     ]
   }
